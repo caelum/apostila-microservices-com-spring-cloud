@@ -13,3 +13,5 @@ MySQL 5.6
 Docker 17.05
 Docker Compose 1.22
 
+curl
+Postman
