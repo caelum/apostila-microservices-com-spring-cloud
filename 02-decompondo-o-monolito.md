@@ -2,7 +2,7 @@
 
 ## Exercício opcional: decomposição em pacotes
 
-1. Copie o diretório `Desktop/cursos/33/eats-pacotes` para o seu `Desktop`.
+1. Copie o diretório `Desktop/cursos/33/eats-pacotes` para o seu Desktop.
 2. Crie um novo workspace no Eclipse, clicando em _File > Switch Workspace > Other_. Defina o workspace `/home/<usuario-do-curso>/workspace-pacotes`, onde `<usuario-do-curso>` é o login do curso.
 3. Acesse _File > Import > Existing Maven Projects_ e clique em _Next_. Em _Root Directory_, aponte para o diretório copiado no passo anterior.
 4. Acesse a classe `EatsApplication` e a execute com _CTRL+F11_.
@@ -11,7 +11,7 @@
 
 ## Exercício: o monólito modular
 
-1. Copie o diretório `Desktop/cursos/33/eats-monolito-modular` para o seu `Desktop`.
+1. Faça uma cópia, para o seu Desktop, do diretório `Desktop/cursos/33/eats-monolito-modular`.
 2. Crie o novo workspace `/home/<usuario-do-curso>/workspace-monolito-modular` no Eclipse, clicando em _File > Switch Workspace > Other_. Troque `<usuario-do-curso>` pelo login do curso.
 3. Importe, pelo menu  _File > Import > Existing Maven Projects_ do Eclipse, o projeto `eats-monolito-modular`.
 4. Para executar a aplicação, acesse o projeto `eats-application` e execute a classe `EatsApplication` com _CTRL+F11_. Certifique-se que as versões anteriores do projeto não estão sendo executadas.
