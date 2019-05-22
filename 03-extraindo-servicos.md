@@ -346,3 +346,36 @@
   Faça um novo pedido, crie e confirme um pagamento. Deve funcionar!
 
   Note apenas um detalhe: o status do pedido, exibido na tela após a confirmação do pagamento, está _REALIZADO_ e não _PAGO_. Iremos corrigir isso posteriormente.
+
+## Exercício: apagando código de pagamentos do monólito
+
+1. Remova a dependência a `eats-pagamento` do `pom.xml` do módulo `eats-application` do monólito:
+
+  ####### fj33-eats-monolito-modular/eats/eats-application/pom.xml
+
+  ```xml
+  <̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
+  ̶ ̶ ̶<̶g̶r̶o̶u̶p̶I̶d̶>̶b̶r̶.̶c̶o̶m̶.̶c̶a̶e̶l̶u̶m̶<̶/̶g̶r̶o̶u̶p̶I̶d̶>̶
+  ̶ ̶ ̶<̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶e̶a̶t̶s̶-̶p̶a̶g̶a̶m̶e̶n̶t̶o̶<̶/̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶
+  ̶ ̶ ̶<̶v̶e̶r̶s̶i̶o̶n̶>̶$̶{̶p̶r̶o̶j̶e̶c̶t̶.̶v̶e̶r̶s̶i̶o̶n̶}̶<̶/̶v̶e̶r̶s̶i̶o̶n̶>̶
+  ̶<̶/̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
+  ```
+
+2. No projeto pai dos módulos, o projeto `eats`, remova o módulo `eats-pagamento`  do `pom.xml`:
+
+  ####### fj33-eats-monolito-modular/eats/pom.xml
+
+  ```xml
+  <modules>
+    <module>eats-admin</module>
+    <̶m̶o̶d̶u̶l̶e̶>̶e̶a̶t̶s̶-̶p̶a̶g̶a̶m̶e̶n̶t̶o̶<̶/̶m̶o̶d̶u̶l̶e̶>̶
+    <module>eats-restaurante</module>
+    <module>eats-pedido</module>
+    <module>eats-distancia</module>
+    <module>eats-seguranca</module>
+    <module>eats-common</module>
+    <module>eats-application</module>
+  </modules>
+  ```
+
+3. Apague o módulo `eats-pagamento` do monólito. Pelo Eclipse, tecle _Delete_ em cima do módulo, selecione a opção _Delete project contents on disk (cannot be undone)_ e clique em _OK_.
