@@ -210,6 +210,8 @@
   Date: Tue, 21 May 2019 20:27:10 GMT
   ```
 
+  <!--  -->
+
   ```json
   { "id":7, "valor":51.8, "nome":"JOÃO DA SILVA",
     "numero":"1111 2222 3333 4444", "expiracao":"2022-07", "codigo":"123",
@@ -232,6 +234,8 @@
   Transfer-Encoding: chunked
   Date: Tue, 21 May 2019 20:31:08 GMT
   ```
+
+  <!--  -->
 
   ```json
   { "id":7, "valor":51.80, "nome":"JOÃO DA SILVA",
@@ -433,3 +437,167 @@
   Troque `<SEU USUARIO>` e `<SUA SENHA>` pelos valores informados pelo instrutor.
 
 6. Execute a classe `EatsDistanciaServiceApplication`.
+
+## Exercício: extraindo código de distância do monólito
+
+1. Copie para o pacote `br.com.caelum.eats.distancia` do serviço `eats-distancia-service`, as seguintes classes do módulo `eats-distancia` do monólito:
+
+  - `DistanciaService`
+  - `RestauranteComDistanciaDto`
+  - `RestaurantesMaisProximosController`
+
+  Copie, do pacote `br.com.caelum.eats.exception` do módulo `eats-common` do monólito, a classe:
+
+  - `ResourceNotFoundException`
+
+  Além disso, já antecipando problemas com CORS no front-end, copie do módulo `eats-common` do monólito, para o pacote `br.com.caelum.eats.distancia` de `eats-distancia-service`, a classe:
+
+  - `CorsConfig`
+
+  Há alguns erros de compilação na classe `DistanciaService`, que corrigiremos nos passos seguintes.
+
+2. O motivo de um dos erros de compilação é uma referência à classe `Restaurante` do módulo `eats-restaurante` do monólito.
+  Copie essa classe para o pacote `br.com.caelum.eats.distancia` do serviço `eats-distancia-service`. Ajuste o pacote, caso seja necessário.
+
+  Remova, na classe `Restaurante` copiada, a referência à entidade `TipoDeCozinha`, trocando-a pelo id. Remova também a referência à classe `User`.
+
+  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/Restaurante.java
+
+  ```java
+  // anotações
+  public class Restaurante {
+
+    // código omitido ...
+
+    @̶M̶a̶n̶y̶T̶o̶O̶n̶e̶(̶o̶p̶t̶i̶o̶n̶a̶l̶=̶f̶a̶l̶s̶e̶)̶
+    ̶p̶r̶i̶v̶a̶t̶e̶ ̶T̶i̶p̶o̶D̶e̶C̶o̶z̶i̶n̶h̶a̶ ̶t̶i̶p̶o̶D̶e̶C̶o̶z̶i̶n̶h̶a̶;̶
+    private Long tipoDeCozinhaId;
+
+    ̶@̶O̶n̶e̶T̶o̶O̶n̶e̶
+    ̶p̶r̶i̶v̶a̶t̶e̶ ̶U̶s̶e̶r̶ ̶u̶s̶e̶r̶;̶
+
+  }
+  ```
+
+  Remova os imports não utilizados:
+
+  ```java
+  i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶p̶e̶r̶s̶i̶s̶t̶e̶n̶c̶e̶.̶M̶a̶n̶y̶T̶o̶O̶n̶e̶;̶
+  ̶i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶p̶e̶r̶s̶i̶s̶t̶e̶n̶c̶e̶.̶O̶n̶e̶T̶o̶O̶n̶e̶;̶
+
+  ̶i̶m̶p̶o̶r̶t̶ ̶b̶r̶.̶c̶o̶m̶.̶c̶a̶e̶l̶u̶m̶.̶e̶a̶t̶s̶.̶a̶d̶m̶i̶n̶.̶T̶i̶p̶o̶D̶e̶C̶o̶z̶i̶n̶h̶a̶;̶
+  ̶i̶m̶p̶o̶r̶t̶ ̶b̶r̶.̶c̶o̶m̶.̶c̶a̶e̶l̶u̶m̶.̶e̶a̶t̶s̶.̶s̶e̶g̶u̶r̶a̶n̶c̶a̶.̶U̶s̶e̶r̶;̶
+  ```
+
+3. Na classe `DistanciaService` de `eats-distancia-service`, remova os imports que referenciam as classes `Restaurante` e `TipoDeCozinha`:
+
+  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/DistanciaService.java
+
+  ```java
+  ̶i̶m̶p̶o̶r̶t̶ ̶b̶r̶.̶c̶o̶m̶.̶c̶a̶e̶l̶u̶m̶.̶e̶a̶t̶s̶.̶a̶d̶m̶i̶n̶.̶T̶i̶p̶o̶D̶e̶C̶o̶z̶i̶n̶h̶a̶;̶
+  i̶m̶p̶o̶r̶t̶ ̶b̶r̶.̶c̶o̶m̶.̶c̶a̶e̶l̶u̶m̶.̶e̶a̶t̶s̶.̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶.̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶;̶
+  ```
+
+  Como a classe `Restaurante` foi copiada para o mesmo pacote de `DistanciaService`, não há a necessidade de importá-la.
+
+  Mas e para `TipoDeCozinha`? Utilizaremos apenas o id. Por isso, modifique o método `restaurantesDoTipoDeCozinhaMaisProximosAoCep` de `DistanciaService`:
+
+  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/DistanciaService.java
+
+  ```java
+  public List<RestauranteComDistanciaDto> restaurantesDoTipoDeCozinhaMaisProximosAoCep(Long tipoDeCozinhaId, String cep) {
+    T̶i̶p̶o̶D̶e̶C̶o̶z̶i̶n̶h̶a̶ ̶t̶i̶p̶o̶ ̶=̶ ̶n̶e̶w̶ ̶T̶i̶p̶o̶D̶e̶C̶o̶z̶i̶n̶h̶a̶(̶)̶;̶
+    t̶i̶p̶o̶.̶s̶e̶t̶I̶d̶(̶t̶i̶p̶o̶D̶e̶C̶o̶z̶i̶n̶h̶a̶I̶d̶)̶;̶
+
+    L̶i̶s̶t̶<̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶>̶ ̶a̶p̶r̶o̶v̶a̶d̶o̶s̶D̶o̶T̶i̶p̶o̶D̶e̶C̶o̶z̶i̶n̶h̶a̶ ̶=̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶.̶f̶i̶n̶d̶A̶l̶l̶B̶y̶A̶p̶r̶o̶v̶a̶d̶o̶A̶n̶d̶T̶i̶p̶o̶D̶e̶C̶o̶z̶i̶n̶h̶a̶(̶t̶r̶u̶e̶,̶ ̶t̶i̶p̶o̶,̶ ̶L̶I̶M̶I̶T̶)̶.̶g̶e̶t̶C̶o̶n̶t̶e̶n̶t̶(̶)̶;̶
+    List<Restaurante> aprovadosDoTipoDeCozinha = restaurantes.findAllByAprovadoAndTipoDeCozinhaId(true, tipoDeCozinhaId, LIMIT).getContent(); // modificado ...
+
+    return calculaDistanciaParaOsRestaurantes(aprovadosDoTipoDeCozinha, cep);
+  }
+  ```
+
+4. Ainda resta um erro de compilação na classe `DistanciaService`: o uso da classe `RestauranteService`. Poderíamos fazer uma chamada remota, por meio de um cliente REST, ao monólito para obter os dados necessários. Porém, para esse serviço, acessaremos diretamente o BD.
+
+  Por isso, crie uma interface `RestauranteRepository` no pacote `br.com.caelum.eats.distancia` de `eats-distancia-service`, que estende `JpaRepository` do Spring Data Jpa e possui os métodos usados por `DistanciaService`:
+
+  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RestauranteRepository.java
+
+  ```java
+  package br.com.caelum.eats.distancia;
+
+  import org.springframework.data.domain.Page;
+  import org.springframework.data.domain.Pageable;
+  import org.springframework.data.jpa.repository.JpaRepository;
+
+  interface RestauranteRepository extends JpaRepository<Restaurante, Long> {
+
+    Page<Restaurante> findAllByAprovadoAndTipoDeCozinhaId(boolean aprovado, Long tipoDeCozinhaId, Pageable limit);
+
+    Page<Restaurante> findAllByAprovado(boolean aprovado, Pageable limit);
+
+  }
+  ```
+
+  Em `DistanciaService`, use `RestauranteRepository` ao invés de `RestauranteService`:
+
+  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/DistanciaService.java
+
+  ```java
+  // anotações ...
+  class DistanciaService {
+
+    // código omitido ...
+
+    p̶r̶i̶v̶a̶t̶e̶ ̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶S̶e̶r̶v̶i̶c̶e̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶;̶
+    private RestauranteRepository restaurantes;
+
+    // restante do código ...
+
+  }
+  ```
+
+  Limpe o import:
+
+  ```java
+  i̶m̶p̶o̶r̶t̶ ̶b̶r̶.̶c̶o̶m̶.̶c̶a̶e̶l̶u̶m̶.̶e̶a̶t̶s̶.̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶.̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶S̶e̶r̶v̶i̶c̶e̶;̶
+  ```
+
+5. Verifique se a classe `EatsDistanciaServiceApplication` está sendo executada.
+
+  Abra um Terminal e use o cURL para disparar uma chamada ao serviço de distância.
+
+  Para buscar os restaurantes mais próximos ao CEP `71503-510`:
+
+  ```sh
+  curl -i http://localhost:8082/restaurantes/mais-proximos/71503510
+  ```
+
+  A resposta será algo como:
+
+  ```txt
+  HTTP/1.1 200 
+  Content-Type: application/json;charset=UTF-8
+  Transfer-Encoding: chunked
+  Date: Wed, 22 May 2019 18:44:13 GMT
+  ```
+
+  <!--  -->
+
+  ```json
+  [
+    { "restauranteId": 1, "distancia":8.357388557756333824499961338005959987640380859375},
+    { "restauranteId": 2, "distancia":8.17018321127992663832628750242292881011962890625}
+  ]
+  ```
+
+6. (opcional) Use o cURL para buscar os restaurantes mais próximos ao CEP `71503-510` com o tipo de cozinha _Chinesa_ (que tem o id `1`):
+
+  ```sh
+  curl -i http://localhost:8082/restaurantes/mais-proximos/71503510
+  ```
+
+7. (opcional) Descubra a distância de uma dado CEP a um restaurante usando o cURL:
+
+  ```sh
+  curl -i http://localhost:8082/restaurantes/71503510/restaurante/1
+  ```
