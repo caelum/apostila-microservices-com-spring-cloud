@@ -601,3 +601,53 @@
   ```sh
   curl -i http://localhost:8082/restaurantes/71503510/restaurante/1
   ```
+
+## Exercício: fazendo UI chamar serviço de distância
+
+1. Abra o projeto `fj33-eats-ui` no Visual Studio Code e defina uma propriedade `distanciaUrl` no arquivo `environment.ts`:
+
+  ####### fj33-eats-ui/src/environments/environment.ts
+
+  ```typescript
+  export const environment = {
+    production: false,
+    baseUrl: '//localhost:8080'
+    , pagamentoUrl: '//localhost:8081'
+    , distanciaUrl: '//localhost:8082'
+  };
+  ```
+
+2. Modifique a classe `RestauranteService` para que use `distanciaUrl` nos métodos `maisProximosPorCep`, `maisProximosPorCepETipoDeCozinha`  e `distanciaPorCepEId`:
+
+  ####### fj33-eats-ui/src/app/services/restaurante.service.ts
+
+  ```typescript
+  export class RestauranteService {
+
+    private API = environment.baseUrl;
+    private DISTANCIA_API = environment.distanciaUrl; // adicionado
+
+    // código omitido ...
+
+    maisProximosPorCep(cep: string): Observable<any> {
+      r̶e̶t̶u̶r̶n̶ ̶t̶h̶i̶s̶.̶h̶t̶t̶p̶.̶g̶e̶t̶(̶`̶$̶{̶t̶h̶i̶s̶.̶A̶P̶I̶}̶/̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶/̶m̶a̶i̶s̶-̶p̶r̶o̶x̶i̶m̶o̶s̶/̶$̶{̶c̶e̶p̶}̶`̶)̶;̶
+      return this.http.get(`${this.DISTANCIA_API}/restaurantes/mais-proximos/${cep}`); // modificado
+    }
+
+    maisProximosPorCepETipoDeCozinha(cep: string, tipoDeCozinhaId: string): Observable<any> {
+      r̶e̶t̶u̶r̶n̶ ̶t̶h̶i̶s̶.̶h̶t̶t̶p̶.̶g̶e̶t̶(̶`̶$̶{̶t̶h̶i̶s̶.̶A̶P̶I̶}̶/̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶/̶m̶a̶i̶s̶-̶p̶r̶o̶x̶i̶m̶o̶s̶/̶$̶{̶c̶e̶p̶}̶/̶t̶i̶p̶o̶s̶-̶d̶e̶-̶c̶o̶z̶i̶n̶h̶a̶/̶$̶{̶t̶i̶p̶o̶D̶e̶C̶o̶z̶i̶n̶h̶a̶I̶d̶}̶`̶)̶;̶
+      return this.http.get(`${this.DISTANCIA_API}/restaurantes/mais-proximos/${cep}/tipos-de-cozinha/${tipoDeCozinhaId}`); // modificado
+    }
+
+    distanciaPorCepEId(cep: string, restauranteId: string): Observable<any> {
+      r̶e̶t̶u̶r̶n̶ ̶t̶h̶i̶s̶.̶h̶t̶t̶p̶.̶g̶e̶t̶(̶`̶$̶{̶t̶h̶i̶s̶.̶A̶P̶I̶}̶/̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶/̶$̶{̶c̶e̶p̶}̶/̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶/̶$̶{̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶I̶d̶}̶`̶)̶;̶
+      return this.http.get(`${this.DISTANCIA_API}/restaurantes/${cep}/restaurante/${restauranteId}`); // modificado
+    }
+
+    // restante do código ...
+
+  }
+  ```
+
+3. Garanta que o front-end esteja rodando e acesse `http://localhost:4200`. Busque os restaurantes de um dado CEP, escolha um dos restaurantes retornados e, na tela de detalhes do restaurante, verifique que a distância aparece logo acima da descrição. Tudo deve funcionar!
+
