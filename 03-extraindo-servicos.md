@@ -296,12 +296,14 @@
 
     // adicionado
     private ajustaIds(pagamento) {
-      pagamento.formaDePagamentoId = pagamento.formaDePagamento.id;
-      pagamento.pedidoId = pagamento.pedido.id;
+      pagamento.formaDePagamentoId = pagamento.formaDePagamentoId || pagamento.formaDePagamento.id;
+      pagamento.pedidoId = pagamento.pedidoId || pagamento.pedido.id;
     }
 
   }
   ```
+
+  O código do método privado `ajustaIds` define as propriedades `formaDePagamentoId` e `pedidoId`, caso ainda não estejam presentes.
 
 5. No componente `PagamentoPedidoComponent`, precisamos fazer ajustes para usar o atributo `pedidoId` do pagamento:
 
@@ -334,3 +336,9 @@
   _Access to XMLHttpRequest at 'http://localhost:8081/pagamentos' from origin 'http://localhost:4200' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource._
 
   Isso acontece porque precisamos habilitar o CORS no serviço de pagamentos, que está sendo invocado diretamente pelo navegador.
+
+## Exercício: habilitando CORS no serviço de pagamentos
+
+1. Copie a classe `CorsConfig` do módulo `eats-common` do monólito para `eats-pagamento-service`. Ajuste o pacote da classe copiada para `br.com.caelum.eats.pagamento`.
+
+2. Com o monólito, o serviço de pagamentos e o front-end rodando, acesse `http://localhost:4200`. Faça um novo pedido, crie e confirme um pagamento. Deve funcionar!
