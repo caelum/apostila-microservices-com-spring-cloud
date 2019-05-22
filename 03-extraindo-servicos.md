@@ -53,7 +53,7 @@
 
   Não deixe de trocar `<SEU USUARIO>` e `<SUA SENHA>` pelos valores informados pelo instrutor.
 
-6. Inicie o serviço de pagamentos, executando  .
+6. Inicie o serviço de pagamentos, executando a classe `EatsPagamentoServiceApplication`.
 
 ## Exercício: extraindo código de pagamentos do monólito
 
@@ -64,7 +64,9 @@
   - `PagamentoDto`
   - `PagamentoRepository`
 
-  Também copie a classe `ResourceNotFoundException` do pacote `br.com.caelum.eats.exception`, que está no módulo `eats-common` do monólito.
+  Também copie, do pacote `br.com.caelum.eats.exception` do módulo `eats-common` do monólito, a seguinte classe:
+
+  - `ResourceNotFoundException`
 
   Dica: você pode copiar e colar pelo próprio Eclipse.
 
@@ -158,10 +160,11 @@
     public PagamentoDto confirma(@RequestBody Pagamento pagamento) {
       pagamento.setStatus(Pagamento.Status.CONFIRMADO);
       pagamentoRepo.save(pagamento);
-      P̶e̶d̶i̶d̶o̶ ̶p̶e̶d̶i̶d̶o̶ ̶=̶ ̶p̶a̶g̶a̶m̶e̶n̶t̶o̶.̶g̶e̶t̶P̶e̶d̶i̶d̶o̶(̶)̶;̶
-      p̶e̶d̶i̶d̶o̶.̶s̶e̶t̶S̶t̶a̶t̶u̶s̶(̶P̶e̶d̶i̶d̶o̶.̶S̶t̶a̶t̶u̶s̶.̶P̶A̶G̶O̶)̶;̶
-      p̶e̶d̶i̶d̶o̶s̶.̶a̶t̶u̶a̶l̶i̶z̶a̶S̶t̶a̶t̶u̶s̶(̶P̶e̶d̶i̶d̶o̶.̶S̶t̶a̶t̶u̶s̶.̶P̶A̶G̶O̶,̶ ̶p̶e̶d̶i̶d̶o̶)̶;̶
-      w̶e̶b̶s̶o̶c̶k̶e̶t̶.̶c̶o̶n̶v̶e̶r̶t̶A̶n̶d̶S̶e̶n̶d̶(̶"̶/̶p̶a̶r̶c̶e̶i̶r̶o̶s̶/̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶/̶"̶+̶p̶e̶d̶i̶d̶o̶.̶g̶e̶t̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶(̶)̶.̶g̶e̶t̶I̶d̶(̶)̶+̶"̶/̶p̶e̶d̶i̶d̶o̶s̶/̶p̶e̶n̶d̶e̶n̶t̶e̶s̶"̶,̶ ̶p̶e̶d̶i̶d̶o̶)̶;̶
+      L̶o̶n̶g̶ ̶p̶e̶d̶i̶d̶o̶I̶d̶ ̶=̶ ̶p̶a̶g̶a̶m̶e̶n̶t̶o̶.̶g̶e̶t̶P̶e̶d̶i̶d̶o̶(̶)̶.̶g̶e̶t̶I̶d̶(̶)̶;̶
+      ̶P̶e̶d̶i̶d̶o̶ ̶p̶e̶d̶i̶d̶o̶ ̶=̶ ̶p̶e̶d̶i̶d̶o̶s̶.̶p̶o̶r̶I̶d̶C̶o̶m̶I̶t̶e̶n̶s̶(̶p̶e̶d̶i̶d̶o̶I̶d̶)̶;̶
+      ̶p̶e̶d̶i̶d̶o̶.̶s̶e̶t̶S̶t̶a̶t̶u̶s̶(̶P̶e̶d̶i̶d̶o̶.̶S̶t̶a̶t̶u̶s̶.̶P̶A̶G̶O̶)̶;̶
+      ̶p̶e̶d̶i̶d̶o̶s̶.̶a̶t̶u̶a̶l̶i̶z̶a̶S̶t̶a̶t̶u̶s̶(̶P̶e̶d̶i̶d̶o̶.̶S̶t̶a̶t̶u̶s̶.̶P̶A̶G̶O̶,̶ ̶p̶e̶d̶i̶d̶o̶)̶;̶
+      w̶e̶b̶s̶o̶c̶k̶e̶t̶.̶c̶o̶n̶v̶e̶r̶t̶A̶n̶d̶S̶e̶n̶d̶(̶"̶/̶p̶a̶r̶c̶e̶i̶r̶o̶s̶/̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶/̶"̶+̶p̶e̶d̶i̶d̶o̶.̶g̶e̶t̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶(̶)̶.̶g̶e̶t̶I̶d̶(̶)̶+̶"̶/̶p̶e̶d̶i̶d̶o̶s̶/̶p̶e̶n̶d̶e̶n̶t̶e̶s̶"̶,̶ ̶n̶e̶w̶ ̶P̶e̶d̶i̶d̶o̶D̶t̶o̶(̶p̶e̶d̶i̶d̶o̶)̶)̶;̶
       return new PagamentoDto(pagamento);
     }
   }
@@ -173,6 +176,7 @@
   i̶m̶p̶o̶r̶t̶ ̶o̶r̶g̶.̶s̶p̶r̶i̶n̶g̶f̶r̶a̶m̶e̶w̶o̶r̶k̶.̶m̶e̶s̶s̶a̶g̶i̶n̶g̶.̶s̶i̶m̶p̶.̶S̶i̶m̶p̶M̶e̶s̶s̶a̶g̶i̶n̶g̶T̶e̶m̶p̶l̶a̶t̶e̶;̶
 
   i̶m̶p̶o̶r̶t̶ ̶b̶r̶.̶c̶o̶m̶.̶c̶a̶e̶l̶u̶m̶.̶e̶a̶t̶s̶.̶p̶e̶d̶i̶d̶o̶.̶P̶e̶d̶i̶d̶o̶;̶
+  i̶m̶p̶o̶r̶t̶ ̶b̶r̶.̶c̶o̶m̶.̶c̶a̶e̶l̶u̶m̶.̶e̶a̶t̶s̶.̶p̶e̶d̶i̶d̶o̶.̶P̶e̶d̶i̶d̶o̶D̶t̶o̶;̶
   i̶m̶p̶o̶r̶t̶ ̶b̶r̶.̶c̶o̶m̶.̶c̶a̶e̶l̶u̶m̶.̶e̶a̶t̶s̶.̶p̶e̶d̶i̶d̶o̶.̶P̶e̶d̶i̶d̶o̶S̶e̶r̶v̶i̶c̶e̶;̶
   ```
 
@@ -184,9 +188,11 @@
   curl -X POST
     -i
     -H 'Content-Type: application/json'
-    -d '{ "valor": 51.8, "nome": "ALEXANDRE DA SILVA", "numero": "1111 2222 3333 4444", "expiracao": "2022-07", "codigo": "123", "formaDePagamentoId": 2, "pedidoId": 1 }'
+    -d '{ "valor": 51.8, "nome": "JOÃO DA SILVA", "numero": "1111 2222 3333 4444", "expiracao": "2022-07", "codigo": "123", "formaDePagamentoId": 2, "pedidoId": 1 }'
     http://localhost:8081/pagamentos
   ```
+
+  Para que você não precise digitar muito, o comando acima está disponível em: https://gitlab.com/snippets/1859389
 
   No comando acima, usamos as seguintes opções do cURL:
 
@@ -205,17 +211,17 @@
   ```
 
   ```json
-  { "id":7, "valor":51.8, "nome":"ALEXANDRE DA SILVA",
+  { "id":7, "valor":51.8, "nome":"JOÃO DA SILVA",
     "numero":"1111 2222 3333 4444", "expiracao":"2022-07", "codigo":"123",
     "status":"CRIADO", "formaDePagamentoId":2, "pedidoId":1}
   ```
 
-  Observação: há outros clientes para testar APIs RESTful, como o Postman. Se for o caso, peça ajuda ao instrutor para instalá-los e fique à vontade para usá-los.
+  Observação: há outros clientes para testar APIs RESTful, como o Postman. Fique à vontade para usá-los. Peça ajuda ao instrutor para instalá-los.
 
 6. Usando o id retornado no passo anterior, teste a confirmação do pagamento pelo cURL, com o seguinte comando:
 
   ```sh
-  curl -X PUT http://localhost:8081/pagamentos/7
+  curl -X PUT -i http://localhost:8081/pagamentos/7
   ```
 
   Você deve obter uma resposta semelhante a:
@@ -228,7 +234,7 @@
   ```
 
   ```json
-  { "id":7, "valor":51.80, "nome":"ALEXANDRE DA SILVA",
+  { "id":7, "valor":51.80, "nome":"JOÃO DA SILVA",
     "numero":"1111 2222 3333 4444", "expiracao":"2022-07", "codigo":"123",
     "status":"CONFIRMADO","formaDePagamentoId":2,"pedidoId":1}
   ```
