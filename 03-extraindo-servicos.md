@@ -649,5 +649,36 @@
   }
   ```
 
-3. Garanta que o front-end esteja rodando e acesse `http://localhost:4200`. Busque os restaurantes de um dado CEP, escolha um dos restaurantes retornados e, na tela de detalhes do restaurante, verifique que a distância aparece logo acima da descrição. Tudo deve funcionar!
+3. Garanta que o front-end esteja rodando e acesse `http://localhost:4200`. Busque os restaurantes de um dado CEP, escolha um dos restaurantes retornados e, na tela de detalhes do restaurante, verifique que a distância aparece logo acima da descrição. Deve funcionar!
 
+## Exercício: removendo código de distância do monólito
+
+1. Remova a dependência a `eats-distancia` do `pom.xml` do módulo `eats-application`:
+
+  ####### fj33-eats-monolito-modular/eats/eats-application/pom.xml
+
+  ```xml
+  <̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
+  ̶ ̶ ̶<̶g̶r̶o̶u̶p̶I̶d̶>̶b̶r̶.̶c̶o̶m̶.̶c̶a̶e̶l̶u̶m̶<̶/̶g̶r̶o̶u̶p̶I̶d̶>̶
+  ̶ ̶ ̶<̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶e̶a̶t̶s̶-̶d̶i̶s̶t̶a̶n̶c̶i̶a̶<̶/̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶
+  ̶ ̶ ̶<̶v̶e̶r̶s̶i̶o̶n̶>̶$̶{̶p̶r̶o̶j̶e̶c̶t̶.̶v̶e̶r̶s̶i̶o̶n̶}̶<̶/̶v̶e̶r̶s̶i̶o̶n̶>̶
+  ̶<̶/̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
+  ```
+
+2. No `pom.xml` do projeto `eats`, o módulo pai, remova a declaração do módulo `eats-distancia`:
+
+  ####### fj33-eats-monolito-modular/eats/pom.xml
+
+  ```xml
+  <modules>
+    <module>eats-admin</module>
+    <module>eats-restaurante</module>
+    <module>eats-pedido</module>
+    <̶m̶o̶d̶u̶l̶e̶>̶e̶a̶t̶s̶-̶d̶i̶s̶t̶a̶n̶c̶i̶a̶<̶/̶m̶o̶d̶u̶l̶e̶>̶
+    <module>eats-seguranca</module>
+    <module>eats-common</module>
+    <module>eats-application</module>
+  </modules>
+  ```
+
+3. Apague o código do módulo `eats-distancia` do monólito. Pelo Eclipse, tecle _Delete_ em cima do módulo, selecione a opção _Delete project contents on disk (cannot be undone)_ e clique em _OK_.
