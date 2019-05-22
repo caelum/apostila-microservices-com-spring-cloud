@@ -240,3 +240,97 @@
   ```
 
   Observe que o status foi modificado para _CONFIRMADO_.
+
+## Exercício: fazendo UI chamar novo serviço de pagamentos
+
+1. Abra o Visual Studio Code e acesse o menu _File > Open Folder..._. Abra o projeto `fj33-eats-ui` do seu Desktop.
+2. Adicione uma propriedade `pagamentoUrl`, que aponta para o endereço do novo serviço de pagamentos, no arquivo `environment.ts`:
+
+  ####### fj33-eats-ui/src/environments/environment.ts
+
+  ```typescript
+  export const environment = {
+    production: false,
+    baseUrl: '//localhost:8080'
+    , pagamentoUrl: '//localhost:8081' //adicionado
+  };
+  ```
+
+3. Use a nova propriedade `pagamentoUrl` na classe `PagamentoService`:
+
+  ####### fj33-eats-ui/src/app/services/pagamento.service.ts
+
+  ```typescript
+  export class PagamentoService {
+
+    p̶r̶i̶v̶a̶t̶e̶ ̶A̶P̶I̶ ̶=̶ ̶e̶n̶v̶i̶r̶o̶n̶m̶e̶n̶t̶.̶b̶a̶s̶e̶U̶r̶l̶ ̶+̶ ̶'̶/̶p̶a̶g̶a̶m̶e̶n̶t̶o̶s̶'̶;̶
+    private API = environment.pagamentoUrl + '/pagamentos';
+
+    // restante do código ...
+  }
+  ```
+
+4. No `eats-pagamento-service`, trocamos referências às entidades `Pedido` e `FormaDePagamento` pelos respectivos ids. Essa mudança afeta o código do front-end. Faça o ajuste dos ids na classe `PagamentoService`:
+
+  ####### fj33-eats-ui/src/app/services/pagamento.service.ts
+
+  ```typescript
+  export class PagamentoService {
+
+    // código omitido ...
+
+    cria(pagamento): Observable<any> {
+      this.ajustaIds(pagamento); // adicionado
+      return this.http.post(`${this.API}`, pagamento);
+    }
+
+    confirma(pagamento): Observable<any> {
+      this.ajustaIds(pagamento); // adicionado
+      return this.http.put(`${this.API}/${pagamento.id}`, null);
+    }
+
+    cancela(pagamento): Observable<any> {
+      this.ajustaIds(pagamento); // adicionado
+      return this.http.delete(`${this.API}/${pagamento.id}`);
+    }
+
+    // adicionado
+    private ajustaIds(pagamento) {
+      pagamento.formaDePagamentoId = pagamento.formaDePagamento.id;
+      pagamento.pedidoId = pagamento.pedido.id;
+    }
+
+  }
+  ```
+
+5. No componente `PagamentoPedidoComponent`, precisamos fazer ajustes para usar o atributo `pedidoId` do pagamento:
+
+  ####### fj33-eats-ui/src/app/pedido/pagamento/pagamento-pedido.component.ts
+
+  ```typescript
+  export class PagamentoPedidoComponent implements OnInit {
+
+    // código omitido ...
+
+    confirmaPagamento() {
+      this.pagamentoService.confirma(this.pagamento)
+        .̶s̶u̶b̶s̶c̶r̶i̶b̶e̶(̶p̶a̶g̶a̶m̶e̶n̶t̶o̶ ̶=̶>̶ ̶t̶h̶i̶s̶.̶r̶o̶u̶t̶e̶r̶.̶n̶a̶v̶i̶g̶a̶t̶e̶B̶y̶U̶r̶l̶(̶`̶p̶e̶d̶i̶d̶o̶s̶/̶$̶{̶p̶a̶g̶a̶m̶e̶n̶t̶o̶.̶p̶e̶d̶i̶d̶o̶.̶i̶d̶}̶/̶s̶t̶a̶t̶u̶s̶`̶)̶)̶;̶
+        .subscribe(pagamento => this.router.navigateByUrl(`pedidos/${pagamento.pedidoId}/status`));
+    }
+
+    // restante do código ...
+
+  }
+  ```
+
+6. Certifique-se que tanto o monólito como o serviço de pagamentos estejam rodando. Para subir o monólito, a classe `EatsApplication` do módulo `eats-application` deve ser executada. Já para o `eats-pagamento-service`, deve ser executada a classe `EatsPagamentoServiceApplication`.
+
+  Veja também se o front-end está sendo executado. Caso não esteja, abra um Terminal e, na pasta `fj33-eats-ui` do Desktop, execute o comando `ng serve`.
+
+  Acesse `http://localhost:4200` e realize um pedido. Tente criar um pagamento.
+
+  Deve ocorrer um _Erro no Servidor_. O Console do navegador, acessível com F12, deve ter um erro parecido com:
+
+  _Access to XMLHttpRequest at 'http://localhost:8081/pagamentos' from origin 'http://localhost:4200' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource._
+
+  Isso acontece porque precisamos habilitar o CORS no serviço de pagamentos, que está sendo invocado diretamente pelo navegador.
