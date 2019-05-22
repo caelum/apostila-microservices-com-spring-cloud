@@ -341,4 +341,8 @@
 
 1. Copie a classe `CorsConfig` do módulo `eats-common` do monólito para `eats-pagamento-service`. Ajuste o pacote da classe copiada para `br.com.caelum.eats.pagamento`.
 
-2. Com o monólito, o serviço de pagamentos e o front-end rodando, acesse `http://localhost:4200`. Faça um novo pedido, crie e confirme um pagamento. Deve funcionar!
+2. Com o monólito, o serviço de pagamentos e o front-end rodando, acesse `http://localhost:4200`.
+
+  Faça um novo pedido, crie e confirme um pagamento. Deve funcionar!
+
+  Note apenas um detalhe: o status do pedido, exibido na tela após a confirmação do pagamento, está _REALIZADO_ e não _PAGO_. Iremos corrigir isso posteriormente.
