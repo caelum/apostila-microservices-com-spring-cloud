@@ -379,3 +379,57 @@
   ```
 
 3. Apague o módulo `eats-pagamento` do monólito. Pelo Eclipse, tecle _Delete_ em cima do módulo, selecione a opção _Delete project contents on disk (cannot be undone)_ e clique em _OK_.
+
+## Exercício: criando um microservice de distância
+
+1. Abra `https://start.spring.io/` no navegador.
+  Em _Project_, mantenha _Maven Project_.
+  Em _Language_, mantenha _Java_.
+  Em _Spring Boot_, mantenha a versão padrão.
+  No trecho de _Project Metadata_, defina:
+
+  - `br.com.caelum` em _Group_
+  - `eats-distancia-service` em _Artifact_
+
+  Clique em _More options_.
+  Mantenha o valor em _Name_.
+  Apague a _Description_, deixando-a em branco.
+  Em _Package Name_, mude para `br.com.caelum.eats.distancia`.
+
+  Mantenha o _Packaging_ como `Jar`.
+  Mantenha a _Java Version_ em `8`.
+
+  Em _Dependencies_, adicione:
+
+  - Web
+  - Validation
+  - DevTools
+  - Lombok
+  - JPA
+  - MySQL
+
+  Clique em _Generate Project_.
+2. Descompacte o `eats-distancia-service.zip` para seu Desktop.
+4. Importe o projeto `eats-distancia-service`, por meio do menu _File > Import > Existing Maven Projects_ do Ecllipse, no workspace de microservices.
+5. Edite o arquivo `src/main/resources/application.properties`, modificando a porta para 8082, apontando para o BD do monólito, além de definir configurações do JPA e de serialização de JSON:
+
+  ####### eats-distancia-service/src/main/resources/application.properties
+
+  ```properties
+  server.port = 8082
+
+  #DATASOURCE CONFIGS
+  spring.datasource.url=jdbc:mysql://localhost/eats?createDatabaseIfNotExist=true
+  spring.datasource.username=<SEU USUARIO>
+  spring.datasource.password=<SUA SENHA>
+
+  #JPA CONFIGS
+  spring.jpa.hibernate.ddl-auto=validate
+  spring.jpa.show-sql=true
+
+  spring.jackson.serialization.fail-on-empty-beans=false
+  ```
+
+  Troque `<SEU USUARIO>` e `<SUA SENHA>` pelos valores informados pelo instrutor.
+
+6. Execute a classe `EatsDistanciaServiceApplication`.
