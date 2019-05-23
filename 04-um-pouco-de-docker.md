@@ -37,13 +37,61 @@
   183bc210a6071b46c4dd790858e07573b28cfa6394a7017cb9fa6d4c9af71563   mysql:5.7           "docker-entrypoint.sh mysqld"   16 minutes ago      Up 16 minutes       33060/tcp, 0.0.0.0:3307->3306/tcp   eats.mysql
   ```
 
+  É possível formatar as informações, deixando a saída do comando mais enxuta. Para isso, use a opção `--format`:
+
+  ```sh
+  docker ps --format "{{.Image}}\t{{.Names}}"
+  ```
+
+  O resultado será semelhante a:
+
+  ```txt
+  mysql:5.7     eats.mysql
+  ```
+
 4. Acesse os logs do container `eats.mysql` com o comando:
 
   ```sh
   docker logs eats.mysql
   ```
 
-5. Pare a execução do container `eats.mysql` com o comando a seguir:
+5. Podemos executar um comando dentro de um container por meio do `docker exec`.
+
+  Para acessar a interface de linha de comando do MySQL (o comando `mysql`) com o database e usuário criados em passos anteriores, devemos executar:
+
+  ```sh
+  docker exec -it eats.mysql mysql -upagamento -p eats_pagamento
+  ```
+
+  A opção `-i` (ou `--interactive`) repassa a entrada padrão do host para o container do Docker.
+
+  Já a opção `-t` (ou `--tty`) simula um Terminal dentro do container.
+
+  Informe a senha `pagamento123`, registrada em passos anteriores.
+
+  Devem ser impressas informações sobre o MySQL, cuja versão deve ser _5.7.26 MySQL Community Server (GPL)_.
+
+  Digite o seguinte comando:
+
+  ```sql
+  show databases;
+  ```
+
+  Deve ser exibido algo semelhante a:
+
+  ```txt
+  +--------------------+
+  | Database           |
+  +--------------------+
+  | information_schema |
+  | eats_pagamento     |
+  +--------------------+
+  2 rows in set (0.00 sec)
+  ```
+
+  Para sair, digite `exit`.
+
+6. Pare a execução do container `eats.mysql` com o comando a seguir:
 
   ```sh
   docker stop eats.mysql
@@ -120,19 +168,6 @@
   4890dcb9e898        mongo:3.6           "docker-entrypoint..."   26 minutes ago      Up 3 minutes        0.0.0.0:27018->27017/tcp            eats-microservices_mongo.distancia_1
   ```
 
-  É possível formatar as informações, deixando a saída do comando mais enxuta. Para isso, use a opção `--format`:
-
-  ```sh
-  docker ps --format "{{.Image}}\t{{.Names}}"
-  ```
-
-  O resultado será semelhante a:
-
-  ```txt
-  mysql:5.7     eats-microservices_mysql.pagamento_1
-  mongo:3.6     eats-microservices_mongo.distancia_1
-  ```
-
 3. Você pode obter os logs de ambos os containers com o seguinte comando:
 
   ```sh
@@ -157,6 +192,6 @@
   docker-compose stop
   ```
 
-  Para iniciá-los novamente, faça um `docker-compose start`.
+  Depois de parados com `stop`, para iniciá-los novamente, faça um `docker-compose start`.
 
-  É possível parar e remover um _service_ específico, passando-o no final do comando.
+  É possível parar e remover um _service_ específico, passando seu nome no final do comando.
