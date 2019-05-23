@@ -168,7 +168,33 @@
   4890dcb9e898        mongo:3.6           "docker-entrypoint..."   26 minutes ago      Up 3 minutes        0.0.0.0:27018->27017/tcp            eats-microservices_mongo.distancia_1
   ```
 
-3. Você pode obter os logs de ambos os containers com o seguinte comando:
+3. É possível executar um Terminal diretamente em uma dos containers criados pelo Docker Compose com o comando `docker-compose exec`.
+
+  Por exemplo, para acessar o comando `mongo`, a interface de linha de comando do MongoDB, do service `mongo.distancia`, faça:
+
+  ```sh
+   docker-compose exec mongo.distancia mongo
+  ```
+
+  Devem aparecer informações sobre o MongoDB, como a versão, que deve ser algo como _MongoDB server version: 3.6.12_.
+
+  Digite o seguinte comando:
+
+  ```sh
+  show dbs
+  ```
+
+  Deve ser impresso algo parecido com:
+
+  ```txt
+  admin   0.000GB
+  config  0.000GB
+  local   0.000GB
+  ```
+
+  Para sair, digite `quit()`, com os parênteses.
+
+4. Você pode obter os logs de ambos os containers com o seguinte comando:
 
   ```sh
   docker-compose logs
@@ -180,7 +206,7 @@
   docker-compose logs mysql.pagamento
   ```
 
-4. Para parar todos os _services_ e remover os containers, volumes e imagens associados, use:
+5. Para parar todos os _services_ e remover os containers, volumes e imagens associados, use:
 
   ```sh
   docker-compose down
