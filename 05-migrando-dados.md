@@ -123,41 +123,27 @@
   docker-compose up -d mysql.pagamento
   ```
 
-  Anote o nome do container criado pelo Docker Compose, através do comando:
+3. Pela linha de comando, vamos executar, no container de `mysql.pagamento`, o script `eats_pagamento.sql`.
+
+  Para isso, vamos usar o comando `mysql` informando _host_ e porta do container Docker:
 
   ```sh
-  docker ps --format "{{.Image}}\t{{.Names}}"
+  mysql -u pagamento -p --host 127.0.0.1 --port 3307 eats_pagamento < eats_pagamento.sql
   ```
 
-  A saída será parecida com:
+  _Observação: o comando `mysql` não aceita `localhost`, apenas o IP `127.0.0.1`._
 
-  ```txt
-  mysql:5.7     eats-microservices_mysql.pagamento_1
-  ```
+  Quando for solicitada a senha, informe a que definimos no arquivo do Docker Compose: `pagamento123`.
 
-  O nome do container que está executando o MySQL de pagamentos é `eats-microservices_mysql.pagamento_1`. Usaremos esse nome logo mais.
-
-3. Pela linha de comando, vamos executar o script `eats_pagamento.sql`, que contém o dump dos dados de pagamento, no container criado pelo Docker Compose.
-
-  Vamos obter o conteúdo do arquivo `eats_pagamento.sql` por meio do comando `cat` e repassá-lo, por meio de um _pipe_ do Unix, para a aplicação de linha de comando do MySQL, que será executada pelo Docker.
-
-  O comando completo de execução do script fica algo como:
+4. Para verificar se a importação do dump foi realizada com sucesso, vamos acessar o comando `mysql` sem passar nenhum arquivo:
 
   ```sh
-  cat eats_pagamento.sql | docker exec -i eats-microservices_mysql.pagamento_1 mysql -upagamento -ppagamento123 eats_pagamento
+  mysql -u pagamento -p --host 127.0.0.1 --port 3307 eats_pagamento
   ```
 
-  O `docker exec`, executa um comando dentro do container e a opção `-i` (ou `--interactive`) repassa a entrada padrão do host para o container do Docker.
+  Informe a senha `pagamento123`.
 
-4. Para verificar se o dump foi realizado com sucesso no container Docker que roda o MySQL de pagamentos, vamos acessar pelo cliente de linha de comando do MySQL. Para isso, execute em um Terminal:
-
-  ```sh
-  docker exec -it eats-microservices_mysql.pagamento_1 mysql -upagamento -ppagamento123 eats_pagamento
-  ```
-
-  Observe que a única diferença em relação ao `docker exec` anterior é a opção `-t` (ou `--tty`), que simula um Terminal dentro do container.
-
-  Devem ser impressas informações sobre o MySQL, que deve estar na versão _5.7.26 MySQL Community Server (GPL)_.
+  Perceba que o MySQL deve estar na versão _5.7.26 MySQL Community Server (GPL)_, a que definimos no arquivo do Docker Compose.
 
   Digite o seguinte comando SQL e verifique o resultado:
 
@@ -166,3 +152,42 @@
   ```
 
   Devem ser exibidos todos os pagamentos já efetuados!
+
+  Para sair, digite `exit`.
+
+## Exercício: apontando serviço de pagamentos para o BD específico
+
+1. Altere a URL, usuário e senha de BD do serviço de pagamentos, para que apontem para o container Docker do `mysql.pagamento`:
+
+  ####### eats-pagamento-service/src/main/resources/application.properties
+
+  ```properties
+  s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶u̶r̶l̶=̶j̶d̶b̶c̶:̶m̶y̶s̶q̶l̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶/̶e̶a̶t̶s̶_̶p̶a̶g̶a̶m̶e̶n̶t̶o̶?̶c̶r̶e̶a̶t̶e̶D̶a̶t̶a̶b̶a̶s̶e̶I̶f̶N̶o̶t̶E̶x̶i̶s̶t̶=̶t̶r̶u̶e̶
+  spring.datasource.url=jdbc:mysql://localhost:3307/eats_pagamento?createDatabaseIfNotExist=true
+
+  s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶u̶s̶e̶r̶n̶a̶m̶e̶=̶<̶S̶E̶U̶ ̶U̶S̶U̶A̶R̶I̶O̶>̶
+  spring.datasource.username=pagamento
+
+  s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶p̶a̶s̶s̶w̶o̶r̶d̶=̶<̶S̶U̶A̶ ̶S̶E̶N̶H̶A̶>̶
+  spring.datasource.password=pagamento123
+  ```
+
+  Note que a porta `3307` foi incluída na URL, mas mantivemos ainda `localhost`.
+
+2. Com a classe `EatsPagamentoServiceApplication` sendo executada, abra um Terminal e crie um novo pagamento:
+
+   ```sh
+  curl -X POST
+    -i
+    -H 'Content-Type: application/json'
+    -d '{ "valor": 9.99, "nome": "MARIA DE SOUSA", "numero": "777 2222 8888 4444", "expiracao": "2025-04", "codigo": "777", "formaDePagamentoId": 1, "pedidoId": 2 }'
+    http://localhost:8081/pagamentos
+  ```
+
+  Se desejar, baseie-se na seguinte URL, modificando os valores: https://gitlab.com/snippets/1859389
+
+  A resposta deve ter sucesso, com status `200` e o um id e status `CRIADO` no corpo da resposta.
+
+3. Pelo Eclipse, inicie o monólito e o serviço de distância. Suba também o front-end. Faça um novo pedido, até efetuar o pagamento. Deve funcionar!
+
+4. (opcional) Apague a tabela `pagamento` do database `eats`, do monólito. Remova também o database `eats_pagamento` do MySQL do monólito. Atenção: muito cuidado para não remover dados indesejados!
