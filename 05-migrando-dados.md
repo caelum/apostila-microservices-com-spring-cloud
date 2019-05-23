@@ -193,7 +193,7 @@
 4. (opcional) Apague a tabela `pagamento` do database `eats`, do monólito. Remova também o database `eats_pagamento` do MySQL do monólito. Atenção: muito cuidado para não remover dados indesejados!
 
 
-## Exercício: Simplificando o restaurante do serviço de distância
+## Exercício: simplificando o restaurante do serviço de distância
 
 1. O `eats-distancia-service` necessita apenas de um subconjunto das informações do restaurante: o `id`, o `cep`, se o restaurante está `aprovado` e o `tipoDeCozinhaId`.
 
@@ -269,3 +269,78 @@
   i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶v̶a̶l̶i̶d̶a̶t̶i̶o̶n̶.̶c̶o̶n̶s̶t̶r̶a̶i̶n̶t̶s̶.̶P̶o̶s̶i̶t̶i̶v̶e̶;̶
   i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶v̶a̶l̶i̶d̶a̶t̶i̶o̶n̶.̶c̶o̶n̶s̶t̶r̶a̶i̶n̶t̶s̶.̶S̶i̶z̶e̶;̶
   ```
+
+## Exercício: configurando MongoDB no serviço de distância
+
+2. Certifique-se que o container MongoDB do serviço de distância definido no Docker Compose esteja no ar. Para isso, execute em um Terminal:
+
+  ```sh
+  docker-compose up -d mongo.distancia
+  ```
+
+1. Adicione o _starter_ do Spring Data MongoDB no `pom.xml` do `eats-distancia-service`:
+
+  ####### eats-distancia-service/pom.xml
+
+  ```xml
+  <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-mongodb</artifactId>
+  </dependency>
+  ```
+
+2. Crie a classe `RestauranteMongo` no pacote `br.com.caelum.eats.distancia.mongo` com o seguinte código:
+
+  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/mongo/RestauranteMongo.java
+
+  ```java
+  @Document(collection = "restaurantes")
+  @Data
+  @AllArgsConstructor
+  public class RestauranteMongo {
+
+    @Id
+    private Long id;
+
+    private String cep;
+
+    private Long tipoDeCozinhaId;
+
+  }
+  ```
+
+  Os imports corretos são os seguintes:
+
+  ```java
+  import org.springframework.data.annotation.Id;
+  import org.springframework.data.mongodb.core.mapping.Document;
+
+  import lombok.AllArgsConstructor;
+  import lombok.Data;
+  ```
+
+  Note que o `@Id` foi importado de `org.springframework.data.annotation` e **não** de `javax.persistence` (do JPA).
+
+3. No mesmo pacote `br.com.caelum.eats.distancia.mongo`, crie uma interface `RestauranteMongoRepository` que estende `MongoRepository`:
+
+  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/mongo/RestauranteMongoRepository.java
+
+  ```java
+  public interface RestauranteMongoRepository extends MongoRepository<RestauranteMongo, Long> {
+  }
+  ```
+
+4. No arquivo `application.properties` do `eats-distancia-service`, ajuste as configurações do MongoDB:
+
+  ####### eats-distancia-service/src/main/resources/application.properties
+
+  ```properties
+  spring.data.mongodb.database=eats_distancia
+  spring.data.mongodb.port=27018
+  ```
+
+  O database padrão do MongoDB é `test`. A porta padrão é `27017`.
+
+  Para saber sobre outras propriedades, consulte: https://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
+
+
