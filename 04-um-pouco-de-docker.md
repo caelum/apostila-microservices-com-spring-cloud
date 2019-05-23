@@ -57,4 +57,90 @@
   docker pull mongo:3.6
   ```
 
+2. Execute o MongoDb 3.6 em um container com o comando:
+
+  ```sh
+  docker run --rm -d -p 27018:27017 --name eats.mongo mongo:3.6
+  ```
+
+  Note que mudamos a porta do host para `27018`. A porta padrão do MongoDB é `27017`.
+
+3. Liste os containers, obtenha os logs de `eats.mongo` e pare a execução. Use como exemplo os comandos listados no exercício do MySQL.
+
 ## Exercício: gerenciando containers de infraestrutura com Docker Compose
+
+1. No seu Desktop, defina um arquivo `docker-compose.yml` com o seguinte conteúdo:
+
+  ####### docker-compose.yml
+
+  ```yml
+  version: '3'
+
+  services:
+    mysql.pagamento:
+      image: mysql:5.7
+      restart: on-failure
+      ports:
+        - "3307:3306"
+      environment:
+        MYSQL_ROOT_PASSWORD: "caelum123"
+    mongo.distancia:
+      image: mongo:3.6
+      restart: on-failure
+      ports:
+        - "27018:27017"
+  ```
+
+  Observação: mantenha os TABs certinhos. São muito importantes em um arquivo `.yml`. Em caso de dúvida, peça ajuda ao instrutor.
+
+  Caso não queira digita, o conteúdo do `docker-compose.yml` pode ser encontrado em: https://gitlab.com/snippets/1859850
+
+2. Mude para o diretório do `docker-compose.yml` , o Desktop, no caso. Suba ambos os containers, do MySQL e do MongoDB, com o comando:
+
+  ```sh
+  docker-compose up -d
+  ```
+
+  A opção `-d`, ou `--detach`, roda os containers no background, liberando o Terminal.
+
+  Observe os containers sendo executados com o comando do Docker:
+
+  ```sh
+  docker ps
+  ```
+
+  Deverá ser impresso algo como:
+
+  ```txt
+  CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                               NAMES
+  49bf0d3241ad        mysql:5.7           "docker-entrypoint..."   26 minutes ago      Up 3 minutes        33060/tcp, 0.0.0.0:3307->3306/tcp   eats-microservices_mysql.pagamento_1
+  4890dcb9e898        mongo:3.6           "docker-entrypoint..."   26 minutes ago      Up 3 minutes        0.0.0.0:27018->27017/tcp            eats-microservices_mongo.distancia_1
+  ```
+
+3. Você pode obter os logs de ambos os containers com o seguinte comando:
+
+  ```sh
+  docker-compose logs
+  ```
+
+  Caso queira os logs apenas de um container específico, basta passar o nome do _service_ (o termo para uma configuração do Docker Compose). Para o MySQL, seria algo como:
+
+  ```sh
+  docker-compose logs mysql.pagamento
+  ```
+
+4. Para parar todos os _services_ e remover os containers, volumes e imagens associados, use:
+
+  ```sh
+  docker-compose down
+  ```
+
+  Se desejar apenas parar os _services_, sem remover nada, o seguinte comando dever ser usado:
+
+  ```sh
+  docker-compose stop
+  ```
+
+  Para iniciá-los novamente, faça um `docker-compose start`.
+
+  É possível parar e remover um _service_ específico, passando-o no final do comando.
