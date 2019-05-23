@@ -84,7 +84,7 @@
   mysql -u <SEU USUÁRIO> -p eats_pagamento
   ```
 
-  Troque `<SEU USUÁRIO>` pelo usuário informado pelo instrutor. Quando solicitada, digite a informada pelo instrutor.
+  Troque `<SEU USUÁRIO>` pelo usuário informado pelo instrutor. Quando solicitada, digite a senha informada pelo instrutor.
 
   Dentro do MySQL, execute a seguinte query:
 
@@ -93,3 +93,76 @@
   ```
 
   Os pagamentos devem ter sido migrados. Note as colunas `forma_de_pagamento_id` e `pedido_id`.
+
+## Exercício: migrando dados de pagamento para um servidor MySQL específico
+
+1. Abra um Terminal e faça um dump do dados de pagamento com o comando a seguir:
+
+  ```sh
+  mysqldump -u <SEU USUÁRIO> -p --opt eats_pagamento > eats_pagamento.sql
+  ```
+
+  Peça ao instrutor o usuário do BD e use em `<SEU USUÁRIO>`. Peça também a senha.
+
+  O comando anterior cria um arquivo `eats_pagamento.sql` com todo o schema e dados do database `eats_pagamento`.
+
+  A opção `--opt` equivale às opções:
+  
+    - `--add-drop-table`, que adiciona um `DROP TABLE` antes de cada `CREATE TABLE`
+    - `--add-locks`, que faz um `LOCK TABLES` e `UNLOCK TABLES` em volta de cada dump
+    - `--create-options`, que inclui opções específicas do MySQL nos `CREATE TABLE`
+    - `--disable-keys`, que desabilita e habilita PKs e FKs em volta de cada `INSERT`
+    - `--extended-insert`, que faz um `INSERT` de múltiplos registros de uma vez
+    - `--lock-tables`, que trava as tabelas antes de realizar o dump
+    - `--quick`, que lê os registros um a um
+    - `--set-charset`, que adiciona `default_character_set` ao dump
+
+2. Garanta que o container MySQL do serviço de pagamentos está sendo executado. Para isso, execute em um Terminal:
+
+  ```sh
+  docker-compose up -d mysql.pagamento
+  ```
+
+  Anote o nome do container criado pelo Docker Compose, através do comando:
+
+  ```sh
+  docker ps --format "{{.Image}}\t{{.Names}}"
+  ```
+
+  A saída será parecida com:
+
+  ```txt
+  mysql:5.7     eats-microservices_mysql.pagamento_1
+  ```
+
+  O nome do container que está executando o MySQL de pagamentos é `eats-microservices_mysql.pagamento_1`. Usaremos esse nome logo mais.
+
+3. Pela linha de comando, vamos executar o script `eats_pagamento.sql`, que contém o dump dos dados de pagamento, no container criado pelo Docker Compose.
+
+  Vamos obter o conteúdo do arquivo `eats_pagamento.sql` por meio do comando `cat` e repassá-lo, por meio de um _pipe_ do Unix, para a aplicação de linha de comando do MySQL, que será executada pelo Docker.
+
+  O comando completo de execução do script fica algo como:
+
+  ```sh
+  cat eats_pagamento.sql | docker exec -i eats-microservices_mysql.pagamento_1 mysql -upagamento -ppagamento123 eats_pagamento
+  ```
+
+  O `docker exec`, executa um comando dentro do container e a opção `-i` (ou `--interactive`) repassa a entrada padrão do host para o container do Docker.
+
+4. Para verificar se o dump foi realizado com sucesso no container Docker que roda o MySQL de pagamentos, vamos acessar pelo cliente de linha de comando do MySQL. Para isso, execute em um Terminal:
+
+  ```sh
+  docker exec -it eats-microservices_mysql.pagamento_1 mysql -upagamento -ppagamento123 eats_pagamento
+  ```
+
+  Observe que a única diferença em relação ao `docker exec` anterior é a opção `-t` (ou `--tty`), que simula um Terminal dentro do container.
+
+  Devem ser impressas informações sobre o MySQL, que deve estar na versão _5.7.26 MySQL Community Server (GPL)_.
+
+  Digite o seguinte comando SQL e verifique o resultado:
+
+  ```sql
+  select * from pagamento;
+  ```
+
+  Devem ser exibidos todos os pagamentos já efetuados!
