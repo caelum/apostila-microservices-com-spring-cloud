@@ -191,3 +191,81 @@
 3. Pelo Eclipse, inicie o monólito e o serviço de distância. Suba também o front-end. Faça um novo pedido, até efetuar o pagamento. Deve funcionar!
 
 4. (opcional) Apague a tabela `pagamento` do database `eats`, do monólito. Remova também o database `eats_pagamento` do MySQL do monólito. Atenção: muito cuidado para não remover dados indesejados!
+
+
+## Exercício: Simplificando o restaurante do serviço de distância
+
+1. O `eats-distancia-service` necessita apenas de um subconjunto das informações do restaurante: o `id`, o `cep`, se o restaurante está `aprovado` e o `tipoDeCozinhaId`.
+
+  Enxugue a classe `Restaurante` do pacote `br.com.caelum.eats.distancia`, deixando apenas as informações realmente necessárias:
+
+  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/Restaurante.java
+
+  ```java
+  // anotações ...
+  public class Restaurante {
+
+    @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
+    private Long id;
+
+    @̶N̶o̶t̶B̶l̶a̶n̶k̶ ̶@̶S̶i̶z̶e̶(̶m̶a̶x̶=̶1̶8̶)̶
+    p̶r̶i̶v̶a̶t̶e̶ ̶S̶t̶r̶i̶n̶g̶ ̶c̶n̶p̶j̶;̶
+
+    @̶N̶o̶t̶B̶l̶a̶n̶k̶ ̶@̶S̶i̶z̶e̶(̶m̶a̶x̶=̶2̶5̶5̶)̶
+    p̶r̶i̶v̶a̶t̶e̶ ̶S̶t̶r̶i̶n̶g̶ ̶n̶o̶m̶e̶;̶ 
+
+    @̶S̶i̶z̶e̶(̶m̶a̶x̶=̶1̶0̶0̶0̶)̶
+    p̶r̶i̶v̶a̶t̶e̶ ̶S̶t̶r̶i̶n̶g̶ ̶d̶e̶s̶c̶r̶i̶c̶a̶o̶;̶
+
+    @̶N̶o̶t̶B̶l̶a̶n̶k̶ ̶@̶S̶i̶z̶e̶(̶m̶a̶x̶=̶9̶)̶
+    private String cep;
+
+    @̶N̶o̶t̶B̶l̶a̶n̶k̶ ̶@̶S̶i̶z̶e̶(̶m̶a̶x̶=̶3̶0̶0̶)̶
+    p̶r̶i̶v̶a̶t̶e̶ ̶S̶t̶r̶i̶n̶g̶ ̶e̶n̶d̶e̶r̶e̶c̶o̶;̶
+
+    @̶P̶o̶s̶i̶t̶i̶v̶e̶
+    ̶p̶r̶i̶v̶a̶t̶e̶ ̶B̶i̶g̶D̶e̶c̶i̶m̶a̶l̶ ̶t̶a̶x̶a̶D̶e̶E̶n̶t̶r̶e̶g̶a̶E̶m̶R̶e̶a̶i̶s̶;̶
+
+    @̶P̶o̶s̶i̶t̶i̶v̶e̶ ̶@̶M̶i̶n̶(̶1̶0̶)̶ ̶@̶M̶a̶x̶(̶1̶8̶0̶)̶
+    p̶r̶i̶v̶a̶t̶e̶ ̶I̶n̶t̶e̶g̶e̶r̶ ̶t̶e̶m̶p̶o̶D̶e̶E̶n̶t̶r̶e̶g̶a̶M̶i̶n̶i̶m̶o̶E̶m̶M̶i̶n̶u̶t̶o̶s̶;̶
+
+    @̶P̶o̶s̶i̶t̶i̶v̶e̶ ̶@̶M̶i̶n̶(̶1̶0̶)̶ ̶@̶M̶a̶x̶(̶1̶8̶0̶)̶
+    p̶r̶i̶v̶a̶t̶e̶ ̶I̶n̶t̶e̶g̶e̶r̶ ̶t̶e̶m̶p̶o̶D̶e̶E̶n̶t̶r̶e̶g̶a̶M̶a̶x̶i̶m̶o̶E̶m̶M̶i̶n̶u̶t̶o̶s̶;̶
+
+    private Boolean aprovado;
+
+    private Long tipoDeCozinhaId;
+
+  }
+  ```
+
+  O conteúdo da classe `Restaurante` ficará da seguinte maneira:
+
+  ```java
+  // anotações ...
+  public class Restaurante {
+
+    @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
+    private Long id;
+
+    private String cep;
+
+    private Boolean aprovado;
+
+    private Long tipoDeCozinhaId;
+
+  }
+  ```
+
+  Alguns dos imports podem ser removidos:
+
+  ```java
+  i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶.̶m̶a̶t̶h̶.̶B̶i̶g̶D̶e̶c̶i̶m̶a̶l̶;̶
+
+  i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶p̶e̶r̶s̶i̶s̶t̶e̶n̶c̶e̶.̶T̶a̶b̶l̶e̶;̶
+  i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶v̶a̶l̶i̶d̶a̶t̶i̶o̶n̶.̶c̶o̶n̶s̶t̶r̶a̶i̶n̶t̶s̶.̶M̶a̶x̶;̶
+  i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶v̶a̶l̶i̶d̶a̶t̶i̶o̶n̶.̶c̶o̶n̶s̶t̶r̶a̶i̶n̶t̶s̶.̶M̶i̶n̶;̶
+  i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶v̶a̶l̶i̶d̶a̶t̶i̶o̶n̶.̶c̶o̶n̶s̶t̶r̶a̶i̶n̶t̶s̶.̶N̶o̶t̶B̶l̶a̶n̶k̶;̶
+  i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶v̶a̶l̶i̶d̶a̶t̶i̶o̶n̶.̶c̶o̶n̶s̶t̶r̶a̶i̶n̶t̶s̶.̶P̶o̶s̶i̶t̶i̶v̶e̶;̶
+  i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶v̶a̶l̶i̶d̶a̶t̶i̶o̶n̶.̶c̶o̶n̶s̶t̶r̶a̶i̶n̶t̶s̶.̶S̶i̶z̶e̶;̶
+  ```
