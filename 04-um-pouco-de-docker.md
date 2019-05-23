@@ -11,7 +11,7 @@
 2. Suba um container do MySQL 5.7 com o seguinte comando:
 
   ```sh
-  docker run --rm -d -p 3307:3306 --name eats.mysql -e MYSQL_ROOT_PASSWORD=caelum123 mysql:5.7
+  docker run --rm -d -p 3307:3306 --name eats.mysql -e MYSQL_ROOT_PASSWORD=caelum123 -e MYSQL_DATABASE=eats_pagamento -e MYSQL_USER=pagamento -e MYSQL_PASSWORD=pagamento123 mysql:5.7
   ```
 
   Usamos as configurações:
@@ -20,7 +20,7 @@
   - `-d`, ou `--detach`, para rodar o container no background, imprimindo o id do container e liberando o Terminal para outros comandos.
   - `-p`, ou `--publish`, que associa a porta do container ao host. No nosso caso, associamos a porta `3307` do host à porta padrão do MySQL (`3306`) do container.
   - `--name`, define um apelido para o container.
-  - `-e`, ou `--env`, define variáveis de ambiente para o container. No caso, definimos a senha do usuário `root` por meio da variável `MYSQL_ROOT_PASSWORD`.
+  - `-e`, ou `--env`, define variáveis de ambiente para o container. No caso, definimos a senha do usuário `root` por meio da variável `MYSQL_ROOT_PASSWORD`. Também definimos um database a ser criado na inicialização do container e seu usuário e senha, pelas variáveis `MYSQL_DATABASE`, `MYSQL_USER` e `MYSQL_PASSWORD`, respectivamente.
 
   Mais detalhes sobre essas opções podem ser encontrados em: https://docs.docker.com/engine/reference/commandline/run/
 
@@ -83,7 +83,10 @@
       ports:
         - "3307:3306"
       environment:
-        MYSQL_ROOT_PASSWORD: "caelum123"
+        MYSQL_ROOT_PASSWORD: caelum123
+        MYSQL_DATABASE: eats_pagamento
+        MYSQL_USER: pagamento
+        MYSQL_PASSWORD: pagamento123
     mongo.distancia:
       image: mongo:3.6
       restart: on-failure
@@ -115,6 +118,19 @@
   CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                               NAMES
   49bf0d3241ad        mysql:5.7           "docker-entrypoint..."   26 minutes ago      Up 3 minutes        33060/tcp, 0.0.0.0:3307->3306/tcp   eats-microservices_mysql.pagamento_1
   4890dcb9e898        mongo:3.6           "docker-entrypoint..."   26 minutes ago      Up 3 minutes        0.0.0.0:27018->27017/tcp            eats-microservices_mongo.distancia_1
+  ```
+
+  É possível formatar as informações, deixando a saída do comando mais enxuta. Para isso, use a opção `--format`:
+
+  ```sh
+  docker ps --format "{{.Image}}\t{{.Names}}"
+  ```
+
+  O resultado será semelhante a:
+
+  ```txt
+  mysql:5.7     eats-microservices_mysql.pagamento_1
+  mongo:3.6     eats-microservices_mongo.distancia_1
   ```
 
 3. Você pode obter os logs de ambos os containers com o seguinte comando:
