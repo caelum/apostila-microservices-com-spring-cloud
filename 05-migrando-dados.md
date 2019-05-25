@@ -343,4 +343,299 @@
 
   Para saber sobre outras propriedades, consulte: https://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
 
+## Exercício: migrando dados de distância do BD do monólito para o MongoDB
 
+1. O serviço de distância apenas considera restaurantes já aprovados. Então, primeiramente, vamos definir em `RestauranteRepository`, do pacote `br.com.caelum.eats.distancia`, um método que obtém todos os restaurantes aprovados, sem paginação:
+
+  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RestauranteRepository.java
+
+  ```java
+  interface RestauranteRepository extends JpaRepository<Restaurante, Long> {
+
+    // outros métodos ...
+
+    List<Restaurante> findAllByAprovado(boolean aprovado); // adicionado ...
+
+  }
+  ```
+
+  Adicione aos imports:
+
+  ```java
+  import java.util.List;
+  ```
+
+2. Poderíamos fazer algum script ou usar uma ferramenta para fazer o dump dos dados do MySQL do monólito para o MongoDB do serviço de distância. Mas uma alternativa é fazer essa migração com código Java, disparado assim que o serviço subir. A interface `CommandLineRunner` do Spring Boot ajuda nessa tarefa.
+
+  Observação: antes de continuar, certifique-se que o serviço de distância esteja **parado**.
+
+  Crie uma classe `MigracaoParaMongo` no pacote `br.com.caelum.eats.distancia` e a faça implementar `CommandLineRunner`, definindo o método `run`. Anote essa classe com `@Configuration`.
+
+  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/MigracaoParaMongo.java
+
+  ```java
+  @Configuration
+  public class MigracaoParaMongo implements CommandLineRunner {
+
+    @Override
+    public void run(String... args) throws Exception {
+
+    }
+
+  }
+  ```
+
+  Os imports corretos são:
+
+  ```java
+  import org.springframework.boot.CommandLineRunner;
+  import org.springframework.context.annotation.Configuration;
+  ```
+
+3. Defina atributos para os repositórios do JPA e do MongoDB na classe `MigracaoParaMongo`. Usando a anotação `@AllArgsConstructor` do Lombok, gere um construtor com todos os atributos, que será usado pelo Spring para injetar instâncias dos repositórios.
+
+  Adicione também a anotação `@Slf4j` do Lombok, que configura um atributo para log.
+
+  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/MigracaoParaMongo.java
+
+  ```java
+  @Configuration
+  @AllArgsConstructor // adicionado
+  @Slf4j
+  public class MigracaoParaMongo implements CommandLineRunner {
+
+    private RestauranteRepository jpaRepo; // adicionado
+    private RestauranteMongoRepository mongoRepo; // adicionado
+
+    @Override
+    public void run(String... args) throws Exception {
+
+    }
+
+  }
+  ```
+
+  Os novos imports devem ser os seguintes:
+
+  ```java
+  import br.com.caelum.eats.distancia.mongo.RestauranteMongoRepository;
+  import lombok.AllArgsConstructor;
+  ```
+
+4. Implemente um algoritmo com os seguintes passos:
+
+  - obtenha todos os restaurantes aprovados pelo repositório JPA, que aponta para o BD do monólito.
+  - percorra os restaurantes aprovado e, pra cada um deles, pegue `id`, `cep` e `tipoDeCozinhaId`.
+  - verifique se `id` não existe no MongoDB, protegendo de uma segunda execução dessa classe.
+  - se o `id` não existir, instancie um `RestauranteMongo` e use o repositório MongoDB para inseri-lo.
+
+  O código do método `run` ficará semelhante a:
+
+  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/MigracaoParaMongo.java
+
+  ```java
+  log.info("Iniciando a migração de restaurantes aprovados para Mongo");
+
+  // obtendo todos os restaurantes aprovados
+  for (Restaurante restauranteJpa : jpaRepo.findAllByAprovado(true)) {
+
+    // recuperando id, cep e tipo de cozinha
+    Long id = restauranteJpa.getId();
+    String cep = restauranteJpa.getCep();
+    Long tipoDeCozinhaId = restauranteJpa.getTipoDeCozinhaId();
+
+    // verificando se o id existe no mongo
+    if (!mongoRepo.existsById(id)) {
+
+      // se não existe, inserindo restaurante no mongo
+      RestauranteMongo restauranteMongo = new RestauranteMongo(id, cep, tipoDeCozinhaId);
+      mongoRepo.insert(restauranteMongo);
+
+      log.info("Migrado para Mongo: " + restauranteMongo);
+    }
+  }
+
+  log.info("Fim da migração de restaurantes aprovados para Mongo");
+  ```
+
+5. Coloque o serviço de distância no ar, executando a classe `EatsDistanciaServiceApplication`.
+
+  No console do Eclipse, devem aparecer logs parecido com os a seguir:
+
+  ```txt
+  2019-05-24 11:20:46.278  INFO 10264 --- [  restartedMain] b.c.c.eats.distancia.MigracaoParaMongo   : Iniciando a migração de restaurantes aprovados para Mongo
+  2019-05-24 11:20:46.309  INFO 10264 --- [  restartedMain] o.h.h.i.QueryTranslatorFactoryInitiator  : HHH000397: Using ASTQueryTranslatorFactory
+  Hibernate: select restaurant0_.id as id1_0_, restaurant0_.aprovado as aprovado2_0_, restaurant0_.cep as cep3_0_, restaurant0_.tipo_de_cozinha_id as tipo_de_4_0_ from restaurante restaurant0_ where restaurant0_.aprovado=?
+  2019-05-24 11:20:46.563  INFO 10264 --- [  restartedMain] org.mongodb.driver.connection            : Opened connection [connectionId{localValue:2, serverValue:6}] to localhost:27018
+  2019-05-24 11:20:46.741  INFO 10264 --- [  restartedMain] b.c.c.eats.distancia.MigracaoParaMongo   : Migrado para Mongo: RestauranteMongo(id=1, cep=70238500, tipoDeCozinhaId=1)
+  2019-05-24 11:20:46.762  INFO 10264 --- [  restartedMain] b.c.c.eats.distancia.MigracaoParaMongo   : Migrado para Mongo: RestauranteMongo(id=2, cep=79878-978, tipoDeCozinhaId=9)
+  2019-05-24 11:20:46.770  INFO 10264 --- [  restartedMain] b.c.c.eats.distancia.MigracaoParaMongo   : Migrado para Mongo: RestauranteMongo(id=3, cep=32131-232, tipoDeCozinhaId=7)
+  2019-05-24 11:20:46.770  INFO 10264 --- [  restartedMain] b.c.c.eats.distancia.MigracaoParaMongo   : Fim da migração de restaurantes aprovados para Mongo
+  ```
+
+  Note que, segundo os logs, os restaurantes foram migrados.
+
+6. Acesse a interface de linha de comando (CLI) do MongoDB, executando o seguinte comando do Docker Compose:
+
+  ```sh
+  docker-compose exec mongo.distancia mongo
+  ```
+
+  _Observação: você precisa estar no diretório onde está o arquivo `docker-compose.yml`._
+
+  Na CLI do MongoDB, mostre todos os databases com o comando:
+
+  ```sh
+  show dbs
+  ```
+
+  Note que o database `eats_distancia`, configurado no serviço, está nos resultados:
+
+  ```txt
+  admin           0.000GB
+  config          0.000GB
+  eats_distancia  0.000GB
+  local           0.000GB
+  ```
+
+  Acesse o database de distancia com o comando:
+
+  ```sh
+  use eats_distancia
+  ```
+
+  Deve ser impresso:
+
+  ```txt
+  switched to db eats_distancia
+  ```
+
+  Execute o comando a seguir para exibir todas as _collections_ do database:
+
+  ```sh
+  show collections
+  ```
+
+  A collections `restaurantes` deve ser exibida no resultado.
+
+  Liste os restaurantes da collection com o comando:
+
+  ```sh
+  db.restaurantes.find();
+  ```
+
+  Devem ser exibidos os dados dos restaurantes migrados. Algo como:
+
+  ```txt
+  { "_id" : NumberLong(1), "cep" : "70238500", "tipoDeCozinhaId" : NumberLong(1), "_class" : "br.com.caelum.eats.distancia.mongo.RestauranteMongo" }
+  { "_id" : NumberLong(2), "cep" : "79878-978", "tipoDeCozinhaId" : NumberLong(9), "_class" : "br.com.caelum.eats.distancia.mongo.RestauranteMongo" }
+  { "_id" : NumberLong(3), "cep" : "32131-232", "tipoDeCozinhaId" : NumberLong(7), "_class" : "br.com.caelum.eats.distancia.mongo.RestauranteMongo" }
+  ```
+
+  Para sair da CLI do MongoDB, digite `quit()`, com os parênteses.
+
+  > Novos restaurantes aprovados só serão migrados para o MongoDB quando reiniciarmos o serviço de distância. Além disso, como listamos _todos_ os restaurantes aprovados a performance de inicialização pode ser bastante afetada. Mais adiante, corrigiremos a migração de novos restaurantes e alguns outros detalhes. De qualquer forma, talvez a solução ideal envolva ETL ou alguma outra técnica de BD.
+
+## Exercício: usando MongoDB no cálculo de distâncias
+
+1. Adicione na interface `RestauranteMongoRepository`, métodos que recuperam todos os restaurantes e todos de um determinado tipo de cozinha de maneira paginada:
+
+  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/mongo/RestauranteMongoRepository.java
+
+  ```java
+  public interface RestauranteMongoRepository extends MongoRepository<RestauranteMongo, Long> {
+
+    Page<RestauranteMongo> findAll(Pageable limit);
+
+    Page<RestauranteMongo> findAllByTipoDeCozinhaId(Long tipoDeCozinhaId, Pageable limit);
+
+  }
+  ```
+
+  Não deixe de fazer os imports corretos:
+
+  ```java
+  import org.springframework.data.domain.Page;
+  import org.springframework.data.domain.Pageable;
+  ```
+
+2. Modifique a classe `DistanciaService` para que use `RestauranteMongoRepository` e `RestauranteMongo`:
+
+  ```java
+  // anotações ....
+  class DistanciaService {
+
+    private static final Pageable LIMIT = PageRequest.of(0,5);
+
+    p̶r̶i̶v̶a̶t̶e̶ ̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶R̶e̶p̶o̶s̶i̶t̶o̶r̶y̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶;̶
+    private RestauranteMongoRepository restaurantes; // modificado
+
+    public List<RestauranteComDistanciaDto> restaurantesMaisProximosAoCep(String cep) {
+      L̶i̶s̶t̶<̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶>̶ ̶a̶p̶r̶o̶v̶a̶d̶o̶s̶ ̶=̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶.̶f̶i̶n̶d̶A̶l̶l̶B̶y̶A̶p̶r̶o̶v̶a̶d̶o̶(̶t̶r̶u̶e̶,̶ ̶L̶I̶M̶I̶T̶)̶.̶g̶e̶t̶C̶o̶n̶t̶e̶n̶t̶(̶)̶;̶
+      List<RestauranteMongo> aprovados = restaurantes.findAll(LIMIT).getContent(); // modificado
+      return calculaDistanciaParaOsRestaurantes(aprovados, cep);
+    }
+
+    public List<RestauranteComDistanciaDto> restaurantesDoTipoDeCozinhaMaisProximosAoCep(Long tipoDeCozinhaId, String cep) {
+      L̶i̶s̶t̶<̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶>̶ ̶a̶p̶r̶o̶v̶a̶d̶o̶s̶D̶o̶T̶i̶p̶o̶D̶e̶C̶o̶z̶i̶n̶h̶a̶ ̶=̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶.̶f̶i̶n̶d̶A̶l̶l̶B̶y̶A̶p̶r̶o̶v̶a̶d̶o̶A̶n̶d̶T̶i̶p̶o̶D̶e̶C̶o̶z̶i̶n̶h̶a̶I̶d̶(̶t̶r̶u̶e̶,̶ ̶t̶i̶p̶o̶D̶e̶C̶o̶z̶i̶n̶h̶a̶I̶d̶,̶ ̶L̶I̶M̶I̶T̶)̶.̶g̶e̶t̶C̶o̶n̶t̶e̶n̶t̶(̶)̶;̶
+      List<RestauranteMongo> aprovadosDoTipoDeCozinha = restaurantes.findAllByTipoDeCozinhaId(tipoDeCozinhaId, LIMIT).getContent();
+      return calculaDistanciaParaOsRestaurantes(aprovadosDoTipoDeCozinha, cep);
+    }
+
+    public RestauranteComDistanciaDto restauranteComDistanciaDoCep(Long restauranteId, String cep) {
+      R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶ ̶=̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶.̶f̶i̶n̶d̶B̶y̶I̶d̶(̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶I̶d̶)̶.̶o̶r̶E̶l̶s̶e̶T̶h̶r̶o̶w̶(̶(̶)̶ ̶-̶>̶ ̶n̶e̶w̶ ̶R̶e̶s̶o̶u̶r̶c̶e̶N̶o̶t̶F̶o̶u̶n̶d̶E̶x̶c̶e̶p̶t̶i̶o̶n̶(̶)̶)̶;̶
+      RestauranteMongo restaurante = restaurantes.findById(restauranteId).orElseThrow(() -> new ResourceNotFoundException()); // modificado
+      String cepDoRestaurante = restaurante.getCep();
+      BigDecimal distancia = distanciaDoCep(cepDoRestaurante, cep);
+      return new RestauranteComDistanciaDto(restauranteId, distancia);
+    }
+
+    p̶r̶i̶v̶a̶t̶e̶ ̶L̶i̶s̶t̶<̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶C̶o̶m̶D̶i̶s̶t̶a̶n̶c̶i̶a̶D̶t̶o̶>̶ ̶c̶a̶l̶c̶u̶l̶a̶D̶i̶s̶t̶a̶n̶c̶i̶a̶P̶a̶r̶a̶O̶s̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶(̶L̶i̶s̶t̶<̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶>̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶,̶ ̶S̶t̶r̶i̶n̶g̶ ̶c̶e̶p̶)̶ ̶{̶
+    private List<RestauranteComDistanciaDto> calculaDistanciaParaOsRestaurantes(List<RestauranteMongo> restaurantes, String cep) {
+      // código omitido ...
+    }
+
+    // restante do código ...
+
+  }
+  ```
+
+  Adicione os imports necessários:
+
+  ```java
+  import br.com.caelum.eats.distancia.mongo.RestauranteMongo;
+  import br.com.caelum.eats.distancia.mongo.RestauranteMongoRepository;
+  ```
+
+3. Com a classe `EatsDistanciaServiceApplication` sendo executada, teste o serviço de distância.
+
+  Acesse pelo navegador ou pelo cURL uma URL como: http://localhost:8082/restaurantes/mais-proximos/71503510
+
+  Suba o front-end e, dado um CEP, pesquise os restaurantes mais próximos. Deve funcionar!
+
+## Exercício: removendo JPA do serviço de distância
+
+1. Remova as classes `Restaurante` e `RestauranteRepository` do pacote `br.com.caelum.eats.distancia` do serviço de distância:
+
+  - R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶
+  - R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶R̶e̶p̶o̶s̶i̶t̶o̶r̶y̶
+
+2. Delete também a classe de migração de dados:
+
+  - M̶i̶g̶r̶a̶c̶a̶o̶P̶a̶r̶a̶M̶o̶n̶g̶o̶
+
+3. Exclua as dependências relacionados ao MySQL e Spring Data JPA do `pom.xml` do `eats-distancia-service`:
+
+  ####### eats-distancia-service/pom.xml
+
+  ```xml
+  <̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
+    <̶g̶r̶o̶u̶p̶I̶d̶>̶m̶y̶s̶q̶l̶<̶/̶g̶r̶o̶u̶p̶I̶d̶>̶
+    <̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶m̶y̶s̶q̶l̶-̶c̶o̶n̶n̶e̶c̶t̶o̶r̶-̶j̶a̶v̶a̶<̶/̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶
+    <̶s̶c̶o̶p̶e̶>̶r̶u̶n̶t̶i̶m̶e̶<̶/̶s̶c̶o̶p̶e̶>̶
+  <̶/̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
+  <̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
+    <̶g̶r̶o̶u̶p̶I̶d̶>̶o̶r̶g̶.̶s̶p̶r̶i̶n̶g̶f̶r̶a̶m̶e̶w̶o̶r̶k̶.̶b̶o̶o̶t̶<̶/̶g̶r̶o̶u̶p̶I̶d̶>̶
+    <̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶s̶p̶r̶i̶n̶g̶-̶b̶o̶o̶t̶-̶s̶t̶a̶r̶t̶e̶r̶-̶d̶a̶t̶a̶-̶j̶p̶a̶<̶/̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶
+  <̶/̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
+  ```
