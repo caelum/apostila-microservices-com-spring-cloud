@@ -624,7 +624,22 @@
 
   - M̶i̶g̶r̶a̶c̶a̶o̶P̶a̶r̶a̶M̶o̶n̶g̶o̶
 
-3. Exclua as dependências relacionados ao MySQL e Spring Data JPA do `pom.xml` do `eats-distancia-service`:
+3. Remova as propriedades relacionadas ao datasource do MySQL e a configurações do JPA do `application.properties`:
+
+  ####### eats-distancia-service/src/main/resources/application.properties
+
+  ```properties
+  #̶D̶A̶T̶A̶S̶O̶U̶R̶C̶E̶ ̶C̶O̶N̶F̶I̶G̶S̶
+  s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶u̶r̶l̶=̶j̶d̶b̶c̶:̶m̶y̶s̶q̶l̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶/̶e̶a̶t̶s̶?̶c̶r̶e̶a̶t̶e̶D̶a̶t̶a̶b̶a̶s̶e̶I̶f̶N̶o̶t̶E̶x̶i̶s̶t̶=̶t̶r̶u̶e̶
+  s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶u̶s̶e̶r̶n̶a̶m̶e̶=̶<̶S̶E̶U̶ ̶U̶S̶U̶Á̶R̶I̶O̶>̶
+  s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶p̶a̶s̶s̶w̶o̶r̶d̶=̶<̶S̶U̶A̶ ̶S̶E̶N̶H̶A̶>̶
+
+  #̶J̶P̶A̶ ̶C̶O̶N̶F̶I̶G̶S̶
+  s̶p̶r̶i̶n̶g̶.̶j̶p̶a̶.̶h̶i̶b̶e̶r̶n̶a̶t̶e̶.̶d̶d̶l̶-̶a̶u̶t̶o̶=̶v̶a̶l̶i̶d̶a̶t̶e̶
+  s̶p̶r̶i̶n̶g̶.̶j̶p̶a̶.̶s̶h̶o̶w̶-̶s̶q̶l̶=̶t̶r̶u̶e̶
+  ```
+
+4. Exclua as dependências relacionados ao MySQL e Spring Data JPA do `pom.xml` do `eats-distancia-service`:
 
   ####### eats-distancia-service/pom.xml
 
