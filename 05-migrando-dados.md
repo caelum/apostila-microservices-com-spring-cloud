@@ -420,6 +420,7 @@
   ```java
   import br.com.caelum.eats.distancia.mongo.RestauranteMongoRepository;
   import lombok.AllArgsConstructor;
+  import lombok.extern.slf4j.Slf4j;
   ```
 
 4. Implemente um algoritmo com os seguintes passos:
