@@ -308,6 +308,8 @@ Implemente, usando Feign, uma maneira do serviço de pagamento avisar ao monóli
 
 4. Defina, no pacote `br.com.caelum.eats.pagamento` de `eats-pagamento-service`, uma interface `PedidoRestClient` com um método `avisaQueFoiPago`, anotados da seguinte maneira:
 
+  ####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PedidoRestClient.java
+
   ```java
   @FeignClient(url="${configuracao.pedido.service.url}", name="pedido")
   public interface PedidoRestClient {
@@ -327,6 +329,8 @@ Implemente, usando Feign, uma maneira do serviço de pagamento avisar ao monóli
   ```
 
 5. Em `PagamentoController`, do serviço de pagamento, defina um `PedidoRestClient` como atributo e use o método `avisaQueFoiPago` passando o id do pedido:
+
+  ####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoController.java
 
   ```java
   // anotações ...
@@ -357,6 +361,197 @@ Implemente, usando Feign, uma maneira do serviço de pagamento avisar ao monóli
 
 6. Certifique-se que o serviço de pagamento foi reiniciado e que os demais serviços e o front-end estão no ar. Faça um novo pedido, realizando o pagamento. Veja que o status do pedido fica como _PAGO_.
 
-## Exercício opcional: Spring HATEOAS
+## Exercício opcional: Spring HATEOAS e HAL
 
-1. 
+1. Adicione o Spring HATEOAS como dependência no `pom.xml` de `eats-pagamento-service`:
+
+  ####### eats-pagamento-service/pom.xml
+
+  ```xml
+  <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-hateoas</artifactId>
+  </dependency>
+  ```
+
+2. Nos métodos de `PagamentoController`, retorne um `Resource` com uma lista de `Link` do Spring HATEOAS.
+
+  - Em todos os métodos, defina um _link relation_ `self` que aponta para o próprio recurso, através da URL do método `detalha`
+  - Nos métodos `detalha` e `cria`, defina _link relations_ `confirma` e `cancela`, apontando para as URLS associadas aos respectivos métodos de `PagamentoController`.
+
+  Para criar os _links_, utilize os métodos estáticos `methodOn` e `linkTo` de `ControllerLinkBuilder`.
+
+  O código de `PagamentoController` ficará semelhante a:
+
+  ####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoController.java
+
+  ```java
+  @RestController
+  @RequestMapping("/pagamentos")
+  @AllArgsConstructor
+  class PagamentoController {
+
+    private PagamentoRepository pagamentoRepo;
+    private PedidoRestClient pedidoClient;
+
+    @GetMapping("/{id}")
+    public Resource<PagamentoDto> detalha(@PathVariable Long id) {
+      Pagamento pagamento = pagamentoRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException());
+
+      List<Link> links = new ArrayList<>();
+
+      Link self = linkTo(methodOn(PagamentoController.class).detalha(id)).withSelfRel();
+      links.add(self);
+
+      if (Pagamento.Status.CRIADO.equals(pagamento.getStatus())) {
+        Link confirma = linkTo(methodOn(PagamentoController.class).confirma(id)).withRel("confirma");
+        links.add(confirma);
+
+        Link cancela = linkTo(methodOn(PagamentoController.class).cancela(id)).withRel("cancela");
+        links.add(cancela);
+      }
+
+      PagamentoDto dto = new PagamentoDto(pagamento);
+      Resource<PagamentoDto> resource = new Resource<PagamentoDto>(dto, links);
+
+      return resource;
+    }
+
+    @PostMapping
+    public ResponseEntity<Resource<PagamentoDto>> cria(@RequestBody Pagamento pagamento,
+        UriComponentsBuilder uriBuilder) {
+      pagamento.setStatus(Pagamento.Status.CRIADO);
+      Pagamento salvo = pagamentoRepo.save(pagamento);
+      URI path = uriBuilder.path("/pagamentos/{id}").buildAndExpand(salvo.getId()).toUri();
+      PagamentoDto dto = new PagamentoDto(salvo);
+
+      Long id = salvo.getId();
+
+      List<Link> links = new ArrayList<>();
+
+      Link self = linkTo(methodOn(PagamentoController.class).detalha(id)).withSelfRel();
+      links.add(self);
+
+      Link confirma = linkTo(methodOn(PagamentoController.class).confirma(id)).withRel("confirma");
+      links.add(confirma);
+
+      Link cancela = linkTo(methodOn(PagamentoController.class).cancela(id)).withRel("cancela");
+      links.add(cancela);
+
+      Resource<PagamentoDto> resource = new Resource<PagamentoDto>(dto, links);
+      return ResponseEntity.created(path).body(resource);
+    }
+
+    @PutMapping("/{id}")
+    public Resource<PagamentoDto> confirma(@PathVariable Long id) {
+      Pagamento pagamento = pagamentoRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException());
+      pagamento.setStatus(Pagamento.Status.CONFIRMADO);
+      pagamentoRepo.save(pagamento);
+
+      Long pedidoId = pagamento.getPedidoId();
+      pedidoClient.avisaQueFoiPago(pedidoId);
+
+      List<Link> links = new ArrayList<>();
+
+      Link self = linkTo(methodOn(PagamentoController.class).detalha(id)).withSelfRel();
+      links.add(self);
+
+      PagamentoDto dto = new PagamentoDto(pagamento);
+      Resource<PagamentoDto> resource = new Resource<PagamentoDto>(dto, links);
+
+      return resource;
+    }
+
+    @DeleteMapping("/{id}")
+    public Resource<PagamentoDto> cancela(@PathVariable Long id) {
+      Pagamento pagamento = pagamentoRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException());
+      pagamento.setStatus(Pagamento.Status.CANCELADO);
+      pagamentoRepo.save(pagamento);
+
+      List<Link> links = new ArrayList<>();
+
+      Link self = linkTo(methodOn(PagamentoController.class).detalha(id)).withSelfRel();
+      links.add(self);
+
+      PagamentoDto dto = new PagamentoDto(pagamento);
+      Resource<PagamentoDto> resource = new Resource<PagamentoDto>(dto, links);
+
+      return resource;
+    }
+
+  }
+  ```
+
+3. Reinicie o serviço de pagamentos e obtenha o pagamento de um `id` já cadastrado:
+
+  ```sh
+   curl -i http://localhost:8081/pagamentos/1
+  ```
+
+  A resposta será algo como:
+
+  ```text
+  HTTP/1.1 200 
+  Content-Type: application/hal+json;charset=UTF-8
+  Transfer-Encoding: chunked
+  Date: Tue, 28 May 2019 19:04:43 GMT
+  ```
+
+  <!--  -->
+
+  ```json
+  {
+    "id":1,
+    "valor":51.80,
+    "nome":"ANDERSON DA SILVA",
+    "numero":"1111 2222 3333 4444",
+    "expiracao":"2022-07",
+    "codigo":"123",
+    "status":"CRIADO",
+    "formaDePagamentoId":2,
+    "pedidoId":1,
+    "_links":{
+      "self":{
+        "href":"http://localhost:8081/pagamentos/1"
+      },
+      "confirma":{
+        "href":"http://localhost:8081/pagamentos/1"
+      },
+      "cancela":{
+        "href":"http://localhost:8081/pagamentos/1"
+      }
+    }
+  }
+  ```
+  
+  Teste também a criação, confirmação e cancelamento de novos pagamentos.
+
+4. Altere o código do front-end para usar os _link relations_ apropriados ao confirmar ou cancelar um pagamento:
+
+  ####### fj33-eats-ui/src/app/services/pagamento.service.ts
+
+  ```typescript
+  confirma(pagamento): Observable<any> {
+    t̶h̶i̶s̶.̶a̶j̶u̶s̶t̶a̶I̶d̶s̶(̶p̶a̶g̶a̶m̶e̶n̶t̶o̶)̶;̶
+
+    const url = pagamento._links.confirma.href; // adicionado
+
+    r̶e̶t̶u̶r̶n̶ ̶t̶h̶i̶s̶.̶h̶t̶t̶p̶.̶p̶u̶t̶(̶`̶$̶{̶t̶h̶i̶s̶.̶A̶P̶I̶}̶/̶$̶{̶p̶a̶g̶a̶m̶e̶n̶t̶o̶.̶i̶d̶}̶`̶,̶ ̶n̶u̶l̶l̶)̶;̶
+    return this.http.put(url, null); // modificado
+  }
+
+  cancela(pagamento): Observable<any> {
+    t̶h̶i̶s̶.̶a̶j̶u̶s̶t̶a̶I̶d̶s̶(̶p̶a̶g̶a̶m̶e̶n̶t̶o̶)̶;̶
+
+    const url = pagamento._links.cancela.href; // adicionado
+
+    r̶e̶t̶u̶r̶n̶ ̶t̶h̶i̶s̶.̶h̶t̶t̶p̶.̶d̶e̶l̶e̶t̶e̶(̶`̶$̶{̶t̶h̶i̶s̶.̶A̶P̶I̶}̶/̶$̶{̶p̶a̶g̶a̶m̶e̶n̶t̶o̶.̶i̶d̶}̶`̶)̶;̶
+    return this.http.delete(url); // modificado
+  }
+  ```
+
+  _Observação: o método auxiliar `ajustaIds` não é mais necessário ao confirmar e cancelar um pagamento, já que o `id` do pagamento não é mais usado para montar a URL. Porém, o método ainda é usado ao criar um pagamento._
+
+5. Faça um novo pedido e efetue um pagamento. Deve continuar funcionando!
+
+
