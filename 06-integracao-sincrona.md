@@ -4,7 +4,7 @@
 
 ### Objetivo
 
-Faça com que o monólito avise ao serviço de distância que novos restaurantes foram aprovados e que houve atualização de dados relevantes.
+Faça com que o monólito avise ao serviço de distância que novos restaurantes foram aprovados e que houve atualização de dados relevantes. A implementação deve usar `RestTemplate`.
 
 ### Passo a passo
 
@@ -219,3 +219,131 @@ Faça com que o monólito avise ao serviço de distância que novos restaurantes
 8 (opcional) Será que os métodos auxiliares `tipoDeCozinhaDiferente` e `cepDiferente` deveriam ficar em `RestauranteController` mesmo?
 
 ## Exercício: cliente declarativo com Feign
+
+### Objetivo
+
+Implemente, usando Feign, uma maneira do serviço de pagamento avisar ao monólito que um pedido foi pago, após a confirmação do pagamento.
+
+### Passo a passo
+
+1. Adicione ao `PedidoController`, do módulo `eats-pedido` do monólito, um método que muda o status do pedido para _PAGO_:
+
+  ####### eats-monolito-modular/eats-pedido/src/main/java/br/com/caelum/eats/pedido/PedidoController.java
+
+  ```java
+  @PutMapping("/pedidos/{id}/pago")
+  public void pago(@PathVariable("id") Long id) {
+    Pedido pedido = repo.porIdComItens(id);
+    if (pedido == null) {
+      throw new ResourceNotFoundException();
+    }
+    pedido.setStatus(Pedido.Status.PAGO);
+    repo.atualizaStatus(Pedido.Status.PAGO, pedido);
+  }
+  ```
+
+2. No arquivo `application.properties` de `eats-pagamento-service`, adicione uma propriedade `configuracao.pedido.service.url` que contém a URL do monólito:
+
+  ####### eats-pagamento-service/src/main/resources/application.properties
+
+  ```properties
+  configuracao.pedido.service.url=http://localhost:8080
+  ```
+
+3. No `pom.xml` de `eats-pagamento-service`, adicione uma dependência ao _Spring Cloud_ na versão `Greenwich.RELEASE`, em `dependencyManagement`:
+
+  ####### eats-pagamento-service/pom.xml
+
+  ```xml
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-dependencies</artifactId>
+        <version>Greenwich.RELEASE</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  ```
+
+  Feito isso, adicione o _starter_ do OpenFeign como dependência:
+  
+  ```xml
+  <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-openfeign</artifactId>
+  </dependency>
+  ```
+
+4. Anote a classe `EatsPagamentoServiceApplication` com `@EnableFeignClients` para habilitar o Feign:
+
+  ####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/EatsPagamentoServiceApplication.java
+
+  ```java
+  @EnableFeignClients // adicionado
+  @SpringBootApplication	@SpringBootApplication
+  public class EatsPagamentoServiceApplication {
+
+    // código omitido ...
+
+  }
+  ```
+
+  O import correto é o seguinte:
+
+  ```java
+  import org.springframework.cloud.openfeign.EnableFeignClients;
+  ```
+
+4. Defina, no pacote `br.com.caelum.eats.pagamento` de `eats-pagamento-service`, uma interface `PedidoRestClient` com um método `avisaQueFoiPago`, anotados da seguinte maneira:
+
+  ```java
+  @FeignClient(url="${configuracao.pedido.service.url}", name="pedido")
+  public interface PedidoRestClient {
+
+    @PutMapping("/pedidos/{pedidoId}/pago")
+    public void avisaQueFoiPago(@PathVariable("pedidoId") Long pedidoId);
+
+  }
+  ```
+
+  Ajuste os imports:
+
+  ```java
+  import org.springframework.cloud.openfeign.FeignClient;
+  import org.springframework.web.bind.annotation.PathVariable;
+  import org.springframework.web.bind.annotation.PutMapping;
+  ```
+
+5. Em `PagamentoController`, do serviço de pagamento, defina um `PedidoRestClient` como atributo e use o método `avisaQueFoiPago` passando o id do pedido:
+
+  ```java
+  // anotações ...
+  public class PagamentoController {
+
+    private PagamentoRepository pagamentoRepo;
+    private PedidoRestClient pedidoClient; // adicionado
+
+    // código omitido ...
+
+    @PutMapping("/{id}")
+    public PagamentoDto confirma(@PathVariable Long id) {
+      Pagamento pagamento = pagamentoRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException());
+      pagamento.setStatus(Pagamento.Status.CONFIRMADO);
+      pagamentoRepo.save(pagamento);
+
+      // adicionado
+      Long pedidoId = pagamento.getPedidoId();
+      pedidoClient.avisaQueFoiPago(pedidoId);
+
+      return new PagamentoDto(pagamento);
+    }
+
+    // restante do código ...
+
+  }
+  ```
+
+6. Certifique-se que o serviço de pagamento foi reiniciado e que os demais serviços e o front-end estão no ar. Faça um novo pedido, realizando o pagamento. Veja que o status do pedido fica como _PAGO_.
