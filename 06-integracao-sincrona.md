@@ -1,4 +1,4 @@
-# Integração síncrona
+# Integração síncrona (e RESTful)
 
 ## Exercício: cliente REST com RestTemplate do Spring
 
@@ -218,7 +218,7 @@ Faça com que o monólito avise ao serviço de distância que novos restaurantes
 
 8 (opcional) Será que os métodos auxiliares `tipoDeCozinhaDiferente` e `cepDiferente` deveriam ficar em `RestauranteController` mesmo?
 
-## Exercício: cliente declarativo com Feign
+## Exercício: cliente REST declarativo com Feign
 
 ### Objetivo
 
