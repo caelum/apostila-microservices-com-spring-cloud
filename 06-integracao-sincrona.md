@@ -23,7 +23,10 @@ Faça com que o monólito avise ao serviço de distância que novos restaurantes
     @PostMapping("/restaurantes")
     public RestauranteMongo adiciona(@RequestBody RestauranteMongo restaurante) {
       log.info("Insere novo restaurante: " + restaurante);
-      return repo.insert(restaurante);
+      RestauranteMongo salvo = repo.insert(restaurante);
+      UriComponents uriComponents = uriBuilder.path("/restaurantes/{id}").buildAndExpand(salvo.getId());
+      URI uri = uriComponents.toUri();
+      return ResponseEntity.created(uri).contentType(MediaType.APPLICATION_JSON).body(salvo);
     }
 
     @PutMapping("/restaurantes/{id}")
@@ -93,6 +96,7 @@ Faça com que o monólito avise ao serviço de distância que novos restaurantes
   ```java
   @Data
   @AllArgsConstructor
+  @NoArgsConstructor
   class RestauranteParaServicoDeDistancia {
 
     private Long id;
@@ -135,7 +139,12 @@ Faça com que o monólito avise ao serviço de distância que novos restaurantes
     public void novoRestauranteAprovado(Restaurante restaurante) {
       RestauranteParaServicoDeDistancia restauranteParaDistancia = new RestauranteParaServicoDeDistancia(restaurante);
       String url = distanciaServiceUrl+"/restaurantes";
-      restTemplate.postForObject(url, restauranteParaDistancia, RestauranteParaServicoDeDistancia.class);
+      ResponseEntity<RestauranteParaServicoDeDistancia> responseEntity =
+          restTemplate.postForEntity(url, restauranteParaDistancia, RestauranteParaServicoDeDistancia.class);
+      HttpStatus statusCode = responseEntity.getStatusCode();
+      if (!HttpStatus.CREATED.equals(statusCode)) {
+        throw new RuntimeException("Status diferente do esperado: " + statusCode);
+      }
     }
 
     public void restauranteAtualizado(Restaurante restaurante) {
@@ -347,3 +356,7 @@ Implemente, usando Feign, uma maneira do serviço de pagamento avisar ao monóli
   ```
 
 6. Certifique-se que o serviço de pagamento foi reiniciado e que os demais serviços e o front-end estão no ar. Faça um novo pedido, realizando o pagamento. Veja que o status do pedido fica como _PAGO_.
+
+## Exercício opcional: Spring HATEOAS
+
+1. 
