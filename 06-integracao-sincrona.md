@@ -554,4 +554,92 @@ Implemente, usando Feign, uma maneira do serviço de pagamento avisar ao monóli
 
 5. Faça um novo pedido e efetue um pagamento. Deve continuar funcionando!
 
+## Exercício opcional: Estendendo o Spring HATEOAS
 
+### Objetivo
+
+Faça com que o método HTTP seja incluído como informações dos links retornados pelo Spring HATEOAS.
+
+### Passo a passo
+
+1. Crie uma classe `LinkWithMethod` que estende o `Link` do Spring HATEOAS e define um atributo adicional chamado `method`, que armazenará o método HTTP dos links. Defina um construtor que recebe um `Link` e uma `String` com o método HTTP:
+
+  ####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/LinkWithMethod.java
+
+  ```java
+  @Getter
+  public class LinkWithMethod extends Link {
+
+    private static final long serialVersionUID = 1L;
+
+    private String method;
+
+    public LinkWithMethod(Link link, String method) {
+      super(link.getHref(), link.getRel());
+      this.method = method;
+    }
+  }
+  ```
+
+  Os imports são os seguintes:
+
+  ```java
+  import org.springframework.hateoas.Link;
+  import lombok.Getter;
+  ```
+
+2. Na classe `PagamentoController`, adicione um `LinkWithMethod` na lista para os links de confirmação e cancelamento, passando o método HTTP adequado.
+
+  Use o trecho abaixo nos métodos `detalha` e `cria` de `PagamentoController`:
+
+  ####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoController.java
+
+  ```java
+  Link confirma = linkTo(methodOn(PagamentoController.class).confirma(id)).withRel("confirma");
+  l̶i̶n̶k̶s̶.̶a̶d̶d̶(̶c̶o̶n̶f̶i̶r̶m̶a̶)̶;̶
+  links.add(new LinkWithMethod(confirma, "PUT")); // modificado
+
+  Link cancela = linkTo(methodOn(PagamentoController.class).cancela(id)).withRel("cancela");
+  l̶i̶n̶k̶s̶.̶a̶d̶d̶(̶c̶a̶n̶c̶e̶l̶a̶)̶;̶
+  links.add(new LinkWithMethod(cancela, "DELETE")); // modificado
+  ```
+
+3. Ajuste o código do front-end para usar o `method` de cada _link relation_:
+
+  ####### fj33-eats-ui/src/app/services/pagamento.service.ts
+
+  ```typescript
+  confirma(pagamento): Observable<any> {
+    const url = pagamento._links.confirma.href;
+
+    r̶e̶t̶u̶r̶n̶ ̶t̶h̶i̶s̶.̶h̶t̶t̶p̶.̶p̶u̶t̶(̶u̶r̶l̶,̶ ̶n̶u̶l̶l̶)̶;̶
+
+    const method = pagamento._links.confirma.method;
+    return this.http.request(method, url);
+  }
+
+  cancela(pagamento): Observable<any> {
+    const url = pagamento._links.cancela.href;
+
+    r̶e̶t̶u̶r̶n̶ ̶t̶h̶i̶s̶.̶h̶t̶t̶p̶.̶d̶e̶l̶e̶t̶e̶(̶u̶r̶l̶)̶;̶
+
+    const method = pagamento._links.cancela.method;
+    return this.http.request(method, url);
+  }
+  ```
+
+4. (desafio) Modifique o `PagamentoController` para usar HAL-FORMS, disponível nas últimas versões do Spring HATEOAS.
+
+<!--@note
+
+---------------
+Alexandre (BSB)
+---------------
+
+HAL-FORMS é uma das ideias de especificação de Hypermedia de Mike Amundsen, autor de diversos livros sobre REST na editor O'Reilly (aquela dos bichos na capa).
+
+Usei o HAL-FORMS na versão milestone 2.2.0.M2 do Spring Boot no commit abaixo:
+
+https://github.com/alexandreaquiles/eats/commit/f8ef33b88cd3d96c62627a13b4e8470c9f09ada0#diff-5f414af558500eda821060272d84b8d8
+
+-->
