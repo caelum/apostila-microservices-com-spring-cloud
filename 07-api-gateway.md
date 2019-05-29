@@ -383,6 +383,8 @@ Invoque o serviço de distância com o `RestTemplate` do Spring e o monólito co
 
 6. A configuração do monólito no Zuul precisa ser ligeiramente alterada para que o Feign funcione:
 
+  ####### api-gateway/src/main/resources/application.properties
+
   ```properties
   z̶u̶u̶l̶.̶r̶o̶u̶t̶e̶s̶.̶m̶o̶n̶o̶l̶i̶t̶o̶.̶u̶r̶l̶=̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶0̶
   monolito.ribbon.listOfServers=http://localhost:8080
@@ -390,9 +392,9 @@ Invoque o serviço de distância com o `RestTemplate` do Spring e o monólito co
 
   Mais adiante estudaremos cuidadosamente o Ribbon.
 
-<!--
+## Exercício: compondo chamadas no API Gateway
 
-2. Adicione, à classe `RestauranteComDistanciaDto`, um atributo `restaurante` do tipo `RestauranteDto`.
+1. Adicione, à classe `RestauranteComDistanciaDto`, um atributo `restaurante` do tipo `RestauranteDto`.
 
   Para incorporar todos os atributos do restaurante na própria classe `RestauranteComDistanciaDto`, coloque o restaurante como um `@Delegate` do Lombok.
   
@@ -421,4 +423,161 @@ Invoque o serviço de distância com o `RestTemplate` do Spring e o monólito co
   import lombok.experimental.Delegate;
   ```
 
--->
+2. No `api-gateway`, crie um `RestauranteComDistanciaController`, que invoca dado um CEP e um id de restaurante obtém:
+
+  - os detalhes do restaurante usando `RestauranteRestClient`
+  - a quilometragem entre o restaurante e o CEP usando `DistanciaRestClient`
+
+  ####### api-gateway/src/main/java/br/com/caelum/apigateway/RestauranteComDistanciaController.java
+
+  ```java
+  @RestController
+  @AllArgsConstructor
+  public class RestauranteComDistanciaController {
+
+    private RestauranteRestClient restauranteRestClient;
+    private DistanciaRestClient distanciaRestClient;
+
+    @GetMapping("/restaurantes-com-distancia/{cep}/restaurante/{restauranteId}")
+    public RestauranteComDistanciaDto porCepEIdComDistancia(@PathVariable("cep") String cep, @PathVariable("restauranteId") Long restauranteId) {
+      RestauranteDto restaurante = restauranteRestClient.porId(restauranteId);
+      RestauranteComDistanciaDto restauranteComDistancia = distanciaRestClient.porCepEId(cep, restauranteId);
+      restauranteComDistancia.setRestaurante(restaurante);
+      return restauranteComDistancia;
+    }
+
+  }
+  ```
+
+  Não esqueça dos imports:
+
+  ```java
+  import org.springframework.web.bind.annotation.GetMapping;
+  import org.springframework.web.bind.annotation.PathVariable;
+  import org.springframework.web.bind.annotation.RestController;
+
+  import lombok.AllArgsConstructor;
+  ```
+
+3. Tente acessar, pelo navegador ou pelo cURL, a URL: `http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1`
+
+  Note que o status da resposta é `401 Unauthorized`.
+
+  Isso ocorre porque, como o prefixo não é `pagamentos` nem `distancia`, a requisição é repassada ao monólito pelo Zuul.
+
+  Devemos configurar uma rota no Zuul, usando o `forward` para o endereço local:
+
+  ####### api-gateway/src/main/resources/application.properties
+
+  ```properties
+  zuul.routes.local.path=/restaurantes-com-distancia/**
+  zuul.routes.local.url=forward:/restaurantes-com-distancia
+  ```
+
+  A rota acima deve ficar logo antes da rota do monólito, porque esta última é `/**`,  um "coringa" que corresponde a qualquer URL solicitada.
+
+4. Tente novamente acessar a URL `http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1`
+
+  Deve ser retornado algo parecido com:
+
+  ```json
+  {
+    "restauranteId":1,
+    "distancia":11.393642891403121808480136678554117679595947265625,
+    "cep":"70238500",
+    "descricao":"O melhor da China aqui do seu lado.",
+    "endereco":"ShC/SUL COMERCIO LOCAL QD 404-BL D LJ 17-ASA SUL",
+    "nome":"Long Fu",
+    "taxaDeEntregaEmReais":6.00,
+    "tempoDeEntregaMaximoEmMinutos":25,
+    "tempoDeEntregaMinimoEmMinutos":40,
+    "tipoDeCozinha":{
+      "id":1,
+      "nome":"Chinesa"
+    },
+    "id":1
+  }
+  ```
+
+## Exercício: chamando a composição do API Gateway a partir da UI
+
+1. No projeto `eats-ui`, adicione um método que chama a nova URL do API Gateway em `RestauranteService`:
+
+  ####### fj33-eats-ui/src/app/services/restaurante.service.ts
+
+  ```typescript
+  export class RestauranteService {
+
+    // código omitido ...
+
+    porCepEIdComDistancia(cep: string, restauranteId: string): Observable<any> {
+      return this.http.get(`${this.API}/restaurantes-com-distancia/${cep}/restaurante/${restauranteId}`);
+    }
+
+  }
+  ```
+
+2. Altere ao `RestauranteComponent` para que chame o novo método `porCepEIdComDistancia`.
+
+  Não será mais necessário invocar o método `distanciaPorCepEId`, porque o restaurante já terá a distância.
+
+  ####### fj33-eats-ui/src/app/pedido/restaurante/restaurante.component.ts
+
+  ```java
+  export class RestauranteComponent implements OnInit {
+
+    // código omitido ...
+
+    ngOnInit() {
+
+      t̶h̶i̶s̶.̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶S̶e̶r̶v̶i̶c̶e̶.̶p̶o̶r̶I̶d̶(̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶I̶d̶)̶
+      this.restaurantesService.porCepEIdComDistancia(this.cep, restauranteId) // modificado
+        .subscribe(restaurante => {
+
+          this.restaurante = restaurante;
+          this.pedido.restaurante = restaurante;
+
+          t̶h̶i̶s̶.̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶S̶e̶r̶v̶i̶c̶e̶.̶d̶i̶s̶t̶a̶n̶c̶i̶a̶P̶o̶r̶C̶e̶p̶E̶I̶d̶(̶t̶h̶i̶s̶.̶c̶e̶p̶,̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶I̶d̶)̶
+            .̶s̶u̶b̶s̶c̶r̶i̶b̶e̶(̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶C̶o̶m̶D̶i̶s̶t̶a̶n̶c̶i̶a̶ ̶=̶>̶ ̶{̶
+              t̶h̶i̶s̶.̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶.̶d̶i̶s̶t̶a̶n̶c̶i̶a̶ ̶=̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶C̶o̶m̶D̶i̶s̶t̶a̶n̶c̶i̶a̶.̶d̶i̶s̶t̶a̶n̶c̶i̶a̶;̶
+          }̶)̶;̶
+
+          // código omitido ...
+
+        });
+
+    }
+
+    // restante do código ...
+
+  }
+  ```
+
+3. Busque os restaurantes a partir de um CEP e escolha um deles. Você também pode acessar, diretamente pelo navegador, uma URL como: `http://localhost:4200/pedidos/71503510/restaurante/1`.
+
+  Deve ocorrer um _Erro no servidor_.
+
+  No Console do navegador, podemos perceber que o erro é relacionado a CORS:
+
+  _Access to XMLHttpRequest at 'http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource._
+
+4. Adicione ao método `porCepEIdComDistancia` de `RestauranteComDistanciaController` a anotação `@CrossOrigin`:
+
+  ####### api-gateway/src/main/java/br/com/caelum/apigateway/RestauranteComDistanciaController.java
+
+  ```java
+  // anotações ...
+  public class RestauranteComDistanciaController {
+
+    // atributos ...
+
+    @CrossOrigin // adicionado
+    @GetMapping("/restaurantes-com-distancia/{cep}/restaurante/{restauranteId}")
+    public RestauranteComDistanciaDto porCepEIdComDistancia(@PathVariable("cep") String cep, @PathVariable("restauranteId") Long restauranteId) {
+      // código omitido ...
+    }
+
+  }
+  ```
+
+5. Teste novamente. Perceba que os detalhes do restaurante são exibidos, assim como a distância ao CEP.
