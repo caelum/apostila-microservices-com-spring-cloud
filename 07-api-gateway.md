@@ -581,3 +581,64 @@ Invoque o serviço de distância com o `RestTemplate` do Spring e o monólito co
   ```
 
 5. Teste novamente. Perceba que os detalhes do restaurante são exibidos, assim como a distância ao CEP.
+
+## Exercício: LocationRewriteFilter no Zuul
+
+1. Através de um cliente REST, tente adicionar um pagamento passando pelo API Gateway. Para isso, utilize a porta `9999`.
+
+  Com o cURL é algo como:
+
+  ```sh
+  curl -X POST
+    -i
+    -H 'Content-Type: application/json'
+    -d '{ "valor": 51.8, "nome": "JOÃO DA SILVA", "numero": "1111 2222 3333 4444", "expiracao": "2022-07", "codigo": "123", "formaDePagamentoId": 2, "pedidoId": 1 }'
+    http://localhost:9999/pagamentos
+  ```
+
+  Lembrando que um comando semalhante ao anterio, mas com a porta `8081`, está disponível em: https://gitlab.com/snippets/1859389
+
+  Note no cabeçalho `Location` do response que, mesmo utilizando a porta `9999` na requisição, a porta da resposta é a `8081`.
+
+  ```txt
+  Location: http://localhost:8081/pagamentos/40
+  ```
+
+2. O `LocationRewriteFilter` padrão do Spring Cloud Zuul só funciona para chamadas com status de resposta `3XX`, de redirecionamentos. Vamos customizá-lo, para que funcione com respostas bem sucedidas, de status `2XX`.
+
+  Para isso, crie uma classe `LocationRewriteConfig` no pacote `br.com.caelum.apigateway`, definindo uma subclasse anônima  de `LocationRewriteFilter`, modificando alguns detalhes.
+
+  ####### api-gateway/src/main/java/br/com/caelum/apigateway/LocationRewriteConfig.java
+
+  ```java
+  @Configuration
+  public class LocationRewriteConfig {
+
+    @Bean
+    public LocationRewriteFilter locationRewriteFilter() {
+      return new LocationRewriteFilter() {
+        @Override
+        public boolean shouldFilter() {
+          int statusCode = RequestContext.getCurrentContext().getResponseStatusCode();
+          return HttpStatus.valueOf(statusCode).is3xxRedirection() || HttpStatus.valueOf(statusCode).is2xxSuccessful();
+        }
+      };
+    }
+
+  }
+  ```
+
+  Tome bastante cuidado com os imports:
+
+  ```java
+  import org.springframework.cloud.netflix.zuul.filters.post.LocationRewriteFilter;
+  import org.springframework.context.annotation.Bean;
+  import org.springframework.context.annotation.Configuration;
+  import org.springframework.http.HttpStatus;
+
+  import com.netflix.zuul.context.RequestContext;
+  ```
+
+3. Teste novamente a criação de um pagamento com um cliente REST. Perceba que o cabeçalho `Location` agora tem a porta `9999`, do API Gateway.
+
+4. (desafio - opcional) Se você fez os exercícios opcionais de Spring HATEOAS, note que as URLs dos links ainda contém a porta `8081`. Implemente um Filter do Zuul que modifique as URLs do corpo de um _response_ para que apontem para a porta `9999`, do API Gateway.
