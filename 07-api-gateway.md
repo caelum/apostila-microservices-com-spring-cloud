@@ -243,6 +243,8 @@ Invoque o serviço de distância com o `RestTemplate` do Spring e o monólito co
 
   No método `comDistanciaPorCepEId`, dispare um `GET` à URL do serviço de distância que retorna a quilometragem de um restaurante a um dado CEP:
 
+  ####### api-gateway/src/main/java/br/com/caelum/apigateway/DistanciaRestClient.java
+
   ```java
   @Service
   public class DistanciaRestClient {
@@ -264,11 +266,9 @@ Invoque o serviço de distância com o `RestTemplate` do Spring e o monólito co
   }
   ```
 
-<!--  
-
 ## Exercício: invocando monólito a partir do API Gateway com Feign
 
-3. No pacote `br.com.caelum.apigateway`, crie uma classe `TipoDeCozinhaDto` que contém o `id` e nome do tipo de cozinha.
+1. Crie uma classe `TipoDeCozinhaDto` que contém o `id` e nome do tipo de cozinha.
 
   Crie também uma classe `RestauranteDto`, que contém todos dos dados informados na tela de detalhes de um restaurante, incluindo o tipo de cozinha.
 
@@ -325,38 +325,100 @@ Invoque o serviço de distância com o `RestTemplate` do Spring e o monólito co
   import lombok.NoArgsConstructor;
   ```
 
-  Defina também o atributo `restaurante` do tipo `RestauranteDto` e o coloque como um `@Delegate` do Lombok para incorporar todos os atributos do restaurante à classe `RestauranteComDistanciaDto`. Essa última propriedade não deve ser serializada no JSON resultante.
+2. Adicione o Feign como dependência no `pom.xml` do projeto `api-gateway`:
 
-  Na classe, use as anotações usadas em passos anteriores.
+  ####### api-gateway/pom.xml
+
+  ```xml
+  <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-openfeign</artifactId>
+  </dependency>
+  ```
+
+3. Na classe `ApiGatewayApplication`, adicione a anotação `@EnableFeignClients`:
+
+  ####### api-gateway/src/main/java/br/com/caelum/apigateway/ApiGatewayApplication.java
+
+  ```java
+  @EnableFeignClients // adicionado
+  @EnableZuulProxy
+  @SpringBootApplication
+  public class ApiGatewayApplication {
+
+    public static void main(String[] args) {
+      SpringApplication.run(ApiGatewayApplication.class, args);
+    }
+
+  }
+  ```
+
+  O import a ser adicionado está a seguir:
+
+  ```java
+  import org.springframework.cloud.openfeign.EnableFeignClients;
+  ```
+
+5. Crie uma interface `RestauranteRestClient`, que define um método `porId` que recebe um `id` e retorna um `RestauranteDto`. Anote esse método com as anotações do Spring Web, para que dispare um GET à URL do monólito que detalha um restaurante.
+
+  A interface deve ser anotada com `@FeignClient`, apontando para a configuração do monólito no Zuul. 
+
+  ```java
+  @FeignClient("monolito")
+  public interface RestauranteRestClient {
+
+    @GetMapping("/restaurantes/{id}")
+    public RestauranteDto porId(@PathVariable("id") Long id);
+
+  }
+  ```
+
+  Ajuste os imports:
+
+  ```java
+  import org.springframework.cloud.openfeign.FeignClient;
+  import org.springframework.web.bind.annotation.GetMapping;
+  import org.springframework.web.bind.annotation.PathVariable;
+  ```
+
+6. A configuração do monólito no Zuul precisa ser ligeiramente alterada para que o Feign funcione:
+
+  ```properties
+  z̶u̶u̶l̶.̶r̶o̶u̶t̶e̶s̶.̶m̶o̶n̶o̶l̶i̶t̶o̶.̶u̶r̶l̶=̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶0̶
+  monolito.ribbon.listOfServers=http://localhost:8080
+  ```
+
+  Mais adiante estudaremos cuidadosamente o Ribbon.
+
+<!--
+
+2. Adicione, à classe `RestauranteComDistanciaDto`, um atributo `restaurante` do tipo `RestauranteDto`.
+
+  Para incorporar todos os atributos do restaurante na própria classe `RestauranteComDistanciaDto`, coloque o restaurante como um `@Delegate` do Lombok.
+  
+  Esse novo atributo não deve ser serializado no JSON resultante.
 
   ####### api-gateway/src/main/java/br/com/caelum/apigateway/RestauranteComDistanciaDto.java
 
   ```java
-  @Data
-  @AllArgsConstructor
-  @NoArgsConstructor
+  // anotações ...
   public class RestauranteComDistanciaDto {
 
-    private Long restauranteId;
-    private BigDecimal distancia;
+    // outros atributos ...
 
+    // adicionado
     @Delegate @JsonIgnore
     private RestauranteDto restaurante;
 
   }
   ```
 
-  Certifique-se dos imports corretos:
+  Adicione os imports corretos:
 
   ```java
-  import java.math.BigDecimal;
-
   import com.fasterxml.jackson.annotation.JsonIgnore;
 
-  import lombok.AllArgsConstructor;
-  import lombok.Data;
   import lombok.experimental.Delegate;
-  import lombok.NoArgsConstructor;
   ```
 
 -->
