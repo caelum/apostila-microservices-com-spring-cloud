@@ -79,3 +79,69 @@
   - `http://localhost:9999/restaurantes/1`
 
   Note que as URLs anteriores, apesar de serem invocados no API Gateway, invocam o serviço de pagamento, o de distância e o monólito, respectivamente.
+
+## Exercício: fazendo a UI usar o API Gateway
+
+1. Remova as URLs específicas dos serviços de distância e pagamento, mantendo apenas a `baseUrl`, que deve apontar para o API Gateway:
+
+  ####### fj33-eats-ui/src/environments/environment.ts
+
+  ```typescript
+  export const environment = {
+    production: false,
+
+    b̶a̶s̶e̶U̶r̶l̶:̶ ̶'̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶0̶'̶
+    baseUrl: '//localhost:9999' // modificado
+
+    ,̶ ̶p̶a̶g̶a̶m̶e̶n̶t̶o̶U̶r̶l̶:̶ ̶'̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶1̶'̶
+    ,̶ ̶d̶i̶s̶t̶a̶n̶c̶i̶a̶U̶r̶l̶:̶ ̶'̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶2̶'̶
+  };
+  ```
+
+2. Em `PagamentoService`, troque `pagamentoUrl` por `baseUrl`:
+
+  ####### fj33-eats-ui/src/app/services/pagamento.service.ts
+
+  ```typescript
+  export class PagamentoService {
+
+    p̶r̶i̶v̶a̶t̶e̶ ̶A̶P̶I̶ ̶=̶ ̶e̶n̶v̶i̶r̶o̶n̶m̶e̶n̶t̶.̶p̶a̶g̶a̶m̶e̶n̶t̶o̶U̶r̶l̶ ̶+̶ ̶'̶/̶p̶a̶g̶a̶m̶e̶n̶t̶o̶s̶'̶;̶
+    private API = environment.baseUrl + '/pagamentos'; // modificado
+
+    // restante do código ...
+
+  }
+  ```
+
+3. Use apenas `baseUrl` em `RestauranteService`, alterando o atributo `DISTANCIA_API`:
+
+  ####### fj33-eats-ui/src/app/services/restaurante.service.ts
+
+  ```typescript
+  export class RestauranteService {
+
+    private API = environment.baseUrl;
+
+    p̶r̶i̶v̶a̶t̶e̶ ̶D̶I̶S̶T̶A̶N̶C̶I̶A̶_̶A̶P̶I̶ ̶=̶ ̶e̶n̶v̶i̶r̶o̶n̶m̶e̶n̶t̶.̶d̶i̶s̶t̶a̶n̶c̶i̶a̶U̶r̶l̶;̶
+    private DISTANCIA_API = environment.baseUrl + '/distancia'; // modificado
+
+    // código omitido ...
+
+  }
+  ```
+
+4. Faça um novo pedido e efetue o pagamento. Deve funcionar!
+
+5. Teste fazer o login como administrador e acessar a página de restaurantes em aprovação. Deve ocorrer um erro _401 Unauthorized_, que não acontecia antes da UI passar pelo API Gateway. Porque será que acontece esse erro?
+
+<!--@note
+
+  O Zuul remove alguns headers sensíveis.
+
+  A configuração é a seguinte:
+
+    sensitiveHeaders: Cookie,Set-Cookie,Authorization
+
+  https://cloud.spring.io/spring-cloud-netflix/multi/multi__router_and_filter_zuul.html#_cookies_and_sensitive_headers
+
+-->
