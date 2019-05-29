@@ -144,4 +144,18 @@
 
   https://cloud.spring.io/spring-cloud-netflix/multi/multi__router_and_filter_zuul.html#_cookies_and_sensitive_headers
 
+  Observação: talvez o ideal seja fazer a Autenticação/Autorização no próprio API Gateway.
+
 -->
+
+## Exercício: desabilitando a remoção de cabeçalhos sensíveis no Zuul
+
+1. Por padrão, o Zuul remove os cabeçalhos HTTP `Cookie`, `Set-Cookie`, `Authorization`. Vamos desabilitar essa remoção no `application.properties`:
+
+  ####### api-gateway/src/main/resources/application.properties
+
+  ```properties
+  zuul.sensitiveHeaders=
+  ```
+
+2. Reinicie o `ApiGatewayApplication` e faça o login como administrador. Acesse a página de restaurantes em aprovação. Deve funcionar!
