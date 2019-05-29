@@ -642,3 +642,87 @@ Invoque o serviço de distância com o `RestTemplate` do Spring e o monólito co
 3. Teste novamente a criação de um pagamento com um cliente REST. Perceba que o cabeçalho `Location` agora tem a porta `9999`, do API Gateway.
 
 4. (desafio - opcional) Se você fez os exercícios opcionais de Spring HATEOAS, note que as URLs dos links ainda contém a porta `8081`. Implemente um Filter do Zuul que modifique as URLs do corpo de um _response_ para que apontem para a porta `9999`, do API Gateway.
+
+## Exercício opcional: um ZuulFilter de Rate Limiting
+
+1. Adicione, no `pom.xml` de `api-gateway`, uma dependência a biblioteca Google Guava:
+
+  ####### api-gateway/pom.xml
+
+  ```xml
+  <dependency>
+    <groupId>com.google.guava</groupId>
+    <artifactId>guava</artifactId>
+    <version>15.0</version>
+  </dependency>
+  ```
+
+  A biblioteca Google Guava possui uma implementação de _rate limiter_, que restringe o acesso a recurso em uma determinada taxa configurável.
+
+2. Crie um `ZuulFilter` que retorna uma falha com status `429 TOO MANY REQUESTS` se a taxa de acesso ultrapassar 1 requisição a cada 30 segundos:
+
+  ####### api-gateway/src/main/java/br/com/caelum/apigateway/RateLimitingZuulFilter.java
+
+  ```java
+  @Component
+  public class RateLimitingZuulFilter extends ZuulFilter {
+
+    private final RateLimiter rateLimiter = RateLimiter.create(1.0 / 30.0); //queries per second
+
+    @Override
+    public String filterType() {
+      return FilterConstants.PRE_TYPE;
+    }
+
+    @Override
+    public int filterOrder() {
+      return Ordered.HIGHEST_PRECEDENCE + 100;
+    }
+
+    @Override
+    public boolean shouldFilter() {
+      return true;
+    }
+
+    @Override
+    public Object run() {
+      try {
+        RequestContext currentContext = RequestContext.getCurrentContext();
+        HttpServletResponse response = currentContext.getResponse();
+
+        if (!this.rateLimiter.tryAcquire()) {
+          response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+          response.getWriter().append(HttpStatus.TOO_MANY_REQUESTS.getReasonPhrase());
+          currentContext.setSendZuulResponse(false);
+        }
+      } catch (IOException e) {
+        ReflectionUtils.rethrowRuntimeException(e);
+      }
+      return null;
+    }
+  }
+  ```
+
+  Os imports são os seguintes:
+
+  ```java
+  import java.io.IOException;
+
+  import javax.servlet.http.HttpServletResponse;
+
+  import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
+  import org.springframework.core.Ordered;
+  import org.springframework.http.HttpStatus;
+  import org.springframework.stereotype.Component;
+  import org.springframework.util.ReflectionUtils;
+
+  import com.google.common.util.concurrent.RateLimiter;
+  import com.netflix.zuul.ZuulFilter;
+  import com.netflix.zuul.context.RequestContext;
+  ```
+
+3. Garanta que `ApiGatewayApplication` foi reiniciado e acesse alguma várias vezes seguidas pelo navegador, uma URL como `http://localhost:9999/restaurantes/1`.
+
+  Deve ocorrer um erro `429 Too Many Requests`.
+
+4. Apague (ou desabilite comentando a anotação `@Component`) a classe `RateLimitingZuulFilter` para que não cause erros na aplicação no restante do curso.
