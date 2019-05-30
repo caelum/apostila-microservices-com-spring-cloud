@@ -60,9 +60,83 @@
 
   Use a porta para `8282`, por meio de uma URL como `http://localhost:8282/restaurantes/mais-proximos/71503510`. Note que os logs do Console do Eclipse agora são da configuração `EatsDistanciaServiceApplication (1)`.
 
-## Exercício: client side load balancing com Ribbon no API Gateway
+## Exercício: client side load balancing no RestTemplate com Ribbon
 
-1. Modifique o `application.properties` do `api-gateway`, para que use o Ribbon como _load balancer_.
+1. No `pom.xml` do módulo `eats`, o módulo pai do monólito, adicione uma dependência ao _Spring Cloud_ na versão `Greenwich.RELEASE`, em `dependencyManagement`:
+
+  ####### fj33-eats-monolito-modular/eats/pom.xml
+
+  ```xml
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-dependencies</artifactId>
+        <version>Greenwich.RELEASE</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  ```
+
+2. Adicione o _starter_ do Ribbon como dependência do módulo `eats-common` do monólito:
+  
+  ####### fj33-eats-monolito-modular/eats/eats-common/pom.xml
+
+  ```xml
+  <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-ribbon</artifactId>
+  </dependency>
+  ```
+
+3. Para que a instância do `RestTemplate` configurada no módulo `eats-common` do monólito use o Ribbon, anote o método `restTemplate` de `RestClientConfig` com `@LoadBalanced`:
+
+  ####### fj33-eats-monolito-modular/eats-common/src/main/java/br/com/caelum/eats/RestClientConfig.java
+
+  ```java
+  @Configuration
+  public class RestClientConfig {
+
+    @LoadBalanced // adicionado
+    @Bean
+    public RestTemplate restTemplate() {
+      return new RestTemplate();
+    }
+
+  }
+  ```
+
+  O import correto é:
+
+  ```java
+  import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+  ```
+
+4. Mude o arquivo `application.properties`, do módulo `eats-application` do monólito, para que seja configurado o _virtual host_ `distancia`, com uma lista de servidores cujas chamadas serão alternadas.
+
+  Faça com que a propriedade `configuracao.distancia.service.url` aponte para esse _virtual host_.
+
+  Por enquanto, desabilite o Eureka, que será abordado mais adiante.
+
+  ```properties
+  c̶o̶n̶f̶i̶g̶u̶r̶a̶c̶a̶o̶.̶d̶i̶s̶t̶a̶n̶c̶i̶a̶.̶s̶e̶r̶v̶i̶c̶e̶.̶u̶r̶l̶=̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶2̶
+  configuracao.distancia.service.url=http://distancia
+
+  distancia.ribbon.listOfServers=http://localhost:8082,http://localhost:8282
+  ribbon.eureka.enabled=false
+  ```
+
+5. Com o monólito, os serviços de distância e de pagamento e a UI no ar, teste a alteração do CEP e/ou tipo de cozinha de um restaurante. Observe qual instância do serviço de distância foi invocada.
+
+  Tente alterar novamente o CEP e/ou tipo de cozinha do restaurante. Note que foi invocada a outra instância do serviço de distância.
+
+  A cada alteração, as instâncias são invocadas alternadamente.
+
+## Exercício: client side load balancing no API Gateway
+
+1. Modifique o `application.properties` do `api-gateway`, para que use o Ribbon como _load balancer_ nas chamadas ao serviço de distância.
 
   Troque a configuração do Zuul do serviço de distância para fazer um _matching_ pelo `path`. Em seguida, configure a lista de servidores do Ribbon com as instâncias do serviço de distância.
 
@@ -102,7 +176,7 @@
   }
   ```
 
-3. Para que a instância do `RestTemplate` use o Ribbon, anote o método `restTemplate` de `RestClientConfig` com `@LoadBalanced`:
+3. Na classe `RestClientConfig` do `api-gateway`, faça com que o `RestTemplate` seja `@LoadBalanced`:
 
   ####### api-gateway/src/main/java/br/com/caelum/apigateway/RestClientConfig.java
 
@@ -119,7 +193,7 @@
   }
   ```
 
-  O import correto é:
+  Lembrando que o import correto é:
 
   ```java
   import org.springframework.cloud.client.loadbalancer.LoadBalanced;
