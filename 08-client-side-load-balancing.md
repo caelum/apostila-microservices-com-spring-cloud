@@ -40,7 +40,7 @@
   logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=DEBUG
   ```
 
-3. Configure a segunda instância para que seja executada na porta `8282`.
+3. Configure a segunda instância do serviço de distância para que seja executada na porta `9092`.
 
   No Eclipse, acesse o menu _Run > Run Configurations..._.
 
@@ -48,17 +48,17 @@
 
   Deve ser criada a configuração `EatsDistanciaServiceApplication (1)`.
 
-  Na aba _Arguments_, defina `8282` como a porta dessa segunda instância, em _VM Arguments_:
+  Na aba _Arguments_, defina `9092` como a porta dessa segunda instância, em _VM Arguments_:
 
   ```txt
-  -Dserver.port=8282
+  -Dserver.port=9092
   ```
 
   Clique em _Run_. Nova instância do serviço de distância no ar!
 
 4. Acesse uma URL do serviço de distância que está sendo executado na porta `8082` como, por exemplo, a URL `http://localhost:8082/restaurantes/mais-proximos/71503510`. Verifique os logs no Console do Eclipse, na configuração `EatsDistanciaServiceApplication`.
 
-  Use a porta para `8282`, por meio de uma URL como `http://localhost:8282/restaurantes/mais-proximos/71503510`. Note que os logs do Console do Eclipse agora são da configuração `EatsDistanciaServiceApplication (1)`.
+  Use a porta para `9092`, por meio de uma URL como `http://localhost:9092/restaurantes/mais-proximos/71503510`. Note que os logs do Console do Eclipse agora são da configuração `EatsDistanciaServiceApplication (1)`.
 
 ## Exercício: client side load balancing no RestTemplate com Ribbon
 
@@ -124,7 +124,7 @@
   c̶o̶n̶f̶i̶g̶u̶r̶a̶c̶a̶o̶.̶d̶i̶s̶t̶a̶n̶c̶i̶a̶.̶s̶e̶r̶v̶i̶c̶e̶.̶u̶r̶l̶=̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶2̶
   configuracao.distancia.service.url=http://distancia
 
-  distancia.ribbon.listOfServers=http://localhost:8082,http://localhost:8282
+  distancia.ribbon.listOfServers=http://localhost:8082,http://localhost:9092
   ribbon.eureka.enabled=false
   ```
 
@@ -148,7 +148,7 @@
   z̶u̶u̶l̶.̶r̶o̶u̶t̶e̶s̶.̶d̶i̶s̶t̶a̶n̶c̶i̶a̶.̶u̶r̶l̶=̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶2̶
 
   zuul.routes.distancia.path=/distancia/**
-  distancia.ribbon.listOfServers=http://localhost:8082,http://localhost:8282
+  distancia.ribbon.listOfServers=http://localhost:8082,http://localhost:9092
 
   configuracao.distancia.service.url=http://distancia
   ```
@@ -202,3 +202,31 @@
 4. Veja que cada instância do serviço de distância é chamada alternadamente ao acessar a URL `http://localhost:9999/distancia/restaurantes/mais-proximos/71503510`, que efetua o proxy do Zuul.
 
   Observe, pelos logs, que a URL `http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1`, que compões as chamadas ao monólito e ao serviço de distância (esse, através do `RestTemplate` com `@LoadBalanced`), também alterna entre as instâncias.
+
+## Exercícios: client side load balancing com Feign
+
+1. Faça com que uma segunda instância do monólito rode com a porta `9090`.
+
+  No workspace do monólito, acesse o menu _Run > Run Configurations..._ do Eclipse e clique com o botão direito na configuração `EatsApplication` e depois clique em _Duplicate_.
+
+  Na configuração `EatsApplication (1)` que foi criada, acesse a aba _Arguments_ e defina `9090` como a porta da segunda instância, em _VM Arguments_:
+
+  ```txt
+  -Dserver.port=9090
+  ```
+
+  Clique em _Run_. Nova instância do monólito no ar!
+
+2. No `application.properties` do `api-gateway`, adicione da URL da nova instância do monólito:
+
+  ####### api-gateway/src/main/resources/application.properties
+
+  ```properties
+  zuul.routes.monolito.path=/**
+  m̶o̶n̶o̶l̶i̶t̶o̶.̶r̶i̶b̶b̶o̶n̶.̶l̶i̶s̶t̶O̶f̶S̶e̶r̶v̶e̶r̶s̶=̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶0̶
+  monolito.ribbon.listOfServers=http://localhost:8080,http://localhost:9090
+  ```
+
+3. Acesse pelo API Gateway, por duas vezes seguidas, uma URL do monólito como `http://localhost:9999/restaurantes/1`.
+
+  Veja que os logs são alternados entre os Consoles de `EatsApplication` e `EatsApplication (1)`.
