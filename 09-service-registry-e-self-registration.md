@@ -64,7 +64,7 @@
 
   Por enquanto, a seção  _Instances currently registered with Eureka_, que mostra quais serviços estão registrados, está vazia.
 
-# Exercício: self registration no serviço de distância
+## Exercício: self registration do serviço de distância no Eureka Server
 
 1. No `pom.xml` do `eats-distancia-service`, adicione uma dependência ao _Spring Cloud_ na versão `Greenwich.RELEASE`, em `dependencyManagement`:
 
@@ -144,3 +144,48 @@
   ```
 
   Dessa maneira, caso seja necessário modificar a URL padrão do Eureka Server, basta definir a variável de ambiente `EUREKA_URI`.
+
+## Exercício: self registration do serviço de pagamento no Eureka Server
+
+1. No `pom.xml` do `eats-pagamento-service`, adicione como dependência o _starter_ do Eureka Client:
+
+  ####### eats-pagamento-service/pom.xml
+
+  ```xml
+  <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+  </dependency>
+  ```
+
+2. Anote a classe `EatsPagamentoServiceApplication` com `@EnableDiscoveryClient`:
+
+  ####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/EatsPagamentoServiceApplication.java
+
+  ```java
+  @EnableDiscoveryClient // adicionado
+  @EnableFeignClients
+  @SpringBootApplication
+  public class EatsPagamentoServiceApplication {
+
+  }
+  ```
+
+  Lembrando que o import é:
+
+  ```java
+  import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+  ```
+
+3. Defina, no `application.properties`, um nome para aplicação, que será usado no Eureka Server:
+
+  ####### eats-pagamento-service/src/main/resources/application.properties
+
+  ```properties
+  spring.application.name=pagamentos
+  ```
+
+4. Pare o serviço de pagamento. Em seguida, execute novamente a classe `EatsPagamentoServiceApplication`.
+
+  Com o serviço em execução, vá até a página do Eureka Server e veja que _PAGAMENTOS_ está entre as instâncias registradas.
+
