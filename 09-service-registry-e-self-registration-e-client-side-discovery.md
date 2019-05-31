@@ -213,6 +213,8 @@
   @SpringBootApplication
   public class EatsApplication {
 
+    // código omitido ...
+
   }
   ```
 
@@ -239,3 +241,66 @@
   Execute a segunda instância do monólito com a _run configuration_ `EatsApplication (1)`.
 
   Note o registro da segunda instância no Eureka Server, também em _MONOLITO_.
+
+## Exercício: self registration do API Gateway no Eureka Server
+
+1. Adicione como dependência o _starter_ do Eureka Client, No `pom.xml` do `api-gateway`:
+
+  ####### api-gateway/pom.xml
+
+  ```xml
+  <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+  </dependency>
+  ```
+
+2. Anote a classe `ApiGatewayApplication` com `@EnableDiscoveryClient`:
+
+  ####### api-gateway/src/main/java/br/com/caelum/apigateway/ApiGatewayApplication.java
+
+  ```java
+  @EnableDiscoveryClient // adicionado
+  @EnableFeignClients
+  @EnableZuulProxy
+  @SpringBootApplication
+  public class ApiGatewayApplication {
+  
+    // código omitido ...
+
+  }
+  ```
+
+  Lembre do novo import:
+
+  ```java
+  import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+  ```
+
+3. No `application.properties`, defina `apigateway` como nome da aplicação:
+
+  ####### api-gateway/src/main/resources/application.properties
+
+  ```properties
+  spring.application.name=apigateway
+  ```
+
+4. Pare o API Gateway.
+
+  Logo após, execute novamente `ApiGatewayApplication`.
+
+  Note, no Eureka Server, o registro da instância _APIGATEWAY_.
+
+## Exercício: client side discovery no monólito
+
+1. Remova a lista de servidores de distância do Ribbon, para que seja obtida do Eureka Server e, também, a configuração que desabilita o Eureka Client no Ribbon, que é habilitado por padrão.
+
+  ```properties
+  distancia.ribbon.listOfServers=http://localhost:8082,http://localhost:9092
+  ribbon.eureka.enabled=false
+  ```
+
+2. Com a UI, os serviços e o monólito no ar, faça login em um restaurante e modifique o tipo de cozinha ou o CEP. Realize essa operação mais de uma vez.
+
+  Perceba que as instâncias do serviço de distância são chamadas alternadamente.
+
