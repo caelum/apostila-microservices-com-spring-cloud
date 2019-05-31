@@ -63,3 +63,84 @@
   Acesse, por um navegador, a URL `http://localhost:8761`. Esse é o Eureka!
 
   Por enquanto, a seção  _Instances currently registered with Eureka_, que mostra quais serviços estão registrados, está vazia.
+
+# Exercício: self registration no serviço de distância
+
+1. No `pom.xml` do `eats-distancia-service`, adicione uma dependência ao _Spring Cloud_ na versão `Greenwich.RELEASE`, em `dependencyManagement`:
+
+  ####### eats-distancia-service/pom.xml
+
+  ```xml
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-dependencies</artifactId>
+        <version>Greenwich.RELEASE</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  ```
+
+2. Adicione o _starter_ do Eureka Client como dependência:
+  
+  ####### eats-distancia-service/pom.xml
+
+  ```xml
+  <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+  </dependency>
+  ```
+
+3. Adicione a anotação `@EnableDiscoveryClient` à classe `EatsDistanciaApplication`:
+
+  ```java
+  @EnableDiscoveryClient // adicionado
+  @SpringBootApplication
+  public class EatsDistanciaApplication {
+
+    // código omitido ...
+
+  }
+  ```
+
+  Adicione o import:
+
+  ```java
+  import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+  ```
+
+4. É preciso identificar o serviço de distância para o Eureka Server. Para isso, adicione a propriedade `spring.application.name` ao `application.properties`:
+
+  ####### eats-distancia-service/src/main/resources/application.properties
+
+  ```properties
+  spring.application.name=distancia
+  ```
+
+5. Pare as instâncias do serviço de distância.
+
+  Execute a _run configuration_ `EatsDistanciaApplication`.
+
+  Acesse o Eureka Server pelo navegador, na URL `http://localhost:8761/`. Observe que a aplicação _DISTANCIA_ aparece entre as instâncias registradas com Eureka.
+
+  Então, execute a segunda instância do serviço de distância, usando a _run configuration_ `EatsDistanciaApplication (1)`.
+
+  Recarregue a página do Eureka Server e note que são indicadas duas instâncias, com suas respectivas portas. Em _Status_, deve aparecer algo como `UP (2) - 192.168.0.90:distancia:9092 , 192.168.0.90:distancia:8082`. 
+
+6. A URL padrão usada pelo Eureka Client é `http://localhost:8761/`.
+
+  Porém, um problema é que não há uma configuração para a URL do Eureka Server que seja customizada nos clientes para ambientes como de testes, homologação e produção.
+
+  É preciso definir essa configuração customizável no `application.properties`:
+
+  ####### eats-distancia-service/src/main/resources/application.properties
+
+  ```properties
+  eureka.client.serviceUrl.defaultZone=${EUREKA_URI:http://localhost:8761/eureka/}
+  ```
+
+  Dessa maneira, caso seja necessário modificar a URL padrão do Eureka Server, basta definir a variável de ambiente `EUREKA_URI`.
