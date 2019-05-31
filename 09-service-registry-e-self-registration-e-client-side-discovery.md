@@ -310,6 +310,41 @@
 
   Note que os logs são alternados entre `EatsApplication` e `EatsApplication (1)`, quando testamos o comando acima várias vezes.
 
+## Exercício: cliente side discovery no API Gateway
+
+1. Modifique o `application.properties` do API Gateway, para que o Eureka Client seja habilita e que não haja mais listas de servidores do Ribbon.
+
+  Limpe as configurações, já que boa parte delas serão obtidas pelas próprias URLs requisitadas e os nomes no Eureka Server.
+
+  Mantenha as que fazem sentido e modifique ligeiramente algumas delas.
+
+  ####### api-gateway/src/main/resources/application.properties
+
+  ```properties
+  r̶i̶b̶b̶o̶n̶.̶e̶u̶r̶e̶k̶a̶.̶e̶n̶a̶b̶l̶e̶d̶=̶f̶a̶l̶s̶e̶
+
+  z̶u̶u̶l̶.̶r̶o̶u̶t̶e̶s̶.̶p̶a̶g̶a̶m̶e̶n̶t̶o̶s̶.̶u̶r̶l̶=̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶1̶
+  zuul.routes.pagamentos.stripPrefix=false
+
+  z̶u̶u̶l̶.̶r̶o̶u̶t̶e̶s̶.̶d̶i̶s̶t̶a̶n̶c̶i̶a̶.̶p̶a̶t̶h̶=̶/̶d̶i̶s̶t̶a̶n̶c̶i̶a̶/̶*̶*̶
+  d̶i̶s̶t̶a̶n̶c̶i̶a̶.̶r̶i̶b̶b̶o̶n̶.̶l̶i̶s̶t̶O̶f̶S̶e̶r̶v̶e̶r̶s̶=̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶2̶,̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶9̶0̶9̶2̶
+  configuracao.distancia.service.url=http://distancia
+
+  zuul.routes.local.path=/restaurantes-com-distancia/**
+  zuul.routes.local.url=forward:/restaurantes-com-distancia
+
+  z̶u̶u̶l̶.̶r̶o̶u̶t̶e̶s̶.̶m̶o̶n̶o̶l̶i̶t̶o̶.̶p̶a̶t̶h̶=̶/̶*̶*̶
+  zuul.routes.monolito=/**
+  
+  m̶o̶n̶o̶l̶i̶t̶o̶.̶r̶i̶b̶b̶o̶n̶.̶l̶i̶s̶t̶O̶f̶S̶e̶r̶v̶e̶r̶s̶=̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶0̶,̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶9̶0̶9̶0̶
+  ```
+
+2. Teste, pelo navegador ou por um cliente REST, as seguintes URLs:
+
+  - `http://localhost:9999/restaurantes/1`, observando se os logs são alternados entre as instâncias do monólito
+  - `http://localhost:9999/distancia/restaurantes/mais-proximos/71503510`, e note a alternância entre logs das instâncias do serviço de distância
+  - `http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1`, que alterna tanto entre instâncias do monólito como do serviço de distância
+
 ## Exercício: client side discovery no monólito
 
 1. Remova, do `application.properties` do módulo `eats-application` do monólito, a lista de servidores de distância do Ribbon e a configuração que desabilita o Eureka Client:
@@ -324,4 +359,3 @@
 2. Com a UI, os serviços e o monólito no ar, faça login em um restaurante e modifique o tipo de cozinha ou o CEP. Realize essa operação mais de uma vez.
 
   Perceba que as instâncias do serviço de distância são chamadas alternadamente.
-
