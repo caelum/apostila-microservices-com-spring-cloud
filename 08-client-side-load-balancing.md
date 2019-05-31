@@ -60,7 +60,7 @@
 
   Use a porta para `9092`, por meio de uma URL como `http://localhost:9092/restaurantes/mais-proximos/71503510`. Note que os logs do Console do Eclipse agora são da configuração `EatsDistanciaServiceApplication (1)`.
 
-## Exercício: client side load balancing no RestTemplate com Ribbon
+## Exercício: client side load balancing com RestTemplate
 
 1. No `pom.xml` do módulo `eats`, o módulo pai do monólito, adicione uma dependência ao _Spring Cloud_ na versão `Greenwich.RELEASE`, em `dependencyManagement`:
 
@@ -134,7 +134,7 @@
 
   A cada alteração, as instâncias são invocadas alternadamente.
 
-## Exercício: client side load balancing no API Gateway
+## Exercício: client side load balancing com RestTemplate no API Gateway
 
 1. Modifique o `application.properties` do `api-gateway`, para que use o Ribbon como _load balancer_ nas chamadas ao serviço de distância.
 
@@ -203,7 +203,12 @@
 
   Observe, pelos logs, que a URL `http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1`, que compões as chamadas ao monólito e ao serviço de distância (esse, através do `RestTemplate` com `@LoadBalanced`), também alterna entre as instâncias.
 
-## Exercícios: client side load balancing com Feign
+
+
+
+
+
+## Exercício: executando uma segunda instância do monólito
 
 1. Faça com que uma segunda instância do monólito rode com a porta `9090`.
 
@@ -217,7 +222,58 @@
 
   Clique em _Run_. Nova instância do monólito no ar!
 
-2. No `application.properties` do `api-gateway`, adicione da URL da nova instância do monólito:
+## Exercícios: client side load balancing com Feign
+
+1. Adicione como dependência o _starter_ do Ribbon no `pom.xml` do `eats-pagamento-service`:
+
+  ####### eats-pagamento-service/pom.xml
+
+  ```xml
+  <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-ribbon</artifactId>
+  </dependency>
+  ```
+
+2.
+
+  ####### eats-pagamento-service/src/main/resources/application.properties
+
+  ```properties
+  c̶o̶n̶f̶i̶g̶u̶r̶a̶c̶a̶o̶.̶p̶e̶d̶i̶d̶o̶.̶s̶e̶r̶v̶i̶c̶e̶.̶u̶r̶l̶=̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶0̶
+
+  monolito.ribbon.listOfServers=http://localhost:8080,http://localhost:9090
+  ```
+
+3. 
+
+  ####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PedidoRestClient.java
+
+  ```java
+  @̶F̶e̶i̶g̶n̶C̶l̶i̶e̶n̶t̶(̶u̶r̶l̶=̶"̶$̶{̶c̶o̶n̶f̶i̶g̶u̶r̶a̶c̶a̶o̶.̶p̶e̶d̶i̶d̶o̶.̶s̶e̶r̶v̶i̶c̶e̶.̶u̶r̶l̶}̶"̶,̶ ̶n̶a̶m̶e̶=̶"̶p̶e̶d̶i̶d̶o̶"̶)̶
+  @FeignClient("monolito") // modificado
+  public interface PedidoRestClient {
+
+    // código omitido ...
+
+  }
+  ```
+
+4. Garanta que o serviço de pagamento foi reiniciado e que as duas instâncias do monólito estão no ar.
+
+  Use um cliente REST como o cURL para confirmar um pagamento:
+
+  ```txt
+  curl -X PUT -i http://localhost:8081/pagamentos/1
+  ```
+
+  Teste várias vezes seguidas e note que os logs são alternados entre `EatsApplication` e `EatsApplication (1)`, as instâncias do monólito.
+
+  _Observação: confirmar um pagamento já confirmado tem o mesmo efeito, incluindo o aviso de pagamento ao monólito._
+
+## Exercício: client side load balancing com Feign no API Gateway
+
+1. No `application.properties` do `api-gateway`, adicione da URL da segunda instância do monólito:
 
   ####### api-gateway/src/main/resources/application.properties
 
