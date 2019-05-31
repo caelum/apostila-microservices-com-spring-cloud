@@ -291,9 +291,30 @@
 
   Note, no Eureka Server, o registro da instância _APIGATEWAY_.
 
+## Exercício: cliente side discovery no serviço de pagamentos
+
+1. No `application.properties` de `eats-pagamento-service`, apague a lista de servidores de distância do Ribbon, para que seja obtida do Eureka Server e, também, a configuração que desabilita o Eureka Client no Ribbon, que é habilitado por padrão:
+
+  ####### eats-pagamento-service/src/main/resources/application.properties
+
+  ```properties
+  m̶o̶n̶o̶l̶i̶t̶o̶.̶r̶i̶b̶b̶o̶n̶.̶l̶i̶s̶t̶O̶f̶S̶e̶r̶v̶e̶r̶s̶=̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶0̶,̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶9̶0̶9̶0̶
+  ̶r̶i̶b̶b̶o̶n̶.̶e̶u̶r̶e̶k̶a̶.̶e̶n̶a̶b̶l̶e̶d̶=̶f̶a̶l̶s̶e̶
+  ```
+
+2. Com as duas instâncias do monólito no ar, use um cliente REST como o cURL para confirmar um pagamento:
+
+  ```txt
+  curl -X PUT -i http://localhost:8081/pagamentos/1
+  ```
+
+  Note que os logs são alternados entre `EatsApplication` e `EatsApplication (1)`, quando testamos o comando acima várias vezes.
+
 ## Exercício: client side discovery no monólito
 
-1. Remova a lista de servidores de distância do Ribbon, para que seja obtida do Eureka Server e, também, a configuração que desabilita o Eureka Client no Ribbon, que é habilitado por padrão.
+1. Remova, do `application.properties` do módulo `eats-application` do monólito, a lista de servidores de distância do Ribbon e a configuração que desabilita o Eureka Client:
+
+  ####### fj33-eats-monolito-modular/eats/eats-application/src/main/resources/application.properties
 
   ```properties
   distancia.ribbon.listOfServers=http://localhost:8082,http://localhost:9092
