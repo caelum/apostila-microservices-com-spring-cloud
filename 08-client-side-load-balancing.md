@@ -93,7 +93,7 @@
 
 3. Para que a instância do `RestTemplate` configurada no módulo `eats-common` do monólito use o Ribbon, anote o método `restTemplate` de `RestClientConfig` com `@LoadBalanced`:
 
-  ####### fj33-eats-monolito-modular/eats-common/src/main/java/br/com/caelum/eats/RestClientConfig.java
+  ####### fj33-eats-monolito-modular/eats/eats-common/src/main/java/br/com/caelum/eats/RestClientConfig.java
 
   ```java
   @Configuration
@@ -119,6 +119,8 @@
   Faça com que a propriedade `configuracao.distancia.service.url` aponte para esse _virtual host_.
 
   Por enquanto, desabilite o Eureka, que será abordado mais adiante.
+
+  ####### fj33-eats-monolito-modular/eats/eats-application/src/main/resources/application.properties
 
   ```properties
   c̶o̶n̶f̶i̶g̶u̶r̶a̶c̶a̶o̶.̶d̶i̶s̶t̶a̶n̶c̶i̶a̶.̶s̶e̶r̶v̶i̶c̶e̶.̶u̶r̶l̶=̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶2̶
@@ -235,7 +237,7 @@
   </dependency>
   ```
 
-2.
+2. Configure a URL do monólito para use uma lista de servidores do Ribbon e, por enquanto, desabilite o Eureka:
 
   ####### eats-pagamento-service/src/main/resources/application.properties
 
@@ -243,9 +245,10 @@
   c̶o̶n̶f̶i̶g̶u̶r̶a̶c̶a̶o̶.̶p̶e̶d̶i̶d̶o̶.̶s̶e̶r̶v̶i̶c̶e̶.̶u̶r̶l̶=̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶0̶
 
   monolito.ribbon.listOfServers=http://localhost:8080,http://localhost:9090
+  ribbon.eureka.enabled=false
   ```
 
-3. 
+3. Troque a anotação do Feign em `PedidoRestClient` para que aponte para a configuração `monolito` do Ribbon:
 
   ####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PedidoRestClient.java
 
