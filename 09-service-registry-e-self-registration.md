@@ -185,7 +185,57 @@
   spring.application.name=pagamentos
   ```
 
-4. Pare o serviço de pagamento. Em seguida, execute novamente a classe `EatsPagamentoServiceApplication`.
+4. Pare o serviço de pagamento.
+
+  Em seguida, execute novamente a classe `EatsPagamentoServiceApplication`.
 
   Com o serviço em execução, vá até a página do Eureka Server e veja que _PAGAMENTOS_ está entre as instâncias registradas.
 
+## Exercício: self registration do monólito no Eureka Server
+
+1. No `pom.xml` do módulo `eats-application` do monólito, adicione como dependência o _starter_ do Eureka Client:
+
+  ####### fj33-eats-monolito-modular/eats/eats-application/pom.xml
+
+  ```xml
+  <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+  </dependency>
+  ```
+
+2. Anote a classe `EatsApplication` com `@EnableDiscoveryClient`:
+
+  ####### fj33-eats-monolito-modular/eats/eats-application/src/main/java/br/com/caelum/eats/EatsApplication.java
+
+  ```java
+  @EnableDiscoveryClient // adicionado
+  @SpringBootApplication
+  public class EatsApplication {
+
+  }
+  ```
+
+  Novamente, lembrando que o import correto:
+
+  ```java
+  import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+  ```
+
+3. Defina, no `application.properties`, um nome para aplicação, que será usado no Eureka Server:
+
+  ####### fj33-eats-monolito-modular/eats/eats-application/src/main/resources/application.properties
+
+  ```properties
+  spring.application.name=monolito
+  ```
+
+4. Pare as duas instâncias do monólito.
+
+  A seguir, execute novamente a _run configuration_ `EatsApplication`.
+
+  Observe _MONOLITO_ como instância registrada no Eureka Server.
+
+  Execute a segunda instância do monólito com a _run configuration_ `EatsApplication (1)`.
+
+  Note o registro da segunda instância no Eureka Server, também em _MONOLITO_.
