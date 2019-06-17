@@ -60,7 +60,7 @@
 
   Use a porta para `9092`, por meio de uma URL como `http://localhost:9092/restaurantes/mais-proximos/71503510`. Note que os logs do Console do Eclipse agora são da configuração `EatsDistanciaServiceApplication (1)`.
 
-## Exercício: client side load balancing com RestTemplate
+## Exercício: client side load balancing no RestTemplate com Ribbon
 
 1. No `pom.xml` do módulo `eats`, o módulo pai do monólito, adicione uma dependência ao _Spring Cloud_ na versão `Greenwich.RELEASE`, em `dependencyManagement`:
 
@@ -136,7 +136,7 @@
 
   A cada alteração, as instâncias são invocadas alternadamente.
 
-## Exercício: client side load balancing com RestTemplate no API Gateway
+## Exercício: client side load balancing com Ribbon no API Gateway
 
 1. Modifique o `application.properties` do `api-gateway`, para que use o Ribbon como _load balancer_ nas chamadas ao serviço de distância.
 
