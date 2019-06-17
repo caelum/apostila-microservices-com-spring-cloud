@@ -291,7 +291,7 @@
 
   Note, no Eureka Server, o registro da instância _APIGATEWAY_.
 
-## Exercício: cliente side discovery no serviço de pagamentos
+## Exercício: client side discovery no serviço de pagamentos
 
 1. No `application.properties` de `eats-pagamento-service`, apague a lista de servidores de distância do Ribbon, para que seja obtida do Eureka Server e, também, a configuração que desabilita o Eureka Client no Ribbon, que é habilitado por padrão:
 
@@ -310,7 +310,7 @@
 
   Note que os logs são alternados entre `EatsApplication` e `EatsApplication (1)`, quando testamos o comando acima várias vezes.
 
-## Exercício: cliente side discovery no API Gateway
+## Exercício: client side discovery no API Gateway
 
 1. Modifique o `application.properties` do API Gateway, para que o Eureka Client seja habilita e que não haja mais listas de servidores do Ribbon.
 
