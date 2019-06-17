@@ -562,6 +562,8 @@
 
 2. Modifique a classe `DistanciaService` para que use `RestauranteMongoRepository` e `RestauranteMongo`:
 
+  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/DistanciaService.java
+
   ```java
   // anotações ....
   class DistanciaService {
