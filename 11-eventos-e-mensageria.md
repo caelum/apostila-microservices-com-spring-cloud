@@ -68,7 +68,7 @@
   </dependency>
   ```
 
-2. Adicione o usuário e senha do RabbitMQ no `application.propertis` do serviço de pagamento:
+2. Adicione o usuário e senha do RabbitMQ no `application.properties` do serviço de pagamento:
 
   ####### eats-pagamento-service/src/main/resources/application.properties
 
@@ -164,6 +164,8 @@
 
 6. Em `PagamentoController`, adicione um atributo `NotificadorPagamentoConfirmado` e, no método `confirma`, invoque o método `notificaPagamentoConfirmado`, passando o pagamento que acabou de ser confirmado:
 
+  ####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoController.java
+
   ```java
   // anotações ...
   class PagamentoController {
@@ -198,3 +200,130 @@
 
   Veja nos gráficos que algumas mensagens foram publicadas. Em _Exchange_, veja `pagamentosConfirmados`.
 
+## Exercício: recebendo pagamentos confirmados no serviço de nota fiscal
+
+1. Adicione ao `pom.xml` do `eats-nota-fiscal-service` uma dependência ao starter do projeto Spring Cloud Stream Rabbit:
+
+  ####### eats-nota-fiscal-service/pom.xml
+
+  ```xml
+  <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-stream-rabbit</artifactId>
+  </dependency>
+  ```
+
+2. No `application.properties` do serviço de nota fiscal, defina o usuário e senha do RabbitMQ :
+
+  ####### eats-nota-fiscal-service/src/main/resources/application.properties
+
+  ```properties
+  spring.rabbitmq.username=eats
+  spring.rabbitmq.password=caelum123
+  ```
+
+3. No pacote `br.com.caelum.eats.notafiscal` do serviço de nota fiscal, crie uma classe `AmqpConfig` , anotando-a com `@Configuration`.
+
+  Defina a interface `PagamentoSink`, que será para configuração do consumo de mensagens do MOM. Dentro dessa interface, defina o método `pagamentosConfirmados`, com a anotação `@Input` e com `SubscribableChannel` como tipo de retorno.
+
+  O nome do _exchange_ no , que é o mesmo do _source_ do serviço de pagamentos, deve ser definido na constante `PAGAMENTOS_CONFIRMADOS`.
+
+  Não deixe de anotar a classe `AmqpConfig` com `@EnableBinding`, tendo como parâmetro a interface `PagamentoSink`:
+
+  ####### eats-nota-fiscal-service/src/main/java/br/com/caelum/eats/notafiscal/AmqpConfig.java
+
+  ```java
+  @EnableBinding(PagamentoSink.class)
+  @Configuration
+  public class AmqpConfig {
+
+    public static interface PagamentoSink {
+      String PAGAMENTOS_CONFIRMADOS = "pagamentosConfirmados";
+
+      @Input
+      SubscribableChannel pagamentosConfirmados();
+    }
+
+  }
+  ```
+
+  Adicione os imports corretos:
+
+  ```java
+  import org.springframework.cloud.stream.annotation.EnableBinding;
+  import org.springframework.cloud.stream.annotation.Input;
+  import org.springframework.context.annotation.Configuration;
+  import org.springframework.messaging.SubscribableChannel;
+
+  import br.com.caelum.notafiscal.AmqpConfig.PagamentoSink;
+  ```
+
+4. Use a anotação `@StreamListener` no método `processaPagamento` da classe `ProcessadorDePagamentos`, passando a constante `PAGAMENTOS_CONFIRMADOS` de `PagamentoSink`:
+
+  ####### eats-nota-fiscal-service/src/main/java/br/com/caelum/notafiscal/services/ProcessadorDePagamentos.java
+
+  ```java
+  // anotações ...
+  public class ProcessadorDePagamentos {
+
+    // código omitido ...
+
+    @StreamListener(PagamentoSink.PAGAMENTOS_CONFIRMADOS) // adicionado
+    public void processaPagamento(PagamentoConfirmado pagamento) {
+      // código omitido ...
+    }
+
+  }
+  ```
+
+  Faça os imports adequados:
+
+  ```java
+  import org.springframework.cloud.stream.annotation.StreamListener;
+  import br.com.caelum.notafiscal.AmqpConfig.PagamentoSink;
+  ```
+
+5. Inicie o serviço de nota fiscal executando a classe `EatsNotaFiscalServiceApplication`. Certifique-se que os demais serviços, o monólito e a UI estejam rodando.
+
+  Faça um novo pedido, crie e confirme um pagamento.
+
+  Observe, nos logs do serviço de nota fiscal, o XML da nota emitida. Algo parecido com:
+
+  ```xml
+  <xml>
+    <loja>314276853</loja>
+    <nat_operacao>Almoços, Jantares, Refeições e Pizzas</nat_operacao>
+    <pedido>
+      <items>
+        <item>
+          <descricao>Yakimeshi</descricao>
+          <un>un</un>
+          <codigo>004</codigo>
+          <qtde>1</qtde>
+          <vlr_unit>21.90</vlr_unit>
+          <tipo>P</tipo>
+          <class_fiscal>21069090</class_fiscal>
+        </item>
+        <item>
+          <descricao>Coca-Cola Zero Lata 310 ML</descricao>
+          <un>un</un>
+          <codigo>004</codigo>
+          <qtde>2</qtde>
+          <vlr_unit>5.90</vlr_unit>
+          <tipo>P</tipo>
+          <class_fiscal>21069090</class_fiscal>
+        </item>
+      </items>
+    </pedido>
+    <cliente>
+      <nome>Isabela</nome>
+      <tipoPessoa>F</tipoPessoa>
+      <contribuinte>9</contribuinte>
+      <cpf_cnpj>169.127.587-54</cpf_cnpj>
+      <email>isa@gmail.com</email>
+      <endereco>Rua dos Bobos, n 0</endereco>
+      <complemento>-</numero>
+      <cep>10001-202</cep>
+    </cliente>
+  </xml>
+  ```
