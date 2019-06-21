@@ -192,13 +192,19 @@
   }
   ```
 
-7. Execute o back-end e o front-end e, então, acesse `http://localhost:4200`.
+7. Certifique-se que o serviço de pagamento e demais serviços estejam sendo executados.
 
-  Faça um novo pedido, crie e confirme um pagamento.
+  Confirme um pagamento já existente com o cURL:
+
+  ```txt
+  curl -X PUT -i http://localhost:9999/pagamentos/1
+  ```
+
+  _Observação: para facilitar testes durante o curso, a API de pagamentos permite reconfirmação de pagamentos. Talvez não seja o ideal..._
 
 8. Acesse a UI de gerenciamento do RabbitMQ, pela URL `http://localhost:15672`.
 
-  Veja nos gráficos que algumas mensagens foram publicadas. Em _Exchange_, veja `pagamentosConfirmados`.
+  Veja nos gráficos que algumas mensagens foram publicadas. Veja `pagamentosConfirmados` listado em _Exchange_.
 
 ## Exercício: recebendo pagamentos confirmados no serviço de nota fiscal
 
@@ -283,9 +289,13 @@
   import br.com.caelum.notafiscal.AmqpConfig.PagamentoSink;
   ```
 
-5. Inicie o serviço de nota fiscal executando a classe `EatsNotaFiscalServiceApplication`. Certifique-se que os demais serviços, o monólito e a UI estejam rodando.
+5. Inicie o serviço de nota fiscal executando a classe `EatsNotaFiscalServiceApplication`. Certifique-se que os demais serviços estejam rodando.
 
-  Faça um novo pedido, crie e confirme um pagamento.
+  Novamente, use o cURL para :
+
+  ```txt
+  curl -X PUT -i http://localhost:9999/pagamentos/1
+  ```
 
   Observe, nos logs do serviço de nota fiscal, o XML da nota emitida. Algo parecido com:
 
@@ -327,3 +337,61 @@
     </cliente>
   </xml>
   ```
+
+## Exercício: Competing Consumers e Durable Subscriber com Consumer Groups
+
+1. Pare o serviço de nota fiscal e confirme alguns pagamentos pelo cURL.
+
+  Note que, mesmo com o serviço consumidor parado, a mensagem é publicada no MOM.
+
+  Suba novamente o serviço de nota fiscal e perceba que as mensagens publicadas enquanto o serviço estava fora do ar **não** foram recebidas. Essa é a característica de um _non-durable subscriber_.
+
+2. Execute uma segunda instância do serviço de nota fiscal na porta `9093`.
+
+  No workspace dos microservices, acesse o menu _Run > Run Configurations..._ do Eclipse e clique com o botão direito na configuração `EatsNotaFiscalServiceApplication` e depois clique em _Duplicate_.
+
+  Na configuração `EatsNotaFiscalServiceApplication (1)` que foi criada, acesse a aba _Arguments_ e defina `9093` como a porta da segunda instância, em _VM Arguments_:
+
+  ```txt
+  -Dserver.port=9093
+  ```
+
+  Clique em _Run_. Nova instância do serviço de nota fiscal no ar!
+
+3. Use o cURL para confirmar um pagamento. Algo como:
+
+ ```txt
+  curl -X PUT -i http://localhost:9999/pagamentos/1
+  ```
+
+  Note que o XML foi impresso nos logs das duas instâncias, `EatsNotaFiscalServiceApplication` e `EatsNotaFiscalServiceApplication (1)`. Ou seja, todas as instâncias recebem todas as mensagens publicadas no exchange `pagamentosConfirmados` do RabbitMQ.
+
+4. Adicione um nome de grupo para as instâncias do serviço de nota fiscal, definindo a propriedade `spring.cloud.stream.bindings.pagamentosConfirmados.group` no `application.properties`:
+
+  ####### eats-nota-fiscal-service/src/main/resources/application.properties
+
+  ```properties
+  spring.cloud.stream.bindings.pagamentosConfirmados.group=notafiscal
+  ```
+
+5. Novamente, confirme alguns pagamentos por meio do cURL.
+
+  Note que o XML é impresso alternadamente nos logs das instâncias `EatsNotaFiscalServiceApplication` e `EatsNotaFiscalServiceApplication (1)`.
+
+  Apenas uma instância do grupo recebe a mensagem, um pattern conhecido como _Competing Consumers_.
+
+6. Pare ambas as instâncias do serviço de nota fiscal. Confirme novos pagamentos usando o cURL.
+
+  Perceba que não ocorre nenhum erro.
+
+  Acesse a UI de gerenciamento do RabbitMQ, na página que lista as _queues_ (filas):
+
+  http://localhost:15672/#/queues
+
+  Perceba que há uma queue para o consumer group chamada `pagamentosConfirmados.notafiscal`, com uma mensagem em _Ready_ para cada confirmação efetuada. Isso indica mensagem de pagamento confirmado foi armazenada na queue.
+
+  Suba uma (ou ambas) as instâncias do `eats-nota-fiscal-service`. Perceba que os XMLs das notas fiscais foram impressos no log.
+
+  Armazenar mensagens publicadas enquanto um subscriber está fora do ar, entregando-as quando sobem novamente, é um pattern conhecido como _Durable Subscriber_.
+
+  Como vimos, os _Consumer Groups_ do Spring Cloud Stream / RabbitMQ implementam os patterns _Competing Consumers_ e  _Durable Subscriber_.
