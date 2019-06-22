@@ -77,20 +77,20 @@
   spring.rabbitmq.password=caelum123
   ```
 
-3. Crie uma classe `AmqpConfig` no pacote `br.com.caelum.eats.pagamento` do serviço de pagamento, anotando-a com `@Configuration`.
+3. Crie uma classe `AmqpPagamentoConfig` no pacote `br.com.caelum.eats.pagamento` do serviço de pagamento, anotando-a com `@Configuration`.
 
   Dentro dessa classe, crie uma interface `PagamentoSource`, que define um método `pagamentosConfirmados`. Esse método deve retornar um `MessageChannel` e tem a anotação `@Output`, indicando que o utilizaremos para enviar mensagens ao MOM.
 
   Defina também uma constante `PAGAMENTOS_CONFIRMADOS`, que conterá o nome do _exchange_ no RabbitMQ.
 
-  A classe `AmqpConfig` também deve ser anotada com `@EnableBinding`, passando como parâmetro a interface `PagamentoSource`:
+  A classe `AmqpPagamentoConfig` também deve ser anotada com `@EnableBinding`, passando como parâmetro a interface `PagamentoSource`:
 
-  ####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/AmqpConfig.java
+  ####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/AmqpPagamentoConfig.java
 
   ```java
   @EnableBinding(PagamentoSource.class)
   @Configuration
-  public class AmqpConfig {
+  public class AmqpPagamentoConfig {
 
     public static interface PagamentoSource {
       String PAGAMENTOS_CONFIRMADOS = "pagamentosConfirmados";
@@ -110,7 +110,7 @@
   import org.springframework.context.annotation.Configuration;
   import org.springframework.messaging.MessageChannel;
 
-  import br.com.caelum.eats.pagamento.AmqpConfig.PagamentoSource;
+  import br.com.caelum.eats.pagamento.AmqpPagamentoConfig.PagamentoSource;
   ```
 
 4. Crie uma classe `PagamentoConfirmado`, que representará o payload da mensagem, no pacote `br.com.caelum.eats.pagamento` do serviço de pagamento. Essa classe deverá conter o id do pagamento e o id do pedido:
@@ -155,7 +155,7 @@
   Faça os imports a seguir:
 
   ```java
-  import org.springframework.integration.support.MessageBuilder;
+  import org.springframework.messaging.support.MessageBuilder;
   import org.springframework.stereotype.Service;
 
   import br.com.caelum.eats.pagamento.AmqpConfig.PagamentoSource;
@@ -395,3 +395,456 @@
   Armazenar mensagens publicadas enquanto um subscriber está fora do ar, entregando-as quando sobem novamente, é um pattern conhecido como _Durable Subscriber_.
 
   Como vimos, os _Consumer Groups_ do Spring Cloud Stream / RabbitMQ implementam os patterns _Competing Consumers_ e  _Durable Subscriber_.
+
+
+<!--
+
+  Execute todos os serviços, o monólito e a UI e acessa a página de status de um pedido. Será algo como:
+
+  http://localhost:4200/pedidos/6/status
+
+  Clique em F12 para abrir o Dev Tools do navegador. Veja que, nessa página de status, há diversos erro relacionados com WebSocket:
+
+  ```txt
+  WebSocket connection to 'ws://localhost:9999/socket/097/ldjsnvcq/websocket' failed: Error during WebSocket handshake: Unexpected response code: 400
+  
+  Refused to display 'http://localhost:9999/socket/iframe.html#0pn4s3nd' in a frame because it set 'X-Frame-Options' to 'deny'.
+  
+  Failed to execute 'postMessage' on 'DOMWindow': The target origin provided ('http://localhost:9999') does not match the recipient window's origin ('null').
+  
+  Failed to load resource: the server responded with a status of 504 ()
+  
+  Access to XMLHttpRequest at 'http://localhost:9999/socket/097/r52mepqt/xhr?t=1561148554812' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+  ```
+
+  O que acontece é que não configuramos o API Gateway para fazer forwarding de WebSocket. Resolveremos esse problema usando o WebSocket no próprio API Gateway e, no serviço de pedido, publicando um evento de atualização de status.
+
+-->
+
+## Exercício: Movendo configurações de WebSocket para o API Gateway
+
+1. Na classe `PedidoController`, do módulo de pedido do monólito, remova os usos da API de WebSocket:
+
+  ####### fj33-eats-monolito-modular/eats/eats-pedido/src/main/java/br/com/caelum/eats/pedido/PedidoController.java
+
+  ```java
+  // anotações ...
+  class PedidoController {
+
+    private PedidoRepository repo;
+    p̶r̶i̶v̶a̶t̶e̶ ̶S̶i̶m̶p̶M̶e̶s̶s̶a̶g̶i̶n̶g̶T̶e̶m̶p̶l̶a̶t̶e̶ ̶w̶e̶b̶s̶o̶c̶k̶e̶t̶;̶
+
+    // código omitido ...
+
+    @PutMapping("/pedidos/{id}/status")
+    public PedidoDto atualizaStatus(@RequestBody Pedido pedido) {
+      repo.atualizaStatus(pedido.getStatus(), pedido);
+      w̶e̶b̶s̶o̶c̶k̶e̶t̶.̶c̶o̶n̶v̶e̶r̶t̶A̶n̶d̶S̶e̶n̶d̶(̶"̶/̶p̶e̶d̶i̶d̶o̶s̶/̶"̶ ̶+̶ ̶p̶e̶d̶i̶d̶o̶.̶g̶e̶t̶I̶d̶(̶)̶ ̶+̶ ̶"̶/̶s̶t̶a̶t̶u̶s̶"̶,̶ ̶p̶e̶d̶i̶d̶o̶)̶;̶
+      return new PedidoDto(pedido);
+    }
+
+    // código omitido ...
+
+  }
+  ```
+
+  Não deixe de remover o seguinte import:
+
+  ```java
+  i̶m̶p̶o̶r̶t̶ ̶o̶r̶g̶.̶s̶p̶r̶i̶n̶g̶f̶r̶a̶m̶e̶w̶o̶r̶k̶.̶m̶e̶s̶s̶a̶g̶i̶n̶g̶.̶s̶i̶m̶p̶.̶S̶i̶m̶p̶M̶e̶s̶s̶a̶g̶i̶n̶g̶T̶e̶m̶p̶l̶a̶t̶e̶;̶
+  ```
+
+2. Remova a classe `WebSocketConfig`, que está no pacote `br.com.caelum.eats` do módulo `eats-common` do monólito:
+
+  ```txt
+  f̶j̶3̶3̶-̶e̶a̶t̶s̶-̶m̶o̶n̶o̶l̶i̶t̶o̶-̶m̶o̶d̶u̶l̶a̶r̶/̶e̶a̶t̶s̶/̶e̶a̶t̶s̶-̶c̶o̶m̶m̶o̶n̶/̶s̶r̶c̶/̶m̶a̶i̶n̶/̶j̶a̶v̶a̶/̶b̶r̶/̶c̶o̶m̶/̶c̶a̶e̶l̶u̶m̶/̶e̶a̶t̶s̶/̶W̶e̶b̶S̶o̶c̶k̶e̶t̶C̶o̶n̶f̶i̶g̶.̶j̶a̶v̶a̶
+  ```
+
+3. No `pom.xml` do módulo `eats-common` do monólito, apague a dependência ao starter de WebSocket do Spring Boot:
+
+  ```xml
+  <̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
+    <̶g̶r̶o̶u̶p̶I̶d̶>̶o̶r̶g̶.̶s̶p̶r̶i̶n̶g̶f̶r̶a̶m̶e̶w̶o̶r̶k̶.̶b̶o̶o̶t̶<̶/̶g̶r̶o̶u̶p̶I̶d̶>̶
+    <̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶s̶p̶r̶i̶n̶g̶-̶b̶o̶o̶t̶-̶s̶t̶a̶r̶t̶e̶r̶-̶w̶e̶b̶s̶o̶c̶k̶e̶t̶<̶/̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶
+  <̶/̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
+  ```
+
+4. Adicione a dependência ao starter de WebSocket do Spring Boot no `pom.xml` do API Gateway:
+
+  ####### api-gateway/pom.xml
+
+  ```xml
+  <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-websocket</artifactId>
+  </dependency>
+  ```
+
+5. Defina a classe `WebSocketConfig` no pacote `br.com.caelum.apigateway` do API Gateway, baseando-se no código removido do monólito. O código será algo como:
+
+  ####### api-gateway/src/main/java/br/com/caelum/apigateway/WebSocketConfig.java
+
+  ```java
+  @EnableWebSocketMessageBroker
+  @Configuration
+  public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    @Override
+    public void configureMessageBroker(MessageBrokerRegistry registry) {
+      registry.enableSimpleBroker("/pedidos", "/parceiros/restaurantes");
+    }
+
+    @Override
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+      registry.addEndpoint("/socket").setAllowedOrigins("*").withSockJS();
+    }
+
+  }
+  ```
+
+  Não esqueça dos imports:
+
+  ```java
+  import org.springframework.context.annotation.Configuration;
+  import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+  import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
+  import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
+  import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+  ```
+
+6. No `application.properties` do API Gateway, defina uma rota local do Zuul, usando forwarding, para as URLs que contém o prefixo `/socket`:
+
+  ####### api-gateway/src/main/resources/application.properties
+
+  ```properties
+  zuul.routes.websocket.path=/socket/**
+  zuul.routes.websocket.url=forward:/socket
+  ```
+
+  _ATENÇÃO: essa rota deve vir antes da rota `zuul.routes.monolito`, que está definida como `/**`, um padrão que corresponde a qualquer URL._
+
+  Ainda não utilizaremos o WebSocket no API Gateway. Mas está tudo preparado!
+
+## Exercício: Publicando evento de atualização de pedido no monólito
+
+1. Adicione ao `pom.xml` do módulo `eats-common` do monólito, a dependência ao starter do Spring Cloud Stream Rabbit:
+
+  ####### fj33-eats-monolito-modular/eats/eats-common/pom.xml
+
+  ```xml
+  <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-stream-rabbit</artifactId>
+  </dependency>
+  ```
+
+2. Configure usuário e senha do RabbitMQ no `application.properties` do módulo `eats-application` do monólito:
+
+  ####### fj33-eats-monolito-modular/eats/eats-application/src/main/resources/application.properties
+
+  ```properties
+  spring.rabbitmq.username=eats
+  spring.rabbitmq.password=caelum123
+  ```
+
+3. Crie a classe `AmqpPedidoConfig` no pacote `br.com.caelum.eats` do módulo de pedidos do monólito, anotada com `@Configuration`.
+
+  _ATENÇÃO: o pacote deve ser o mencionado anteriormente, para que não sejam necessárias configurações extras no Spring Boot._
+
+  Dentro dessa classe, defina uma interface `AtualizacaoPedidoSource` que define o método `pedidoComStatusAtualizado` que tem o tipo de retorno `MessageChannel` e é anotada com `@Output`.
+
+  Defina o nome do exchange na constante `PEDIDO_COM_STATUS_ATUALIZADO`.
+
+  Anote a classe `AmqpPedidoConfig` com `@EnableBinding`, passando a interface criada.
+
+  ####### fj33-eats-monolito-modular/eats/eats-pedido/src/main/java/br/com/caelum/eats/AmqpPedidoConfig.java
+
+  ```java
+  @EnableBinding(AtualizacaoPedidoSource.class)
+  @Configuration
+  public class AmqpPedidoConfig {
+
+    public static interface AtualizacaoPedidoSource {
+
+      String PEDIDO_COM_STATUS_ATUALIZADO = "pedidoComStatusAtualizado";
+
+      @Output
+      MessageChannel pedidoComStatusAtualizado();
+    }
+
+  }
+  ```
+
+  Seguem os imports:
+
+  ```java
+  import org.springframework.cloud.stream.annotation.EnableBinding;
+  import org.springframework.cloud.stream.annotation.Output;
+  import org.springframework.context.annotation.Configuration;
+  import org.springframework.messaging.MessageChannel;
+
+  import br.com.caelum.eats.AmqpPedidoConfig.AtualizacaoPedidoSource;
+  ```
+
+4. Adicione um atributo do tipo `AtualizacaoPedidoSource` e utiliza logo depois de atualizar o status do pedido no BD, nos método `atualizaStatus` e `pago` da classe `PedidoController`, do módulo de pedido do monólito:
+
+  ####### fj33-eats-monolito-modular/eats/eats-pedido/src/main/java/br/com/caelum/eats/pedido/PedidoController.java
+
+  ```java
+  // anotações ...
+  class PedidoController {
+
+    private PedidoRepository repo;
+    private AtualizacaoPedidoSource atualizacaoPedido; // adicionado
+
+    // código omitido ...
+
+    @PutMapping("/pedidos/{id}/status")
+    public PedidoDto atualizaStatus(@RequestBody Pedido pedido) {
+      repo.atualizaStatus(pedido.getStatus(), pedido);
+
+      r̶e̶t̶u̶r̶n̶ ̶n̶e̶w̶ ̶P̶e̶d̶i̶d̶o̶D̶t̶o̶(̶p̶e̶d̶i̶d̶o̶)̶;̶
+
+      // adicionado
+      PedidoDto dto = new PedidoDto(pedido);
+      atualizacaoPedido.pedidoComStatusAtualizado().send(MessageBuilder.withPayload(dto).build());
+      return dto;
+
+    }
+
+    // código omitido ...
+
+    @PutMapping("/pedidos/{id}/pago")
+    public void pago(@PathVariable("id") Long id) {
+      // código omitido ...
+      repo.atualizaStatus(Pedido.Status.PAGO, pedido);
+
+      // adicionado
+      PedidoDto dto = new PedidoDto(pedido);
+      atualizacaoPedido.pedidoComStatusAtualizado().send(MessageBuilder.withPayload(dto).build());
+
+    }
+
+  }
+  ```
+
+  ```java
+  import org.springframework.messaging.support.MessageBuilder;
+  import br.com.caelum.eats.AmqpPedidoConfig.AtualizacaoPedidoSource;
+  ```
+
+5. Inicie todos os serviços, o monólito e a UI. Efetue login como dono de um restaurante e acesse _Pedidos pendentes_.
+
+  Altere o status de um pedido e observe nos logs do monólito a atualização do status seguida por uma conexão com o RabbitMQ, usada para enviar a mensagem de atualização de status do pedido. Algo como:
+
+  ```txt
+  Hibernate: update pedido set status=? where id=?
+  2019-06-22 08:27:39.793  INFO 12308 --- [nio-8080-exec-4] o.s.a.r.c.CachingConnectionFactory       : Attempting to connect to: [localhost:5672]
+  2019-06-22 08:27:39.797  INFO 12308 --- [nio-8080-exec-4] o.s.a.r.c.CachingConnectionFactory       : Created new connection: rabbitConnectionFactory.publisher#679864d6:0/SimpleConnection@1ec86cef [delegate=amqp://eats@127.0.0.1:5672/, localPort= 54602]
+  ```
+
+## Exercício: Recebendo o evento de atualização de status do pedido no API Gateway
+
+1. Adicione o starter do Spring Cloud Stream Rabbit como dependência no `pom.xml` do API Gateway:
+
+  ####### api-gateway/pom.xml
+
+  ```xml
+  <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-stream-rabbit</artifactId>
+  </dependency>
+  ```
+
+2. No pacote `br.com.caelum.apigateway` do API Gateway, defina uma classe que `AmqpApiGatewayConfig`, anotada com `@Configuration` e `@EnableBinding`.
+
+  Dentro dessa classe, defina a interface `AtualizacaoPedidoSink` que deve conter o método `pedidoComStatusAtualizado`, anotado com `@Input` e retornando um `SubscribableChannel`. Essa interface deve conter também a constante `PEDIDO_COM_STATUS_ATUALIZADO`:
+
+  ####### api-gateway/src/main/java/br/com/caelum/apigateway/AmqpApiGatewayConfig.java
+
+  ```java
+  @EnableBinding(AtualizacaoPedidoSink.class)
+  @Configuration
+  public class AmqpApiGatewayConfig {
+
+    public static interface AtualizacaoPedidoSink {
+
+      String PEDIDO_COM_STATUS_ATUALIZADO = "pedidoComStatusAtualizado";
+
+      @Input
+      SubscribableChannel pedidoComStatusAtualizado();
+    }
+
+  }
+  ```
+
+3. No `application.properties` do API Gateway, configure o usuário e senha do RabbitMQ. Defina também um Consumer Group para o exchange `pedidoComStatusAtualizado`:
+
+  ####### api-gateway/src/main/resources/application.properties
+
+  ```properties
+  spring.rabbitmq.username=eats
+  spring.rabbitmq.password=caelum123
+
+  spring.cloud.stream.bindings.pedidoComStatusAtualizado.group=apigateway
+  ```
+
+  Dessa maneira, teremos um Durable Subscriber com uma queue para armazenar as mensagens, no caso do API Gateway estar fora do ar, e Competing Consumers, no caso de mais de uma instância.
+
+4. Crie as classes a seguir no pacote `br.com.caelum.apigateway.pedido` do API Gateway, que serão utilizadas na desserialização da mensagem do MOM.
+
+  _DICA: basei-se nas classes do módulo de pedido do monólito._
+
+  ####### api-gateway/src/main/java/br/com/caelum/apigateway/pedido/ClienteDto.java
+
+  ```java
+  @Data
+  @AllArgsConstructor
+  @NoArgsConstructor
+  public class ClienteDto {
+
+    private String nome;
+
+    private String cpf;
+
+    private String email;
+
+    private String telefone;
+
+  }
+  ```
+
+  ####### api-gateway/src/main/java/br/com/caelum/apigateway/pedido/EntregaDto.java
+
+  ```java
+  @Data
+  @AllArgsConstructor
+  @NoArgsConstructor
+  public class EntregaDto {
+
+    private Long id;
+    private ClienteDto cliente;
+    private String cep;
+    private String endereco;
+    private String complemento;
+
+  }
+  ```
+
+  ####### api-gateway/src/main/java/br/com/caelum/apigateway/pedido/ItemDoCardapioDto.java
+
+  ```java
+  @Data
+  @AllArgsConstructor
+  @NoArgsConstructor
+  public class ItemDoCardapioDto {
+
+    private Long id;
+    private String nome;
+    private String descricao;
+    private BigDecimal preco;
+    private BigDecimal precoPromocional;
+
+  }
+  ```
+
+  ####### api-gateway/src/main/java/br/com/caelum/apigateway/pedido/ItemDoPedidoDto.java
+
+  ```java
+  @Data
+  @AllArgsConstructor
+  @NoArgsConstructor
+  public class ItemDoPedidoDto {
+
+    private Long id;
+    private Integer quantidade;
+    private String observacao;
+    private ItemDoCardapioDto itemDoCardapio;
+
+  }
+  ```
+
+  ####### api-gateway/src/main/java/br/com/caelum/apigateway/pedido/PedidoDto.java
+
+  ```java
+  @Data
+  @AllArgsConstructor
+  @NoArgsConstructor
+  public class PedidoDto {
+
+    private Long id;
+    private LocalDateTime dataHora;
+    private String status;
+    private RestauranteDto restaurante;
+    private EntregaDto entrega;
+    private List<ItemDoPedidoDto> itens = new ArrayList<>();
+
+    public BigDecimal getTotal() {
+      BigDecimal taxaDeEntregaEmReais = restaurante.getTaxaDeEntregaEmReais();
+      BigDecimal total = taxaDeEntregaEmReais != null ? taxaDeEntregaEmReais : BigDecimal.ZERO;
+      for (ItemDoPedidoDto item : itens) {
+        ItemDoCardapioDto itemDoCardapio = item.getItemDoCardapio();
+        BigDecimal precoPromocional = itemDoCardapio.getPrecoPromocional();
+        BigDecimal preco = precoPromocional != null ? precoPromocional : itemDoCardapio.getPreco() ;
+        total = total.add(preco.multiply(new BigDecimal(item.getQuantidade())));
+      }
+      return total;
+    }
+
+  }
+  ```
+
+5. Crie uma classe para receber as mensagens de atualização de status do pedido chamada `StatusDoPedidoService`, no pacote `br.com.caelum.apigateway.pedido` do API Gateway.
+
+  Anote-a com `@Service` e `@AllArgsConstructor`. Defina um atributo do tipo `SimpMessagingTemplate`, cuja instância será injetada pelo Spring.
+
+  Crie um método `pedidoAtualizado`, que recebe um `PedidoDto` como parâmetro. Nesse método, use o  `SimpMessagingTemplate` para enviar o novo status do pedido para o front-end. Se o pedido for pago, envie para uma _destination_ específica para os pedidos pendentes do restaurante.
+
+  Anote o método `pedidoAtualizado` com `@StreamListener`, passando como parâmetro a constante `PEDIDO_COM_STATUS_ATUALIZADO` de `AtualizacaoPedidoSink`.
+
+  ####### api-gateway/src/main/java/br/com/caelum/apigateway/pedido/StatusDoPedidoService.java
+
+  ```java
+  @Service
+  @AllArgsConstructor
+  public class StatusDoPedidoService {
+
+    private SimpMessagingTemplate websocket;
+
+    @StreamListener(AtualizacaoPedidoSink.PEDIDO_COM_STATUS_ATUALIZADO)
+    public void pedidoAtualizado(PedidoDto pedido) {
+
+      websocket.convertAndSend("/pedidos/"+pedido.getId()+"/status", pedido);
+
+      if ("PAGO".equals(pedido.getStatus())) {
+        websocket.convertAndSend("/parceiros/restaurantes/"+pedido.getRestaurante().getId()+"/pedidos/pendentes", pedido);
+      }
+    }
+
+  }
+  ```
+
+  Certifique-se que fez os imports adequados:
+
+  ```java
+  import org.springframework.cloud.stream.annotation.StreamListener;
+  import org.springframework.messaging.simp.SimpMessagingTemplate;
+  import org.springframework.stereotype.Service;
+
+  import br.com.caelum.apigateway.AmqpApiGatewayConfig.AtualizacaoPedidoSink;
+
+  import lombok.AllArgsConstructor;
+  ```
+
+6. Suba todos os serviços, o monólito e o front-end.
+
+  Abra duas janelas de um navegador, de maneira que possa vê-las simultaneamente.
+
+  Em uma das janelas, efetue login como dono de um restaurante e vá até a página de pedidos pendentes.
+
+  Na outra janela do navegador, efetue um pedido no mesmo restaurante, até confirmar o pagamento.
+
+  Perceba que o novo pedido aparece na tela de pedidos pendentes.
+
+  Mude o status do pedido para _Confirmado_ ou _Pronto_ e veja a alteração na tela de acompanhamento do pedido.
+  
