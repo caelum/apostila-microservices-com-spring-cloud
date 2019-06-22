@@ -224,7 +224,7 @@
 
   Clique em _Run_. Nova instância do monólito no ar!
 
-## Exercícios: client side load balancing com Feign
+## Exercício: client side load balancing com Feign
 
 1. Adicione como dependência o _starter_ do Ribbon no `pom.xml` do `eats-pagamento-service`:
 
