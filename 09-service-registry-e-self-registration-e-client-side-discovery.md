@@ -177,12 +177,14 @@
   import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
   ```
 
-3. Defina, no `application.properties`, um nome para aplicação, que será usado no Eureka Server:
+3. Defina, no `application.properties`, um nome para aplicação, que será usado no Eureka Server. Além disso, adicione a configuração customizável para a URL do Eureka Server:
 
   ####### eats-pagamento-service/src/main/resources/application.properties
 
   ```properties
   spring.application.name=pagamentos
+
+  eureka.client.serviceUrl.defaultZone=${EUREKA_URI:http://localhost:8761/eureka/}
   ```
 
 4. Pare o serviço de pagamento.
@@ -224,12 +226,14 @@
   import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
   ```
 
-3. Defina, no `application.properties`, um nome para aplicação, que será usado no Eureka Server:
+3. Defina, no `application.properties`, um nome para aplicação e a URL do Eureka Server:
 
   ####### fj33-eats-monolito-modular/eats/eats-application/src/main/resources/application.properties
 
   ```properties
   spring.application.name=monolito
+
+  eureka.client.serviceUrl.defaultZone=${EUREKA_URI:http://localhost:8761/eureka/}
   ```
 
 4. Pare as duas instâncias do monólito.
@@ -277,12 +281,14 @@
   import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
   ```
 
-3. No `application.properties`, defina `apigateway` como nome da aplicação:
+3. No `application.properties`, defina `apigateway` como nome da aplicação. Defina também a URL do Eureka Server:
 
   ####### api-gateway/src/main/resources/application.properties
 
   ```properties
   spring.application.name=apigateway
+
+  eureka.client.serviceUrl.defaultZone=${EUREKA_URI:http://localhost:8761/eureka/}
   ```
 
 4. Pare o API Gateway.
