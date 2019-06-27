@@ -69,3 +69,51 @@
   ```
 
 7. Execute a classe `ConfigServerApplication`.
+
+## Exercício: configurando Config Clients nos serviços
+
+1. Vamos usar como exemplo a configuração do Config Client no serviço de pagamento. Os passos para os demais serviços serão semelhantes.
+
+  No `pom.xml` de `eats-pagamento-service`, adicione a dependência ao _starter_ do Spring Cloud Config Client:
+
+  ####### eats-pagamento-service/pom.xml
+
+  ```xml
+  <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-config</artifactId>
+  </dependency>
+  ```
+
+2. Retire do `application.properties` do serviço de pagamentos as configurações comuns que foram definidas no Config Server. Remova também o nome da aplicação:
+
+  ####### eats-pagamento-service/src/main/resources/application.properties
+
+  ```properties
+  
+  e̶u̶r̶e̶k̶a̶.̶c̶l̶i̶e̶n̶t̶.̶s̶e̶r̶v̶i̶c̶e̶U̶r̶l̶.̶d̶e̶f̶a̶u̶l̶t̶Z̶o̶n̶e̶=̶$̶{̶E̶U̶R̶E̶K̶A̶_̶U̶R̶I̶:̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶7̶6̶1̶/̶e̶u̶r̶e̶k̶a̶/̶}̶
+
+  s̶p̶r̶i̶n̶g̶.̶r̶a̶b̶b̶i̶t̶m̶q̶.̶u̶s̶e̶r̶n̶a̶m̶e̶=̶e̶a̶t̶s̶
+  s̶p̶r̶i̶n̶g̶.̶r̶a̶b̶b̶i̶t̶m̶q̶.̶p̶a̶s̶s̶w̶o̶r̶d̶=̶c̶a̶e̶l̶u̶m̶1̶2̶3̶
+  ```
+
+3. Crie o arquivo `bootstrap.properties` no diretório `src/main/resources` do serviço de pagamentos. Nesse arquivo, defina o nome da aplicação e a URL do Config Server:
+
+  ####### eats-pagamento-service/src/main/resources/bootstrap.properties
+
+  ```properties
+  spring.application.name=pagamentos
+
+  spring.cloud.config.uri=http://localhost:8888
+  ```
+
+4. Faça o mesmo para:
+
+  - o API Gateway
+  - o monólito
+  - o serviço de nota fiscal
+  - o serviço de distância
+
+  _Observação: no monólito, as configurações devem ser feitas no módulo `eats-application`._
+
+5. Reinicie todos os serviços. Garanta que a UI esteja no ar. Teste a aplicação, por exemplo, fazendo um pedido até o final e confirmando-o no restaurante. Deve funcionar!
