@@ -117,3 +117,35 @@
   _Observação: no monólito, as configurações devem ser feitas no módulo `eats-application`._
 
 5. Reinicie todos os serviços. Garanta que a UI esteja no ar. Teste a aplicação, por exemplo, fazendo um pedido até o final e confirmando-o no restaurante. Deve funcionar!
+
+## Exercício: repositório Git no Config Server
+
+1. Crie um repositório Git no diretório `config-repo` do seu Desktop com os comandos:
+
+  ```sh
+  cd Desktop
+  mkdir config-repo
+  cd config-repo
+  git init
+  ```
+
+2. Mova o arquivo `application.properties` do diretório `configs` do Config Server, que contém as configurações comuns aos vários serviços, para o repositório `config-repo` e o faça o commit:
+
+  ```sh
+  mv ~/Desktop/config-server/src/main/resources/configs/application.properties ~/Desktop/config-repo
+  git add .
+  git commit -m "versão inicial do application.properties"
+  ```
+
+3. Configure o `application.properties` do `config-server` para apontar para o repositório Git:
+
+  ####### config-server/src/main/resources/application.properties
+
+  ```properties
+  s̶p̶r̶i̶n̶g̶.̶p̶r̶o̶f̶i̶l̶e̶s̶.̶a̶c̶t̶i̶v̶e̶=̶n̶a̶t̶i̶v̶e̶
+  s̶p̶r̶i̶n̶g̶.̶c̶l̶o̶u̶d̶.̶c̶o̶n̶f̶i̶g̶.̶s̶e̶r̶v̶e̶r̶.̶n̶a̶t̶i̶v̶e̶.̶s̶e̶a̶r̶c̶h̶L̶o̶c̶a̶t̶i̶o̶n̶s̶=̶c̶l̶a̶s̶s̶p̶a̶t̶h̶:̶/̶c̶o̶n̶f̶i̶g̶s̶
+
+  spring.cloud.config.server.git.uri: file://${user.home}/Desktop/config-repo
+  ```
+
+4. Reinicie os serviços e o monólito. Com a UI no ar, veja se a aplicação continua funcionando!
