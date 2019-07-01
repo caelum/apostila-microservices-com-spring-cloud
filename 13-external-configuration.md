@@ -33,7 +33,7 @@
   public class ConfigServerApplication {
 
     public static void main(String[] args) {
-      SpringApplication.run(ServiceRegistryApplication.class, args);
+      SpringApplication.run(ConfigServerApplication.class, args);
     }
 
   }

@@ -292,7 +292,7 @@ Implemente, usando Feign, uma maneira do serviço de pagamento avisar ao monóli
 
   ```java
   @EnableFeignClients // adicionado
-  @SpringBootApplication	@SpringBootApplication
+  @SpringBootApplication
   public class EatsPagamentoServiceApplication {
 
     // código omitido ...
