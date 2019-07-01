@@ -118,4 +118,56 @@
 
 ## Exercício: configurando o Hystrix Dashboard
 
-1. 
+1. Pelo navegador, abra `https://start.spring.io/`.
+  Em _Project_, mantenha _Maven Project_.
+  Em _Language_, mantenha _Java_.
+  Em _Spring Boot_, mantenha a versão padrão.
+  No trecho de _Project Metadata_, defina:
+
+  - `br.com.caelum` em _Group_
+  - `hystrix-dashboard` em _Artifact_
+
+  Mantenha os valores em _More options_.
+ 
+  Mantenha o _Packaging_ como `Jar`.
+  Mantenha a _Java Version_ em `8`.
+
+  Em _Dependencies_, adicione:
+
+  - Hystrix Dashboard
+
+  Clique em _Generate Project_.
+2. Extraia o `hystrix-dashboard.zip` e copie a pasta para seu Desktop.
+3. No Eclipse, no workspace de microservices, importe o projeto `hystrix-dashboard`, usando o menu _File > Import > Existing Maven Projects_.
+4. Adicione a anotação `@EnableHystrixDashboard` à classe `HystrixDashboardApplication`:
+
+  ####### hystrix-dashboard/src/main/java/br/com/caelum/hystrixdashboard/HystrixDashboardApplication.java
+
+  ```java
+  @EnableHystrixDashboard
+  @SpringBootApplication
+  public class HystrixDashboardApplication {
+
+    public static void main(String[] args) {
+      SpringApplication.run(HystrixDashboardApplication.class, args);
+    }
+
+  }
+  ```
+
+  Adicione o import:
+
+  ```java
+  import org.springframework.cloud.netflix.hystrix.dashboard.EnableHystrixDashboard;
+  ```
+
+5. No arquivo `application.properties`, modifique a porta para `7777`:
+
+  ####### hystrix-dashboard/src/main/resources/application.properties
+
+  ```properties
+  server.port=7777
+  ```
+
+6. Execute a classe `HystrixDashboardApplication`.
+
