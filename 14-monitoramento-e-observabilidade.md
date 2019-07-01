@@ -106,7 +106,7 @@
 
   http://localhost:{porta}/actuator/channels
 
-  _Observação: troque `{porta}` pela porta de um serviço qualquer._
+  _Observação: troque `{porta}` pela porta de algum serviço._
 
   Há ainda endpoints específicos para o serviço que estamos acessando. Por exemplo, para o API Gateway temos com as rotas e _filters_:
 
@@ -115,3 +115,7 @@
   e
 
   http://localhost:9999/actuator/filters
+
+## Exercício: configurando o Hystrix Dashboard
+
+1. 
