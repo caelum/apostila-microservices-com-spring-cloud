@@ -149,3 +149,94 @@
   ```
 
 4. Reinicie os serviços e o monólito. Com a UI no ar, veja se a aplicação continua funcionando!
+
+## Movendo configurações específicas dos serviços para o Config Server
+
+1. Crie um arquivo `monolito.properties` no diretório `config-repo`, que é nosso repositório Git. Passe para esse novo arquivo as configurações de BD e chaves criptográficas, removendo-as do monólito:
+
+  ####### fj33-eats-monolito-modular/eats/eats-application/src/main/resources/application.properties
+
+  ```properties
+  #̶D̶A̶T̶A̶S̶O̶U̶R̶C̶E̶ ̶C̶O̶N̶F̶I̶G̶S̶
+  s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶u̶r̶l̶=̶j̶d̶b̶c̶:̶m̶y̶s̶q̶l̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶/̶e̶a̶t̶s̶?̶c̶r̶e̶a̶t̶e̶D̶a̶t̶a̶b̶a̶s̶e̶I̶f̶N̶o̶t̶E̶x̶i̶s̶t̶=̶t̶r̶u̶e̶
+  s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶u̶s̶e̶r̶n̶a̶m̶e̶=̶r̶o̶o̶t̶
+  s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶p̶a̶s̶s̶w̶o̶r̶d̶=̶
+
+  # código omitido ...
+  
+  #̶J̶W̶T̶ ̶C̶O̶N̶F̶I̶G̶S̶
+  j̶w̶t̶.̶s̶e̶c̶r̶e̶t̶ ̶=̶ ̶r̶m̶'̶!̶@̶N̶=̶K̶e̶!̶~̶p̶8̶V̶T̶A̶2̶Z̶R̶K̶~̶n̶M̶D̶Q̶X̶5̶U̶v̶m̶!̶m̶'̶D̶&̶]̶{̶@̶V̶r̶?̶G̶;̶2̶?̶X̶h̶b̶C̶:̶Q̶a̶#̶9̶#̶e̶M̶L̶N̶\̶}̶x̶3̶?̶J̶R̶3̶.̶2̶z̶r̶~̶v̶)̶g̶Y̶F̶^̶8̶\̶:̶8̶>̶:̶X̶f̶B̶:̶W̶w̶7̶5̶N̶/̶e̶m̶t̶9̶Y̶j̶[̶b̶Q̶M̶N̶C̶W̶w̶W̶\̶J̶?̶N̶,̶n̶v̶H̶.̶<̶2̶\̶.̶r̶~̶w̶]̶*̶e̶~̶v̶g̶a̶k̶)̶X̶"̶v̶8̶H̶`̶M̶H̶/̶7̶"̶2̶E̶`̶,̶^̶k̶@̶n̶<̶v̶E̶-̶w̶D̶3̶g̶9̶J̶W̶P̶y̶;̶C̶r̶Y̶*̶.̶K̶d̶2̶_̶D̶]̶)̶=̶>̶<̶D̶?̶Y̶h̶B̶a̶S̶u̶a̶5̶h̶W̶%̶{̶2̶]̶_̶F̶V̶X̶z̶b̶9̶`̶8̶F̶H̶^̶b̶[̶X̶3̶j̶z̶V̶E̶R̶&̶:̶j̶w̶2̶<̶=̶c̶3̶8̶=̶>̶L̶/̶z̶B̶q̶`̶}̶C̶6̶t̶T̶*̶c̶C̶S̶V̶C̶^̶c̶]̶-̶L̶}̶&̶/̶
+  j̶w̶t̶.̶e̶x̶p̶i̶r̶a̶t̶i̶o̶n̶ ̶=̶ ̶6̶0̶4̶8̶0̶0̶0̶0̶0̶
+  ```
+
+  ####### config-repo/monolito.properties
+
+  ```properties
+  # DATASOURCE CONFIGS
+  spring.datasource.url=jdbc:mysql://localhost/eats?createDatabaseIfNotExist=true
+  spring.datasource.username=root
+  spring.datasource.password=
+  
+  #JWT CONFIGS
+  jwt.secret = rm'!@N=Ke!~p8VTA2ZRK~nMDQX5Uvm!m'D&]{@Vr?G;2?XhbC:Qa#9#eMLN\}x3?JR3.2zr~v)gYF^8\:8>:XfB:Ww75N/emt9Yj[bQMNCWwW\J?N,nvH.<2\.r~w]*e~vgak)X"v8H`MH/7"2E`,^k@n<vE-wD3g9JWPy;CrY*.Kd2_D])=><D?YhBaSua5hW%{2]_FVXzb9`8FH^b[X3jzVER&:jw2<=c38=>L/zBq`}C6tT*cCSVC^c]-L}&/
+  jwt.expiration = 604800000
+  ```
+
+  Não deixe de comitar o novo arquivo no repositório Git:
+
+  ```sh
+  git add monolito.properties
+  git commit -m "adiciona configurações do monolito"
+  ```
+
+2. Mova as configurações do BD do serviço de pagamento para o arquivo `pagamentos.properties` do repositório de configurações:
+
+  ###### eats-pagamento-service/src/main/resources/application.properties
+
+  ```properties
+  #̶D̶A̶T̶A̶S̶O̶U̶R̶C̶E̶ ̶C̶O̶N̶F̶I̶G̶S̶
+  s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶u̶r̶l̶=̶j̶d̶b̶c̶:̶m̶y̶s̶q̶l̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶3̶3̶0̶7̶/̶e̶a̶t̶s̶_̶p̶a̶g̶a̶m̶e̶n̶t̶o̶?̶c̶r̶e̶a̶t̶e̶D̶a̶t̶a̶b̶a̶s̶e̶I̶f̶N̶o̶t̶E̶x̶i̶s̶t̶=̶t̶r̶u̶e̶
+  s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶u̶s̶e̶r̶n̶a̶m̶e̶=̶p̶a̶g̶a̶m̶e̶n̶t̶o̶
+  s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶p̶a̶s̶s̶w̶o̶r̶d̶=̶p̶a̶g̶a̶m̶e̶n̶t̶o̶1̶2̶3̶
+  ```
+
+  ####### config-repo/pagamentos.properties
+
+  ```properties
+  #DATASOURCE CONFIGS
+  spring.datasource.url=jdbc:mysql://localhost:3307/eats_pagamento?createDatabaseIfNotExist=true
+  spring.datasource.username=pagamento
+  spring.datasource.password=pagamento123
+  ```
+
+  Faça o commit do novo arquivo:
+
+  ```sh
+  git add pagamentos.properties
+  git commit -m "adiciona configurações do serviço de pagamento"
+  ```
+
+3. Transfira as configurações de DB do serviço de distância para um novo arquivo `distancia.properties` do `config-repo`:
+
+  ###### eats-distancia-service/src/main/resources/application.properties
+
+  ```properties
+  s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶.̶m̶o̶n̶g̶o̶d̶b̶.̶d̶a̶t̶a̶b̶a̶s̶e̶=̶e̶a̶t̶s̶_̶d̶i̶s̶t̶a̶n̶c̶i̶a̶
+  s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶.̶m̶o̶n̶g̶o̶d̶b̶.̶p̶o̶r̶t̶=̶2̶7̶0̶1̶8̶
+  ```
+
+  ####### config-repo/distancia.properties
+
+  ```properties
+  spring.data.mongodb.database=eats_distancia
+  spring.data.mongodb.port=27018
+  ```
+
+  Comite o novo arquivo no repositório Git:
+
+  ```sh
+  git add distancia.properties
+  git commit -m "adiciona configurações do serviço de distância"
+  ```
+
+4. Faça com que os serviços sejam reiniciados. Acesse a UI e teste as funcionalidades.
