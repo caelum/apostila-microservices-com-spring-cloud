@@ -451,3 +451,76 @@
   Vá até a interface Web do Zipkin e, em selecione um serviço em _Service Name_. Então, clique em _Find traces_ e veja os rastreamentos. Clique para ver os detalhes.
 
   Na aba _Dependencies_, veja um gráfico com as dependências entre os serviços baseadas no uso real (e não apenas em diagramas arquiteturais).
+
+## Exercício: Spring Boot Admin
+
+1. Pelo navegador, abra `https://start.spring.io/`.
+  Em _Project_, mantenha _Maven Project_.
+  Em _Language_, mantenha _Java_.
+  Em _Spring Boot_, mantenha a versão padrão.
+  No trecho de _Project Metadata_, defina:
+
+  - `br.com.caelum` em _Group_
+  - `admin-server` em _Artifact_
+
+  Mantenha os valores em _More options_.
+ 
+  Mantenha o _Packaging_ como `Jar`.
+  Mantenha a _Java Version_ em `8`.
+
+  Em _Dependencies_, adicione:
+
+  - Spring Boot Admin (Server)
+  - Config Client
+  - Eureka Discovery Client
+
+  Clique em _Generate Project_.
+2. Extraia o `admin-server.zip` e copie a pasta para seu Desktop.
+3. No Eclipse, no workspace de microservices, importe o projeto `admin-server`, usando o menu _File > Import > Existing Maven Projects_.
+4. Adicione a anotação `@EnableAdminServer` à classe `AdminServerApplication`:
+
+  ####### admin-server/src/main/java/br/com/caelum/adminserver/AdminServerApplication.java
+
+  ```java
+  @EnableAdminServer
+  @SpringBootApplication
+  public class AdminServerApplication {
+
+    public static void main(String[] args) {
+      SpringApplication.run(AdminServerApplication.class, args);
+    }
+
+  }
+  ```
+
+  Adicione o import:
+
+  ```java
+  import de.codecentric.boot.admin.server.config.EnableAdminServer;
+  ```
+
+5. No arquivo `application.properties`, modifique a porta para `6666`:
+
+  ####### admin-server/src/main/resources/application.properties
+
+  ```properties
+  server.port=8084
+  ```
+
+6. Crie um arquivo `bootstrap.properties` no diretório `src/main/resources` do Admin Server, definindo o nome da aplicação e o endereço do Config Server:
+
+  ```properties
+  spring.application.name=adminserver
+
+  spring.cloud.config.uri=http://localhost:8888
+  ```
+
+7. Execute a classe `AdminServerApplication`.
+
+  Pelo navegador, acesse a URL:
+
+  http://localhost:8084
+
+  Veja informações sobre as aplicações e instâncias.
+
+  Em _Wallboard_, há uma visualização interessante do status dos serviços.
