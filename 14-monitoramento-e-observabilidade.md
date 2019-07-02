@@ -403,3 +403,51 @@
   ```sh
   docker-compose up
   ```
+
+3. Acesse a UI Web do Zipkin pelo navegador através da URL:
+
+  http://localhost:9411/zipkin/
+
+## Exercício: enviando informações para o Zipkin com Spring Cloud Sleuth
+
+1. Adicione uma dependência ao starter do Spring Cloud Zipkin no `pom.xml` do API Gateway:
+
+  ####### api-gateway/pom.xml
+
+  ```xml
+  <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-zipkin</artifactId>
+  </dependency>
+  ```
+
+  Faça o mesmo no `pom.xml` do:
+
+  - módulo `eats-application` do monólito
+  - serviço de pagamentos
+  - serviço de distância
+  - serviço de nota fiscal
+
+2. Por padrão, o Spring Cloud Sleuth faz rastreamento por amostragem de 10% das chamadas. É um bom valor, mas inviável pelo pouco volume de nossos requests.
+
+  Por isso, altere a porcentagem de amostragem para 100%, modificando o arquivo `application.properties` do `config-repo`:
+
+  ####### config-repo/application.properties
+
+  ```properties
+  spring.sleuth.sampler.probability=1.0
+  ```
+
+  Não esqueça de comitar a alteração:
+
+  ```sh
+  git commit -m "configuração do Spring Cloud Sleuth"
+  ```
+
+3. Reinicie os serviços que foram modificados no passo anterior. Garanta que a UI esteja no ar.
+
+  Faça um novo pedido, até a confirmação do pagamento. Faça o login como dono do restaurante e aprove o pedido. Edite o tipo de cozinha e/ou CEP de um restaurante.
+
+  Vá até a interface Web do Zipkin e, em selecione um serviço em _Service Name_. Então, clique em _Find traces_ e veja os rastreamentos. Clique para ver os detalhes.
+
+  Na aba _Dependencies_, veja um gráfico com as dependências entre os serviços baseadas no uso real (e não apenas em diagramas arquiteturais).
