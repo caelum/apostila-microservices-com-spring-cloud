@@ -290,7 +290,7 @@
 
   Depois disso, veja os status dos circuit breakers.
 
-## Exercício: Turbine Stream, o agregador baseado em eventos
+## Exercício: agregando baseado em eventos com Turbine Stream
 
 1. No `pom.xml` do projeto `turbine`, troque a dependência ao starter do Turbine pela do Turbine Stream. Adicione também o binder do Spring Cloud Stream ao RabbitMQ:
 
@@ -379,3 +379,27 @@
   Chame o API Gateway em outra janela do navegador, como as dos exercícios anteriores.
 
   Observe informações sobre os circuit breakers no Hystrix Dashboard.
+
+## Exercício: configurando o Zipkin no Docker Compose
+
+1. Para provisionar uma instância do Zipkin, adicione as seguintes configurações ao `docker-compose.yml` do seu Desktop:
+
+  ####### docker-compose.yml
+
+  ```yml
+  zipkin:
+    image: openzipkin/zipkin
+    ports:
+      - "9410:9410"
+      - "9411:9411"
+    depends_on:
+      - rabbitmq
+    environment:
+      RABBIT_URI: "amqp://eats:caelum123@rabbitmq:5672"
+  ```
+
+2. Execute o servidor do Zipkin pelo Docker Compose com o comando:
+
+  ```sh
+  docker-compose up
+  ```
