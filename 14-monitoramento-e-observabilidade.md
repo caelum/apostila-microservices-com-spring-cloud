@@ -263,10 +263,7 @@
 
   http://localhost:7776/turbine.stream
 
-  Em outra janela do navegador, faça algumas chamadas ao API Gateway, como as do exercício anterior:
-
-   - http://localhost:9999/distancia/restaurantes/mais-proximos/71503510, que exibirá o circuit breaker do serviço de distância
-  - http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1, que exibirá os circuit breakers relacionados a composição de chamadas feita no API Gateway
+  Em outra janela do navegador, faça algumas chamadas ao API Gateway, como as do exercício anterior.
 
   Observe, na página do Turbine, um fluxo de dados parecido com:
 
@@ -289,4 +286,96 @@
 
   http://localhost:7776/turbine.stream
 
-  Então, veja os status dos circuit breakers.
+  Faça algumas chamadas ao API Gateway, como nos passos anteriores.
+
+  Depois disso, veja os status dos circuit breakers.
+
+## Exercício: Turbine Stream, o agregador baseado em eventos
+
+1. No `pom.xml` do projeto `turbine`, troque a dependência ao starter do Turbine pela do Turbine Stream. Adicione também o binder do Spring Cloud Stream ao RabbitMQ:
+
+  ####### turbine/pom.xml
+
+  ```xml
+  <̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
+    <̶g̶r̶o̶u̶p̶I̶d̶>̶o̶r̶g̶.̶s̶p̶r̶i̶n̶g̶f̶r̶a̶m̶e̶w̶o̶r̶k̶.̶c̶l̶o̶u̶d̶<̶/̶g̶r̶o̶u̶p̶I̶d̶>̶
+    <̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶s̶p̶r̶i̶n̶g̶-̶c̶l̶o̶u̶d̶-̶s̶t̶a̶r̶t̶e̶r̶-̶n̶e̶t̶f̶l̶i̶x̶-̶t̶u̶r̶b̶i̶n̶e̶<̶/̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶
+  <̶/̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
+  <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-turbine-stream</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-stream-binder-rabbit</artifactId>
+  </dependency>
+  ```
+
+2. O status de cada circuit breaker será obtido por meio de eventos no Exchange `springCloudHystrixStream` do RabbitMQ.
+
+  Por isso, remova as configurações de aplicações do `application.properties`:
+
+  ####### turbine/src/main/resources/application.properties
+
+  ```properties
+  t̶u̶r̶b̶i̶n̶e̶.̶a̶p̶p̶C̶o̶n̶f̶i̶g̶=̶a̶p̶i̶g̶a̶t̶e̶w̶a̶y̶
+  t̶u̶r̶b̶i̶n̶e̶.̶c̶l̶u̶s̶t̶e̶r̶N̶a̶m̶e̶E̶x̶p̶r̶e̶s̶s̶i̶o̶n̶=̶'̶d̶e̶f̶a̶u̶l̶t̶'̶
+  ```
+
+3. Troque a anotação `@EnableTurbine` por `@EnableTurbineStream` na classe `TurbineApplication`:
+
+  ####### turbine/src/main/java/br/com/caelum/turbine/TurbineApplication.java
+
+  ```java
+  @̶E̶n̶a̶b̶l̶e̶T̶u̶r̶b̶i̶n̶e̶
+  @EnableTurbineStream
+  @EnableDiscoveryClient
+  @SpringBootApplication
+  public class TurbineApplication {
+
+    public static void main(String[] args) {
+      SpringApplication.run(TurbineApplication.class, args);
+    }
+
+  }
+  ```
+
+  Ajuste os imports da seguinte maneira:
+
+  ```java
+  i̶m̶p̶o̶r̶t̶ ̶o̶r̶g̶.̶s̶p̶r̶i̶n̶g̶f̶r̶a̶m̶e̶w̶o̶r̶k̶.̶c̶l̶o̶u̶d̶.̶n̶e̶t̶f̶l̶i̶x̶.̶t̶u̶r̶b̶i̶n̶e̶.̶E̶n̶a̶b̶l̶e̶T̶u̶r̶b̶i̶n̶e̶;̶
+  import org.springframework.cloud.netflix.turbine.stream.EnableTurbineStream;
+  ```
+
+4. Adicione a dependência ao Hystrix Stream no `pom.xml` do API Gateway:
+
+  ####### api-gateway/pom.xml
+
+  ```xml
+  <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-netflix-hystrix-stream</artifactId>
+  </dependency>
+  ```
+
+5. Ajuste o _destination_ do _channel_ `hystrixStreamOutput`, no `application.properties` do API Gateway, por meio da propriedade:
+
+  ####### api-gateway/src/main/resources/application.properties
+
+  ```properties
+  spring.cloud.stream.bindings.hystrixStreamOutput.destination=springCloudHystrixStream
+  ```
+
+6. Reinicie o API Gateway e o Turbine.
+
+  Acesse, pelo navegador, o Hystrix Dashboard:
+
+  http://localhost:7777/hystrix
+
+  Aponte para a URL do Turbine:
+
+  http://localhost:7776/turbine.stream
+
+  Chame o API Gateway em outra janela do navegador, como as dos exercícios anteriores.
+
+  Observe informações sobre os circuit breakers no Hystrix Dashboard.
