@@ -128,7 +128,7 @@
   - `hystrix-dashboard` em _Artifact_
 
   Mantenha os valores em _More options_.
- 
+
   Mantenha o _Packaging_ como `Jar`.
   Mantenha a _Java Version_ em `8`.
 
@@ -171,3 +171,122 @@
 
 6. Execute a classe `HystrixDashboardApplication`.
 
+7. Acesse o Hystrix Dashboard, pelo navegador, com a seguinte URL:
+
+  http://localhost:7777/hystrix
+
+  Coloque, na URL, o endpoint de Hystrix Stream Actuator do API Gateway:
+
+  http://localhost:9999/actuator/hystrix.stream
+
+  Clique em _Monitor Stream_.
+
+  Em outra aba, acesse URLs do API Gateway como as que seguem:
+
+  - http://localhost:9999/restaurantes/1, que exibirá o circuit breaker do monolito
+  - http://localhost:9999/pagamentos/1, que exibirá o circuit breaker do serviço de pagamentos
+  - http://localhost:9999/distancia/restaurantes/mais-proximos/71503510, que exibirá o circuit breaker do serviço de distância
+  - http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1, que exibirá os circuit breakers relacionados a composição de chamadas feita no API Gateway
+
+## Exercício: agregando dados dos circuit-breakers com Turbine
+
+1. Pelo navegador, abra `https://start.spring.io/`.
+  Em _Project_, mantenha _Maven Project_.
+  Em _Language_, mantenha _Java_.
+  Em _Spring Boot_, mantenha a versão padrão.
+  No trecho de _Project Metadata_, defina:
+
+  - `br.com.caelum` em _Group_
+  - `turbine` em _Artifact_
+
+  Mantenha os valores em _More options_.
+
+  Mantenha o _Packaging_ como `Jar`.
+  Mantenha a _Java Version_ em `8`.
+
+  Em _Dependencies_, adicione:
+
+  - Turbine
+  - Eureka Client
+  - Config Client
+
+  Clique em _Generate Project_.
+2. Extraia o `turbine.zip` e copie a pasta para seu Desktop.
+3. No Eclipse, no workspace de microservices, importe o projeto `turbine`, usando o menu _File > Import > Existing Maven Projects_.
+4. Adicione as anotações `@EnableDiscoveryClient` e `@EnableTurbine` à classe `TurbineApplication`:
+
+  ####### turbine/src/main/java/br/com/caelum/turbine/TurbineApplication.java
+
+  ```java
+  @EnableTurbine
+  @EnableDiscoveryClient
+  @SpringBootApplication
+  public class TurbineApplication {
+
+    public static void main(String[] args) {
+      SpringApplication.run(TurbineApplication.class, args);
+    }
+
+  }
+  ```
+
+  Não esqueça de ajustar os imports:
+
+  ```java
+  import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+  import org.springframework.cloud.netflix.turbine.EnableTurbine;
+  ```
+
+5. No arquivo `application.properties`, modifique a porta para `7776`.
+
+  Adicione configurações que aponta para os nomes das aplicações e para o cluster `default`:
+
+  ####### turbine/src/main/resources/application.properties
+
+  ```properties
+  server.port=7776
+
+  turbine.appConfig=apigateway
+  turbine.clusterNameExpression='default'
+  ```
+
+6. Defina um arquivo `bootstrap.properties` no diretório de _resources_, configurando o endereço do Config Server:
+
+  ```properties
+  spring.application.name=turbine
+  spring.cloud.config.uri=http://localhost:8888
+  ```
+
+7. Execute a classe `TurbineApplication`.
+
+  Então, acesse o Turbina pela URL a seguir:
+
+  http://localhost:7776/turbine.stream
+
+  Em outra janela do navegador, faça algumas chamadas ao API Gateway, como as do exercício anterior:
+
+   - http://localhost:9999/distancia/restaurantes/mais-proximos/71503510, que exibirá o circuit breaker do serviço de distância
+  - http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1, que exibirá os circuit breakers relacionados a composição de chamadas feita no API Gateway
+
+  Observe, na página do Turbine, um fluxo de dados parecido com:
+
+  ```txt
+  : ping
+  data: {"reportingHostsLast10Seconds":0,"name":"meta","type":"meta","timestamp":1562070789955}
+
+  : ping
+  data: {"reportingHostsLast10Seconds":0,"name":"meta","type":"meta","timestamp":1562070792956}
+
+  : ping
+  data: {"rollingCountFallbackSuccess":0,"rollingCountFallbackFailure":0,"propertyValue_circuitBreakerRequestVolumeThreshold":20,"propertyValue_circuitBreakerForceOpen":false,"propertyValue_metricsRollingStatisticalWindowInMilliseconds":10000,"latencyTotal_mean":0,"rollingMaxConcurrentExecutionCount":0,"type":"HystrixCommand","rollingCountResponsesFromCache":0,"rollingCountBadRequests":0,"rollingCountTimeout":0,"propertyValue_executionIsolationStrategy":"THREAD","rollingCountFailure":0,"rollingCountExceptionsThrown":0,"rollingCountFallbackMissing":0,"threadPool":"monolito","latencyExecute_mean":0,"isCircuitBreakerOpen":false,"errorCount":0,"rollingCountSemaphoreRejected":0,"group":"monolito","latencyTotal":{"0":0,"99":0,"100":0,"25":0,"90":0,"50":0,"95":0,"99.5":0,"75":0},"requestCount":0,"rollingCountCollapsedRequests":0,"rollingCountShortCircuited":0,"propertyValue_circuitBreakerSleepWindowInMilliseconds":5000,"latencyExecute":{"0":0,"99":0,"100":0,"25":0,"90":0,"50":0,"95":0,"99.5":0,"75":0},"rollingCountEmit":0,"currentConcurrentExecutionCount":1,"propertyValue_executionIsolationSemaphoreMaxConcurrentRequests":10,"errorPercentage":0,"rollingCountThreadPoolRejected":0,"propertyValue_circuitBreakerEnabled":true,"propertyValue_executionIsolationThreadInterruptOnTimeout":true,"propertyValue_requestCacheEnabled":true,"rollingCountFallbackRejection":0,"propertyValue_requestLogEnabled":true,"rollingCountFallbackEmit":0,"rollingCountSuccess":0,"propertyValue_fallbackIsolationSemaphoreMaxConcurrentRequests":10,"propertyValue_circuitBreakerErrorThresholdPercentage":50,"propertyValue_circuitBreakerForceClosed":false,"name":"RestauranteRestClient#porId(Long)","reportingHosts":1,"propertyValue_executionIsolationThreadPoolKeyOverride":"null","propertyValue_executionIsolationThreadTimeoutInMilliseconds":1000,"propertyValue_executionTimeoutInMilliseconds":1000}
+  ```
+
+8. Vá novamente ao Hystrix Dashboard, pela URL:
+
+  http://localhost:7777/hystrix
+
+  Na URL, use o endereço da stream do Turbine:
+
+  http://localhost:7776/turbine.stream
+
+  Então, veja os status dos circuit breakers.
