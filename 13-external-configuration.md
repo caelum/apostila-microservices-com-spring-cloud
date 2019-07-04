@@ -150,7 +150,7 @@
 
 4. Reinicie os serviços e o monólito. Com a UI no ar, veja se a aplicação continua funcionando!
 
-## Movendo configurações específicas dos serviços para o Config Server
+## Exercício: Movendo configurações específicas dos serviços para o Config Server
 
 1. Crie um arquivo `monolito.properties` no diretório `config-repo`, que é nosso repositório Git. Passe para esse novo arquivo as configurações de BD e chaves criptográficas, removendo-as do monólito:
 
