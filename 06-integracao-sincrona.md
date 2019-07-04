@@ -2,12 +2,6 @@
 
 ## Exercício: cliente REST com RestTemplate do Spring
 
-### Objetivo
-
-Faça com que o monólito avise ao serviço de distância que novos restaurantes foram aprovados e que houve atualização de dados relevantes. A implementação deve usar `RestTemplate`.
-
-### Passo a passo
-
 1. No `eats-distancia-service`, crie um Controller chamado `RestaurantesController` no pacote `br.com.caelum.eats.distancia` com um método que insere um novo restaurante e outro que atualiza um restaurante existente. Defina mensagens de log em cada método.
 
   ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RestaurantesController.java
@@ -228,12 +222,6 @@ Faça com que o monólito avise ao serviço de distância que novos restaurantes
 8 (opcional) Será que os métodos auxiliares `tipoDeCozinhaDiferente` e `cepDiferente` deveriam ficar em `RestauranteController` mesmo?
 
 ## Exercício: cliente REST declarativo com Feign
-
-### Objetivo
-
-Implemente, usando Feign, uma maneira do serviço de pagamento avisar ao monólito que um pedido foi pago, após a confirmação do pagamento.
-
-### Passo a passo
 
 1. Adicione ao `PedidoController`, do módulo `eats-pedido` do monólito, um método que muda o status do pedido para _PAGO_:
 
@@ -555,12 +543,6 @@ Implemente, usando Feign, uma maneira do serviço de pagamento avisar ao monóli
 5. Faça um novo pedido e efetue um pagamento. Deve continuar funcionando!
 
 ## Exercício opcional: Estendendo o Spring HATEOAS
-
-### Objetivo
-
-Faça com que o método HTTP seja incluído como informações dos links retornados pelo Spring HATEOAS.
-
-### Passo a passo
 
 1. Crie uma classe `LinkWithMethod` que estende o `Link` do Spring HATEOAS e define um atributo adicional chamado `method`, que armazenará o método HTTP dos links. Defina um construtor que recebe um `Link` e uma `String` com o método HTTP:
 

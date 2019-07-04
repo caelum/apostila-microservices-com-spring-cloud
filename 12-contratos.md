@@ -305,7 +305,8 @@
   Mais adiante, observe que o WireMock recebeu uma requisição POST na URL `/restaurantes` e enviou a resposta descrita no contrato:
 
   ```txt
-  2019-07-03 17:41:37.689  INFO [monolito,,,] 32404 --- [tp1306763722-36] WireMock                                 : Request received:
+  2019-07-03 17:41:37.689  INFO [monolito,,,] 32404 --- [tp1306763722-36] WireMock:
+  Request received:
   127.0.0.1 - POST /restaurantes
 
   User-Agent: [Java/1.8.0_201]
@@ -315,7 +316,6 @@
   Content-Length: [46]
   Content-Type: [application/json;charset=UTF-8]
   {"id":2,"cep":"71500-000","tipoDeCozinhaId":1}
-
 
   Matched response definition:
   {
