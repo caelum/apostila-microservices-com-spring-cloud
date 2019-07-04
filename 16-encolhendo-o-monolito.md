@@ -1,4 +1,4 @@
-# Encolhendo o monólito
+# Apêndice: Encolhendo o monólito
 
 ## Desafio: extrair serviços de pedidos e de administração de restaurantes
 
