@@ -221,3 +221,5 @@
   Depois de parados com `stop`, para iniciá-los novamente, faça um `docker-compose start`.
 
   É possível parar e remover um _service_ específico, passando seu nome no final do comando.
+
+  _ATENÇÃO: evite usar o comando `docker-compose down` durante o curso. Esse comando apagará todos os dados dos seus BD. Use apenas o `docker-compose stop`._
