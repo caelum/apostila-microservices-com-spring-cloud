@@ -32,11 +32,51 @@
 
   Note que na configuração `packageWithBaseClasses` definimos um pacote para as classes base, que serão usadas na execução de testes.
 
-2. No pacote `br.com.caelum.eats.distancia.base`, definido anteriormente no plugin do Maven, crie a classe a classe `RestaurantesBase`, que será a base para a execução de testes baseados no contrato do controller de restaurantes.
+2. No Eclipse, com o botão direito no projeto `eats-distancia-service`, acesse o menu _New > Folder..._. Defina em _Folder name_, o caminho `src/test/resources/contracts/restaurantes`.
+
+  _Dica: para que o diretório `src/test/resources` seja reconhecido como um source folder faça um refresh no projeto e, com o botão direito no projeto, clique em Maven > Update Project... e, então, em OK._
+
+  Dentro desse diretório, crie o arquivo `deveAdicionarNovoRestaurante.groovy`. Esse arquivo conterá o contrato que estamos definindo, utilizando uma DSL Groovy:
+
+  ####### eats-distancia-service/src/test/resources/contracts/restaurantes/deveAdicionarNovoRestaurante.groovy
+
+  ```groovy
+  import org.springframework.cloud.contract.spec.Contract
+  Contract.make {
+      description "deve adicionar novo restaurante"
+      request{
+          method POST()
+          url("/restaurantes")
+          body([
+            id: 2,
+            cep: '71500-000',
+            tipoDeCozinhaId: 1
+          ])
+          headers {
+            contentType('application/json')
+          }
+      }
+      response {
+          status 201
+          body([
+            id: 2,
+            cep: '71500-000',
+            tipoDeCozinhaId: 1
+          ])
+          headers {
+            contentType('application/json')
+          }
+      }
+  }
+  ```
+
+3. 2. No pacote `br.com.caelum.eats.distancia.base`, definido anteriormente no plugin do Maven, crie a classe a classe `RestaurantesBase`, que será a base para a execução de testes baseados no contrato do controller de restaurantes.
 
   Nessa classe injete o `RestaurantesController`, passando a instância para o `RestAssuredMockMvc`, uma integração da biblioteca REST Assured com o MockMvc do Spring.
 
   Além disso, injetaremos um `RestauranteMongoRepository` anotado com `@MockBean`, fazendo com que a instância seja gerenciada pelo Mockito. Usaremos essa instância como um _stub_, registrando uma chamada ao método `insert` que retorna o próprio objeto passado como parâmetro.
+
+  _Observação: o nome da classe `RestaurantesBase` usa como prefixo o diretório de nosso contrato (`restaurantes`) com o sufixo `Base`._
 
   ####### eats-distancia-service/src/test/java/br/com/caelum/eats/distancia/base/RestaurantesBase.java
 
@@ -82,44 +122,6 @@
   import br.com.caelum.eats.distancia.mongo.RestauranteMongoRepository;
 
   import io.restassured.module.mockmvc.RestAssuredMockMvc;
-  ```
-
-3. No Eclipse, com o botão direito no projeto `eats-distancia-service`, acesse o menu _New > Folder..._. Define em _Folder name_, o caminho `src/test/resources/contracts/restaurantes`.
-
-  _Dica: faça um refresh no projeto para que o diretório `src/test/resources` seja reconhecido como um source folder._
-
-  Dentro desse diretório, crie o arquivo `deveAdicionarNovoRestaurante.groovy`. Esse arquivo conterá o contrato que estamos definindo, utilizando uma DSL Groovy:
-
-  ####### eats-distancia-service/src/test/resources/contracts/restaurantes/deveAdicionarNovoRestaurante.groovy
-
-  ```groovy
-  import org.springframework.cloud.contract.spec.Contract
-  Contract.make {
-      description "deve adicionar novo restaurante"
-      request{
-          method POST()
-          url("/restaurantes")
-          body([
-        id: 2,
-        cep: '71500-000',
-        tipoDeCozinhaId: 1
-      ])
-          headers {
-        contentType('application/json')
-      }
-      }
-      response {
-          status 201
-          body([
-        id: 2,
-        cep: '71500-000',
-        tipoDeCozinhaId: 1
-      ])
-          headers {
-        contentType('application/json')
-      }
-      }
-  }
   ```
 
 4. Ajuste a classe `RestauranteMongo.java` para que seja definido um construtor padrão, que será utilizado na execução do teste gerado a partir do contrato:
@@ -330,3 +332,234 @@
   Content-Type: [application/json]
   Matched-Stub-Id: [64ce3139-e460-405d-8ebb-fe7f527018c3]
   ```
+
+## Exercício: definindo um contrato no publisher
+
+1. Adicione, ao `pom.xml` do serviço de pagamentos, dependências ao starter do Spring Cloud Contract Verifier e à biblioteca de suporte a testes do Spring Cloud Stream:
+
+  ####### eats-pagamento-service/pom.xml
+
+  ```xml
+  <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-contract-verifier</artifactId>
+    <scope>test</scope>
+  </dependency>
+  <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-stream-test-support</artifactId>
+    <scope>test</scope>
+  </dependency>
+  ```
+
+  Adicione também o plugin Maven do Spring Cloud Contract, configurando `br.com.caelum.eats.pagamento.base` como pacote das classes base a serem usadas nos testes gerados a partir dos contratos.
+
+  ####### eats-pagamento-service/pom.xml
+
+  ```xml
+  <plugin>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-contract-maven-plugin</artifactId>
+    <version>2.1.2.RELEASE</version>
+    <extensions>true</extensions>
+    <configuration>
+      <packageWithBaseClasses>br.com.caelum.eats.pagamento.base</packageWithBaseClasses>
+    </configuration>
+  </plugin>
+  ```
+
+2. Dentro do Eclipse, clique com o botão direito no projeto `eats-pagamento-service`, acessando _New > Folder..._ e definindo o caminho `src/test/resources/contracts/pagamentos/confirmados` em _Folder name_.
+
+  Crie o arquivo `deveAdicionarNovoRestaurante.groovy` nesse diretório, definindo o contrato por meio da DSL Groovy:
+
+  ####### eats-pagamento-service/src/test/resources/contracts/pagamentos/confirmados/deveNotificarPagamentosConfirmados.groovy
+
+  ```groovy
+  import org.springframework.cloud.contract.spec.Contract
+  Contract.make {
+    description "deve notificar pagamentos confirmados"
+    label 'pagamento_confirmado'
+    input {
+      triggeredBy('novoPagamentoConfirmado()')
+    }
+    outputMessage {
+      sentTo 'pagamentosConfirmados'
+      body([
+        pagamentoId: 2,
+        pedidoId: 3
+      ])
+      headers {
+        messagingContentType(applicationJson())
+      }
+    }
+  }
+  ```
+
+  Definimos `pagamento_confirmado` como `label`, que será usado nos testes do subscriber. Em `input`, invocamos o método `novoPagamentoConfirmado` da classe base. Já em `outputMessage`, definimos `pagamentosConfirmados` como _destination_ esperado, o corpo da mensagem e o _Content Type_ nos cabeçalhos.
+
+3. No pacote `br.com.caelum.eats.pagamento.base`,  do source folder `src/test/java`, crie a classe `PagamentosConfirmadosBase`. Anote essa classe com `@AutoConfigureMessageVerifier`, além das anotações de testes do Spring Boot. Na anotação `@SpringBootTest`, configure o `webEnvironment` para `NONE`.
+
+  Peça ao Spring para injetar uma instância da classe `NotificadorPagamentoConfirmado`.
+
+  Defina um método `novoPagamentoConfirmado`, que usa a instância injetada para chamar o método `notificaPagamentoConfirmado` passando como parâmetro um `Pagamento` com dados compatíveis com o contrato definido anteriormente.
+
+  _Observação: o nome da classe `PagamentosConfirmadosBase` usa como prefixo o diretório de nosso contrato (`pagamentos/confirmados`) com o sufixo `Base`._
+
+  ####### eats-pagamento-service/src/test/java/br/com/caelum/eats/pagamento/base/PagamentosConfirmadosBase.java
+
+  ```java
+  @RunWith(SpringRunner.class)
+  @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+  @AutoConfigureMessageVerifier
+  public class PagamentosConfirmadosBase {
+
+    @Autowired
+    private NotificadorPagamentoConfirmado notificador;
+
+    public void novoPagamentoConfirmado() {
+      Pagamento pagamento = new Pagamento();
+      pagamento.setId(2L);
+      pagamento.setPedidoId(3L);
+      notificador.notificaPagamentoConfirmado(pagamento);
+    }
+
+  }
+  ```
+
+  Confira os imports:
+
+  ```java
+  import org.junit.runner.RunWith;
+  import org.springframework.beans.factory.annotation.Autowired;
+  import org.springframework.boot.test.context.SpringBootTest;
+  import org.springframework.cloud.contract.verifier.messaging.boot.AutoConfigureMessageVerifier;
+  import org.springframework.test.context.junit4.SpringRunner;
+
+  import br.com.caelum.eats.pagamento.NotificadorPagamentoConfirmado;
+  ```
+
+4. Deve acontecer um erro de compilação no uso de `Pagamento` na classe `PagamentosConfirmadosBase`.
+
+  Corrija esse erro, fazendo com que a classe `Pagamento` seja pública:
+
+  ####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/Pagamento.java
+
+  ```java
+  public class Pagamento { // modificado
+
+    // código omitido ...
+
+  }
+  ```
+
+5. Abra um Terminal e vá ao diretório do serviço de pagamentos. Execute os comandos:
+
+  ```sh
+  cd ~/Desktop/eats-pagamento-service
+  mvn clean install
+  ```
+
+  Depois da execução do build, deve aparecer algo como:
+
+  ```txt
+  [INFO] Results:
+  [INFO]
+  [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0
+  [INFO]
+  [INFO]
+  ...
+  [INFO] ------------------------------------------------------------------------
+  [INFO] BUILD SUCCESS
+  [INFO] ------------------------------------------------------------------------
+  [INFO] Total time: 50.94 s
+  [INFO] Finished at: 2019-07-03T16:45:17-03:00
+  [INFO] ------------------------------------------------------------------------
+  ```
+
+  O Spring Cloud Contract deve ter gerado a seguinte classe: eats-pagamento-service/target/generated-test-sources/contracts/br/com/caelum/eats/pagamento/base/pagamentos/ConfirmadosTest.java
+
+  O intuito dessa classe é verificar que o contrato é seguido pelo próprio publisher.
+
+  Com o sucesso dos testes, é  gerado o arquivo `eats-pagamento-service-0.0.1-SNAPSHOT-stubs.jar` em `target`, contendo o contrato `deveAdicionarNovoRestaurante.groovy`. Esse JAR será usado na verificação do contrato do lado do subscriber.
+
+## Exercício: verificando o contrato no subscriber
+
+1. Adicione, no `pom.xml` do serviço de nota fiscal, dependências ao starter do Spring Cloud Contract Stub Runner e à biblioteca de suporte a testes do Spring Cloud Stream:
+
+  ####### eats-nota-fiscal-service/pom.xml
+
+  ```xml
+  <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-contract-stub-runner</artifactId>
+    <scope>test</scope>
+  </dependency>
+  <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-stream-test-support</artifactId>
+    <scope>test</scope>
+  </dependency>
+  ```
+
+2. Crie a classe `ProcessadorDePagamentosTest`, dentro do pacote `br.com.caelum.notafiscal` do source folder `src/test/java`.
+
+  Anote-a com as anotações de teste do Spring Boot, definindo em `@SpringBootTest` o valor `NONE` no atributo `webEnvironment`.
+
+  Adicione também a anotação `@AutoConfigureStubRunner`. No atributo `ids`, aponte para o artefato que conterá os stubs, definindo `br.com.caelum` como `groupId` e `eats-pagamento-service` como `artifactId`. No atributo `stubsMode`, use o modo `LOCAL`.
+
+  Faça com que o Spring injete uma instância de `StubTrigger`.
+
+  Injete também mocks para `GeradorDeNotaFiscal` e `PedidoRestClient` e um spy para `ProcessadorDePagamentos`, a classe que recebe as mensagens.
+
+  Defina um método `deveProcessarPagamentoConfirmado`, anotando-o com `@Test`.
+  
+  No método de teste, use as instâncias de `GeradorDeNotaFiscal` e `PedidoRestClient` como stubs, registrando respostas as chamadas dos métodos `detalhaPorId` e `geraNotaPara`, respectivamente. O valor dos parâmetros deve considerar os valores definidos no contrato.
+
+  Dispare a mensagem usando o label `pagamento_confirmado` no método `trigger` do `StubTrigger`.
+
+  Verifique a chamada ao `ProcessadorDePagamentos`, usando um `ArgumentCaptor` do Mockito. Os valores dos parâmetros devem corresponder aos definidos no contrato.
+
+  ####### eats-nota-fiscal-service/src/test/java/br/com/caelum/notafiscal/ProcessadorDePagamentosTest.java
+
+  ```java
+  @RunWith(SpringRunner.class)
+  @SpringBootTest(webEnvironment = WebEnvironment.NONE)
+  @AutoConfigureStubRunner(ids = "br.com.caelum:eats-pagamento-service", stubsMode = StubRunnerProperties.StubsMode.LOCAL)
+  public class ProcessadorDePagamentosTest {
+
+    @Autowired
+    private StubTrigger stubTrigger;
+
+    @MockBean
+    private GeradorDeNotaFiscal notaFiscal;
+
+    @MockBean
+    private PedidoRestClient pedidos;
+
+    @SpyBean
+    private ProcessadorDePagamentos processadorPagamentos;
+
+    @Test
+    public void deveProcessarPagamentoConfirmado() {
+
+      PedidoDto pedidoDto = new PedidoDto();
+      Mockito.when(pedidos.detalhaPorId(3L)).thenReturn(pedidoDto);
+      Mockito.when(notaFiscal.geraNotaPara(pedidoDto)).thenReturn("<xml>...</xml>");
+
+      stubTrigger.trigger("pagamento_confirmado");
+
+      ArgumentCaptor<PagamentoConfirmado> pagamentoArg = ArgumentCaptor.forClass(PagamentoConfirmado.class);
+
+      Mockito.verify(processadorPagamentos).processaPagamento(pagamentoArg.capture());
+
+      PagamentoConfirmado pagamentoConfirmado = pagamentoArg.getValue();
+      Assert.assertEquals(2L, pagamentoConfirmado.getPagamentoId().longValue());
+      Assert.assertEquals(3L, pagamentoConfirmado.getPedidoId().longValue());
+    }
+
+  }
+  ```
+
+3. No Eclipse, clique com o botão direito na classe `ProcessadorDePagamentosTest` e, então, em _Run As... > JUnit Test_. Use o JUnit 4.
+
+  Aguarde a execução dos testes. Sucesso!
