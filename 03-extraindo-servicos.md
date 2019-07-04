@@ -593,7 +593,7 @@
 6. (opcional) Use o cURL para buscar os restaurantes mais próximos ao CEP `71503-510` com o tipo de cozinha _Chinesa_ (que tem o id `1`):
 
   ```sh
-  curl -i http://localhost:8082/restaurantes/mais-proximos/71503510
+  curl -i http://localhost:8082/restaurantes/mais-proximos/71503510/tipos-de-cozinha/1
   ```
 
 7. (opcional) Descubra a distância de uma dado CEP a um restaurante usando o cURL:
