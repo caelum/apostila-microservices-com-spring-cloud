@@ -318,7 +318,7 @@
 
 ## Exercício: client side discovery no API Gateway
 
-1. Modifique o `application.properties` do API Gateway, para que o Eureka Client seja habilita e que não haja mais listas de servidores do Ribbon.
+1. Modifique o `application.properties` do API Gateway, para que o Eureka Client seja habilitado e que não haja mais listas de servidores do Ribbon.
 
   Limpe as configurações, já que boa parte delas serão obtidas pelas próprias URLs requisitadas e os nomes no Eureka Server.
 
@@ -358,8 +358,8 @@
   ####### fj33-eats-monolito-modular/eats/eats-application/src/main/resources/application.properties
 
   ```properties
-  distancia.ribbon.listOfServers=http://localhost:8082,http://localhost:9092
-  ribbon.eureka.enabled=false
+  d̶i̶s̶t̶a̶n̶c̶i̶a̶.̶r̶i̶b̶b̶o̶n̶.̶l̶i̶s̶t̶O̶f̶S̶e̶r̶v̶e̶r̶s̶=̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶2̶,̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶9̶0̶9̶2̶
+  r̶i̶b̶b̶o̶n̶.̶e̶u̶r̶e̶k̶a̶.̶e̶n̶a̶b̶l̶e̶d̶=̶f̶a̶l̶s̶e̶
   ```
 
 2. Com a UI, os serviços e o monólito no ar, faça login em um restaurante e modifique o tipo de cozinha ou o CEP. Realize essa operação mais de uma vez.

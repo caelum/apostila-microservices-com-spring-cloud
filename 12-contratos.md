@@ -70,7 +70,7 @@
   }
   ```
 
-3. 2. No pacote `br.com.caelum.eats.distancia.base`, definido anteriormente no plugin do Maven, crie a classe a classe `RestaurantesBase`, que será a base para a execução de testes baseados no contrato do controller de restaurantes.
+3. No pacote `br.com.caelum.eats.distancia.base`, definido anteriormente no plugin do Maven, crie a classe a classe `RestaurantesBase`, que será a base para a execução de testes baseados no contrato do controller de restaurantes.
 
   Nessa classe injete o `RestaurantesController`, passando a instância para o `RestAssuredMockMvc`, uma integração da biblioteca REST Assured com o MockMvc do Spring.
 
@@ -335,7 +335,7 @@
 
 ## Exercício: definindo um contrato no publisher
 
-1. Adicione, ao `pom.xml` do serviço de pagamentos, dependências ao starter do Spring Cloud Contract Verifier e à biblioteca de suporte a testes do Spring Cloud Stream:
+1. Adicione, ao `pom.xml` do serviço de pagamentos, as dependências ao starter do Spring Cloud Contract Verifier e à biblioteca de suporte a testes do Spring Cloud Stream:
 
   ####### eats-pagamento-service/pom.xml
 
@@ -484,7 +484,7 @@
 
 ## Exercício: verificando o contrato no subscriber
 
-1. Adicione, no `pom.xml` do serviço de nota fiscal, dependências ao starter do Spring Cloud Contract Stub Runner e à biblioteca de suporte a testes do Spring Cloud Stream:
+1. Adicione, no `pom.xml` do serviço de nota fiscal, as dependências ao starter do Spring Cloud Contract Stub Runner e à biblioteca de suporte a testes do Spring Cloud Stream:
 
   ####### eats-nota-fiscal-service/pom.xml
 

@@ -499,7 +499,7 @@
   import de.codecentric.boot.admin.server.config.EnableAdminServer;
   ```
 
-5. No arquivo `application.properties`, modifique a porta para `6666`:
+5. No arquivo `application.properties`, modifique a porta para `8084`:
 
   ####### admin-server/src/main/resources/application.properties
 

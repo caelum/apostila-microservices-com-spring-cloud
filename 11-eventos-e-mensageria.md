@@ -15,7 +15,7 @@
   - Clientes REST declarativos com Feign
   - Self registration com Eureka Client
 
-  A classe que gerencia a emissão das notas fiscais é `ProcessadorDePagamentos` que, dados os ids de um pagamento e de um pedido, obtém os detalhes do pedido do monólito usando o Feign.
+  A classe que gerencia a emissão das notas fiscais é a `ProcessadorDePagamentos` que, dados os ids de um pagamento e de um pedido, obtém os detalhes do pedido do monólito usando o Feign.
 
   Então, é gerado um XML da nota fiscal usando a biblioteca FreeMarker.
 

@@ -134,7 +134,7 @@
 
 4. Faça um novo pedido e efetue o pagamento. Deve funcionar!
 
-5. Teste fazer o login como administrador e acessar a página de restaurantes em aprovação. Deve ocorrer um erro _401 Unauthorized_, que não acontecia antes da UI passar pelo API Gateway. Porque será que acontece esse erro?
+5. Teste fazer o login como administrador e acessar a página de restaurantes em aprovação. Deve ocorrer um erro _401 Unauthorized_, que não acontecia antes da UI passar pelo API Gateway. Por que será que acontece esse erro?
 
 <!--@note
 

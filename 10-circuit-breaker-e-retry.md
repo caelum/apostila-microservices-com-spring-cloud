@@ -2,7 +2,7 @@
 
 ## Exercício: simulando demora no serviço de distância
 
-1. Altere o método `calculaDistancia` classe `DistanciaService` do serviço de distância, para invoque o método que simula uma demora de 10 a 20 segundos:
+1. Altere o método `calculaDistancia` da classe `DistanciaService` do serviço de distância, para que invoque o método que simula uma demora de 10 a 20 segundos:
 
   ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/DistanciaService.java
 
@@ -12,8 +12,7 @@
     // código omitido ...
 
     private BigDecimal calculaDistancia() {
-      /̶/̶ ̶s̶i̶m̶u̶l̶a̶D̶e̶m̶o̶r̶a̶(̶)̶;̶
-      simulaDemora(); // modificado
+      simulaDemora(); // adicionado
       return new BigDecimal(Math.random() * 15);
     }
 
@@ -186,7 +185,6 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
     // código omitido ...
 
     private BigDecimal calculaDistancia() {
-      s̶i̶m̶u̶l̶a̶D̶e̶m̶o̶r̶a̶(̶)̶;̶
       //simulaDemora(); // modificado
       return new BigDecimal(Math.random() * 15);
     }
@@ -257,6 +255,7 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
   ####### api-gateway/src/main/java/br/com/caelum/apigateway/RestauranteRestClientFallback.java
 
   ```java
+  @Component
   public class RestauranteRestClientFallback implements RestauranteRestClient {
 
     @Override
