@@ -157,7 +157,8 @@
     // demais métodos...
 
     @PutMapping("/{id}")
-    public PagamentoDto confirma(@RequestBody Pagamento pagamento) {
+    public PagamentoDto confirma(@PathVariable Long id) {
+      Pagamento pagamento = pagamentoRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException());
       pagamento.setStatus(Pagamento.Status.CONFIRMADO);
       pagamentoRepo.save(pagamento);
       L̶o̶n̶g̶ ̶p̶e̶d̶i̶d̶o̶I̶d̶ ̶=̶ ̶p̶a̶g̶a̶m̶e̶n̶t̶o̶.̶g̶e̶t̶P̶e̶d̶i̶d̶o̶(̶)̶.̶g̶e̶t̶I̶d̶(̶)̶;̶
@@ -471,6 +472,8 @@
 
     @̶M̶a̶n̶y̶T̶o̶O̶n̶e̶(̶o̶p̶t̶i̶o̶n̶a̶l̶=̶f̶a̶l̶s̶e̶)̶
     ̶p̶r̶i̶v̶a̶t̶e̶ ̶T̶i̶p̶o̶D̶e̶C̶o̶z̶i̶n̶h̶a̶ ̶t̶i̶p̶o̶D̶e̶C̶o̶z̶i̶n̶h̶a̶;̶
+
+    @Column(nullable=false)
     private Long tipoDeCozinhaId;
 
     ̶@̶O̶n̶e̶T̶o̶O̶n̶e̶
@@ -479,7 +482,7 @@
   }
   ```
 
-  Remova os imports não utilizados:
+  Ajuste os imports:
 
   ```java
   i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶p̶e̶r̶s̶i̶s̶t̶e̶n̶c̶e̶.̶M̶a̶n̶y̶T̶o̶O̶n̶e̶;̶
@@ -487,6 +490,8 @@
 
   ̶i̶m̶p̶o̶r̶t̶ ̶b̶r̶.̶c̶o̶m̶.̶c̶a̶e̶l̶u̶m̶.̶e̶a̶t̶s̶.̶a̶d̶m̶i̶n̶.̶T̶i̶p̶o̶D̶e̶C̶o̶z̶i̶n̶h̶a̶;̶
   ̶i̶m̶p̶o̶r̶t̶ ̶b̶r̶.̶c̶o̶m̶.̶c̶a̶e̶l̶u̶m̶.̶e̶a̶t̶s̶.̶s̶e̶g̶u̶r̶a̶n̶c̶a̶.̶U̶s̶e̶r̶;̶
+  
+  import javax.persistence.Column; // adicionado ...
   ```
 
 3. Na classe `DistanciaService` de `eats-distancia-service`, remova os imports que referenciam as classes `Restaurante` e `TipoDeCozinha`:
