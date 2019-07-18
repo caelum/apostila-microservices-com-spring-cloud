@@ -15,7 +15,7 @@
     private RestauranteMongoRepository repo;
 
     @PostMapping("/restaurantes")
-    public RestauranteMongo adiciona(@RequestBody RestauranteMongo restaurante) {
+    public ResponseEntity<RestauranteMongo> adiciona(@RequestBody RestauranteMongo restaurante, UriComponentsBuilder uriBuilder) {
       log.info("Insere novo restaurante: " + restaurante);
       RestauranteMongo salvo = repo.insert(restaurante);
       UriComponents uriComponents = uriBuilder.path("/restaurantes/{id}").buildAndExpand(salvo.getId());
