@@ -297,6 +297,7 @@
   @Document(collection = "restaurantes")
   @Data
   @AllArgsConstructor
+  @NoArgsConstructor
   public class RestauranteMongo {
 
     @Id
@@ -317,6 +318,7 @@
 
   import lombok.AllArgsConstructor;
   import lombok.Data;
+  import lombok.NoArgsConstructor;
   ```
 
   Note que o `@Id` foi importado de `org.springframework.data.annotation` e **não** de `javax.persistence` (do JPA).

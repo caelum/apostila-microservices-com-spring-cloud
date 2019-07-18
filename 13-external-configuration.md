@@ -191,7 +191,7 @@
 
 2. Mova as configurações do BD do serviço de pagamento para o arquivo `pagamentos.properties` do repositório de configurações:
 
-  ###### eats-pagamento-service/src/main/resources/application.properties
+  ####### eats-pagamento-service/src/main/resources/application.properties
 
   ```properties
   #̶D̶A̶T̶A̶S̶O̶U̶R̶C̶E̶ ̶C̶O̶N̶F̶I̶G̶S̶

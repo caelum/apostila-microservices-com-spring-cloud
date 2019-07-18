@@ -124,23 +124,7 @@
   import io.restassured.module.mockmvc.RestAssuredMockMvc;
   ```
 
-4. Ajuste a classe `RestauranteMongo.java` para que seja definido um construtor padrão, que será utilizado na execução do teste gerado a partir do contrato:
-
-  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/mongo/RestauranteMongo.java
-
-  ```java
-  @Document(collection = "restaurantes")
-  @Data
-  @AllArgsConstructor
-  @NoArgsConstructor // adicionado
-  public class RestauranteMongo {
-  
-    // código omitido ...
-  
-  }
-  ```
-
-5. Abra um Terminal e, no diretório do serviço de distância, execute os comandos a seguir:
+4. Abra um Terminal e, no diretório do serviço de distância, execute os comandos a seguir:
 
   ```sh
   cd ~/Desktop/eats-distancia-service
@@ -176,16 +160,11 @@
 
 ## Exercício: usando stubs do contrato no cliente
 
-1. No `pom.xml` do módulo `eats-application` do monólito, adicione os starters do Spring Boot Test e do Spring Cloud Contract Stub Runner:
+1. No `pom.xml` do módulo `eats-application` do monólito, adicione o starter do Spring Cloud Contract Stub Runner:
 
   ####### eats-monolito-modular/eats-application/pom.xml
 
   ```xml
-  <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-test</artifactId>
-    <scope>test</scope>
-  </dependency>
   <dependency>
     <groupId>org.springframework.cloud</groupId>
     <artifactId>spring-cloud-starter-contract-stub-runner</artifactId>
