@@ -122,7 +122,7 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
 
 -->
 
-## Exercício: fallback com Hystrix
+## Exercício: fallback com @HystrixCommand no RestTemplate
 
 1. Acesse repetidas vezes, em um navegador, a URL a seguir:
 

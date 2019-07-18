@@ -158,7 +158,7 @@
   import org.springframework.messaging.support.MessageBuilder;
   import org.springframework.stereotype.Service;
 
-  import br.com.caelum.eats.pagamento.AmqpConfig.PagamentoSource;
+  import br.com.caelum.eats.pagamento.AmqpPagamentoConfig.PagamentoSource;
   import lombok.AllArgsConstructor;
   ```
 
@@ -228,20 +228,20 @@
   spring.rabbitmq.password=caelum123
   ```
 
-3. No pacote `br.com.caelum.eats.notafiscal` do serviço de nota fiscal, crie uma classe `AmqpConfig` , anotando-a com `@Configuration`.
+3. No pacote `br.com.caelum.eats.notafiscal` do serviço de nota fiscal, crie uma classe `AmqpNotaFiscalConfig` , anotando-a com `@Configuration`.
 
   Defina a interface `PagamentoSink`, que será para configuração do consumo de mensagens do MOM. Dentro dessa interface, defina o método `pagamentosConfirmados`, com a anotação `@Input` e com `SubscribableChannel` como tipo de retorno.
 
   O nome do _exchange_ no , que é o mesmo do _source_ do serviço de pagamentos, deve ser definido na constante `PAGAMENTOS_CONFIRMADOS`.
 
-  Não deixe de anotar a classe `AmqpConfig` com `@EnableBinding`, tendo como parâmetro a interface `PagamentoSink`:
+  Não deixe de anotar a classe `AmqpNotaFiscalConfig` com `@EnableBinding`, tendo como parâmetro a interface `PagamentoSink`:
 
-  ####### eats-nota-fiscal-service/src/main/java/br/com/caelum/eats/notafiscal/AmqpConfig.java
+  ####### eats-nota-fiscal-service/src/main/java/br/com/caelum/eats/notafiscal/AmqpNotaFiscalConfig.java
 
   ```java
   @EnableBinding(PagamentoSink.class)
   @Configuration
-  public class AmqpConfig {
+  public class AmqpNotaFiscalConfig {
 
     public static interface PagamentoSink {
       String PAGAMENTOS_CONFIRMADOS = "pagamentosConfirmados";
@@ -261,7 +261,7 @@
   import org.springframework.context.annotation.Configuration;
   import org.springframework.messaging.SubscribableChannel;
 
-  import br.com.caelum.notafiscal.AmqpConfig.PagamentoSink;
+  import br.com.caelum.notafiscal.AmqpNotaFiscalConfig.PagamentoSink;
   ```
 
 4. Use a anotação `@StreamListener` no método `processaPagamento` da classe `ProcessadorDePagamentos`, passando a constante `PAGAMENTOS_CONFIRMADOS` de `PagamentoSink`:
@@ -286,7 +286,7 @@
 
   ```java
   import org.springframework.cloud.stream.annotation.StreamListener;
-  import br.com.caelum.notafiscal.AmqpConfig.PagamentoSink;
+  import br.com.caelum.notafiscal.AmqpNotaFiscalConfig.PagamentoSink;
   ```
 
 5. Inicie o serviço de nota fiscal executando a classe `EatsNotaFiscalServiceApplication`. Certifique-se que os demais serviços estejam rodando.
@@ -421,7 +421,7 @@
 
 -->
 
-## Exercício: Movendo configurações de WebSocket para o API Gateway
+## Exercício Opcional: Movendo configurações de WebSocket para o API Gateway
 
 1. Na classe `PedidoController`, do módulo de pedido do monólito, remova os usos da API de WebSocket:
 
@@ -525,7 +525,7 @@
 
   Ainda não utilizaremos o WebSocket no API Gateway. Mas está tudo preparado!
 
-## Exercício: Publicando evento de atualização de pedido no monólito
+## Exercício Opcional: Publicando evento de atualização de pedido no monólito
 
 1. Adicione ao `pom.xml` do módulo `eats-common` do monólito, a dependência ao starter do Spring Cloud Stream Rabbit:
 
@@ -643,7 +643,7 @@
   2019-06-22 08:27:39.797  INFO 12308 --- [nio-8080-exec-4] o.s.a.r.c.CachingConnectionFactory       : Created new connection: rabbitConnectionFactory.publisher#679864d6:0/SimpleConnection@1ec86cef [delegate=amqp://eats@127.0.0.1:5672/, localPort= 54602]
   ```
 
-## Exercício: Recebendo o evento de atualização de status do pedido no API Gateway
+## Exercício Opcional: Recebendo o evento de atualização de status do pedido no API Gateway
 
 1. Adicione o starter do Spring Cloud Stream Rabbit como dependência no `pom.xml` do API Gateway:
 
