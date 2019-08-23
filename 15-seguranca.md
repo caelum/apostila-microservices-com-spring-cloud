@@ -794,7 +794,6 @@ Vamos modificar esse cenário, passando a responsabilidade de geração de token
 
   http://localhost:8080/formas-de-pagamento
 
-
   Deve funcionar e retornar algo como:
 
   ```json
@@ -855,6 +854,55 @@ Vamos modificar esse cenário, passando a responsabilidade de geração de token
 
   Isso indica que o módulo de segurança do monólito reconheceu o token como válido e extraiu a informação dos roles do usuário, reconhecendo-o no role ADMIN.
 
+  Altere o payload do JWT, definindo um valor diferente para o `sub`, o Subject, que indica o id do usuário.
+
+  Para isso, vá até um site como o http://www.base64url.com/ e defina no campo _Base 64 URL Encoding_ o payload do token JWT recebido do API Gateway:
+
+  ```txt
+  eyJpc3MiOiJDYWVsdW0gRWF0cyIsInN1YiI6IjEiLCJyb2xlcyI6WyJBRE1JTiJdLCJ1c2VybmFtZSI6ImFkbWluIiwiaWF0IjoxNTY2NTE4NzIyLCJleHAiOjE1NjcxMjM1MjJ9
+  ```
+
+  Será exibido em _Plain Text_, um JSON parecido com:
+
+  ```json
+  {"iss":"Caelum Eats","sub":"1","roles":["ADMIN"],"username":"admin","iat":1566518722,"exp":1567123522}
+  ```
+
+  Altere o `sub` para `2`, simulando um usuário malicioso tentando forjar um token para roubar a identidade de outro usuário, de id diferente. O texto codificado em Base 64 URL Encoding será algo como:
+
+  ```txt
+  eyJpc3MiOiJDYWVsdW0gRWF0cyIsInN1YiI6IjIiLCJyb2xlcyI6WyJBRE1JTiJdLCJ1c2VybmFtZSI6ImFkbWluIiwiaWF0IjoxNTY2NTE4NzIyLCJleHAiOjE1NjcxMjM1MjJ9
+  ```
+
+  Observe que a codificação é quase idêntica: apenas o 39º caractere foi modificado de `E` para `I`.
+
+  Através de um Terminal, use o cURL para tentar alterar uma forma de pagamento utilizando o payload modificado do JWT:
+
+  ```sh
+  curl -i -X PUT -H 'Content-type: application/json' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJDYWVsdW0gRWF0cyIsInN1YiI6IjIiLCJyb2xlcyI6WyJBRE1JTiJdLCJ1c2VybmFtZSI6ImFkbWluIiwiaWF0IjoxNTY2NTE4NzIyLCJleHAiOjE1NjcxMjM1MjJ9.FmH2QkryLBxWZjt2DMKHsCmjQNCmk3hrRAC0keam5_w' -d '{"id": 3, "tipo": "CARTAO_CREDITO", "nome": "Amex Express"}' http://localhost:9999/admin/formas-de-pagamento/3
+  ```
+
+  Obtenha o comando anterior na seguinte URL: https://gitlab.com/snippets/1888416
+
+  Como a assinatura do JWT não bate com o payload, o acesso deverá ser negado:
+
+  ```txt
+  HTTP/1.1 401 
+  Date: Fri, 23 Aug 2019 12:47:07 GMT
+  X-Content-Type-Options: nosniff
+  X-XSS-Protection: 1; mode=block
+  Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+  X-Frame-Options: DENY
+  Content-Type: application/json;charset=UTF-8
+  Transfer-Encoding: chunked
+
+  {"timestamp":"2019-08-23T12:47:07.785+0000","status":401,"error":"Unauthorized","message":"Você não está autorizado a acessar esse recurso.","path":"/admin/formas-de-pagamento/3"}
+  ```
+
+  Teste também com o cURL o acesso direto ao monólito, usando a porta `8080`. O acesso deve ser negado, da mesma maneira.
+
 <!-- ## Extraindo um serviço Administrativo -->
 
 <!-- ## OAuth -->
@@ -882,7 +930,6 @@ Microservices Patterns
 Chris Richardson - Manning
 Capítulo 11 (Developing production-ready services) - Seção 11.1 (DEVELOPING SECURE SERVICES)
 https://learning.oreilly.com/library/view/microservices-patterns/9781617294549/kindle_split_019.html
-
 
 Microservices for the Enterprise: Designing, Developing, and Deploying
 Kasun Indrasiri; Prabath Siriwardena - Apress 2018
