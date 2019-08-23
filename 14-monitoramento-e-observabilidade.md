@@ -398,6 +398,8 @@
       RABBIT_URI: "amqp://eats:caelum123@rabbitmq:5672"
   ```
 
+  O `docker-compose.yml` completo, com a configuração do Zipkin, pode ser encontrado em: https://gitlab.com/snippets/1888247
+
 2. Execute o servidor do Zipkin pelo Docker Compose com o comando:
 
   ```sh

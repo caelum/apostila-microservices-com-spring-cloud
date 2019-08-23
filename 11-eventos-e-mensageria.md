@@ -21,7 +21,7 @@
 
 ## Exercício: configurando o RabbitMQ no Docker
 
-1. Adicione ao `docker-compose.yaml` a configuração de um RabbitMQ na versão 3. Mantenha as portas padrão 5672 para o MOM propriamente dito e 15672 para a UI Web de gerenciamento. Defina o usuário `eats` com a senha `caelum123`:
+1. Adicione ao `docker-compose.yml` a configuração de um RabbitMQ na versão 3. Mantenha as portas padrão 5672 para o MOM propriamente dito e 15672 para a UI Web de gerenciamento. Defina o usuário `eats` com a senha `caelum123`:
 
   ```yaml
   rabbitmq:
@@ -34,6 +34,8 @@
       RABBITMQ_DEFAULT_USER: eats
       RABBITMQ_DEFAULT_PASS: caelum123
   ```
+
+  O `docker-compose.yml` completo, com a configuração do RabbitMQ, pode ser encontrado em: https://gitlab.com/snippets/1888246
 
 2. Execute novamente o seguinte comando:
 

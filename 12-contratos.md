@@ -162,7 +162,7 @@
 
 1. No `pom.xml` do módulo `eats-application` do monólito, adicione o starter do Spring Cloud Contract Stub Runner:
 
-  ####### eats-monolito-modular/eats-application/pom.xml
+  ####### fj33-eats-monolito-modular/eats/eats-application/pom.xml
 
   ```xml
   <dependency>
@@ -180,7 +180,7 @@
 
   Invoque o método `novoRestauranteAprovado` de `DistanciaRestClient`, passando um objeto `Restaurante` com valores condizentes com o contrato. Como o método é `void`, em caso de exceção force a falha do teste.
 
-  ####### eats-monolito-modular/eats-application/src/test/java/br/com/caelum/eats/DistanciaRestClientWiremockTest.java
+  ####### fj33-eats-monolito-modular/eats/eats-application/src/test/java/br/com/caelum/eats/DistanciaRestClientWiremockTest.java
 
   ```java
   @SpringBootTest

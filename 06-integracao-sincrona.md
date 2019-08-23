@@ -53,7 +53,7 @@
 
 2. No `application.properties` do módulo `eats-application` do monólito, crie uma propriedade `configuracao.distancia.service.url` para indicar a URL do serviço de distância:
 
-  ####### eats-monolito-modular/eats-application/src/main/resources/application.properties
+  ####### fj33-eats-monolito-modular/eats/eats-application/src/main/resources/application.properties
 
   ```properties
   configuracao.distancia.service.url=http://localhost:8082
@@ -61,7 +61,7 @@
 
 3. No módulo `eats-common` do monólito, crie uma classe `RestClientConfig` no pacote `br.com.caelum.eats`, que fornece um `RestTemplate` do Spring:
 
-  ####### eats-monolito-modular/eats-common/src/main/java/br/com/caelum/eats/RestClientConfig.java
+  ####### fj33-eats-monolito-modular/eats/eats-common/src/main/java/br/com/caelum/eats/RestClientConfig.java
 
   ```java
   @Configuration
@@ -85,7 +85,7 @@
 
 4. No módulo `eats-restaurante` do monólito, crie uma classe `RestauranteParaServicoDeDistancia` no pacote `br.com.caelum.eats.restaurante` que contém apenas as informações adequadas para o serviço de distância. Crie um construtor que recebe um `Restaurante` e popula os dados necessários:
 
-  ####### eats-monolito-modular/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/RestauranteParaServicoDeDistancia.java
+  ####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/RestauranteParaServicoDeDistancia.java
 
   ```java
   @Data
@@ -115,7 +115,7 @@
   - inserir um novo restaurante aprovado, enviando um POST para `/restaurantes` com o `RestauranteParaServicoDeDistancia` como corpo da requisição
   - atualizar um restaurante já existente, enviando um PUT para `/restaurantes/{id}`, com o `id` adequado e um `RestauranteParaServicoDeDistancia` no corpo da requisição
 
-  ####### eats-monolito-modular/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/DistanciaRestClient.java
+  ####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/DistanciaRestClient.java
 
   ```java
   @Service
@@ -164,7 +164,7 @@
   - no caso de aprovação de um restaurante, invoque o método `novoRestauranteAprovado` de `DistanciaRestClient`
   - no caso de atualização do CEP ou tipo de cozinha de um restaurante já aprovado, invoque o método `restauranteAtualizado` de `DistanciaRestClient`
 
-  ####### eats-monolito-modular/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/RestauranteController.java
+  ####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/RestauranteController.java
 
   ```java
   // anotações ...
@@ -225,7 +225,7 @@
 
 1. Adicione ao `PedidoController`, do módulo `eats-pedido` do monólito, um método que muda o status do pedido para _PAGO_:
 
-  ####### eats-monolito-modular/eats-pedido/src/main/java/br/com/caelum/eats/pedido/PedidoController.java
+  ####### fj33-eats-monolito-modular/eats/eats-pedido/src/main/java/br/com/caelum/eats/pedido/PedidoController.java
 
   ```java
   @PutMapping("/pedidos/{id}/pago")
