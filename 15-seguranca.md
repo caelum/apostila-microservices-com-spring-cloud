@@ -1694,7 +1694,7 @@ vault write mysql/roles/readonly sql="CREATE USER '{{name}}'@'%' IDENTIFIED BY '
 
 As credenciais dos backends precisam ser conhecidas pelo Vault. No caso do MySQL, o usuário `root` e a respectiva senha precisam ser conhecidos. Essas configurações são armazenadas de maneira criptografada na representação interna do Vault. O Vault pode usar para armazenamento Consul, Etcd, o sistema de arquivos, entre diversos outros.
 
-Os dados do Vault são criptografados com uma chave simétrica. Essa chave simétrica é criptografada com uma _master key_. E a _master key_ é criptografada usando o algortimo _Shamir's secret sharing_, em que mais de uma chave é necessária para descriptografar. Por padrão, o Vault usa 5 chaves e 3 delas são necessárias para a descriptografia.
+Os dados do Vault são criptografados com uma chave simétrica. Essa chave simétrica é criptografada com uma _master key_. E a _master key_ é criptografada usando o algoritmo _Shamir's secret sharing_, em que mais de uma chave é necessária para descriptografar os dados. Por padrão, o Vault usa 5 chaves ao todo, sendo 3 delas necessárias para a descriptografia.
 
 O Spring Cloud Config Server permite o uso do Vault como repositório de configurações: https://cloud.spring.io/spring-cloud-config/reference/html/#vault-backend
 
