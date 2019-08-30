@@ -903,17 +903,804 @@ Vamos modificar esse cenário, passando a responsabilidade de geração de token
 
   Teste também com o cURL o acesso direto ao monólito, usando a porta `8080`. O acesso deve ser negado, da mesma maneira.
 
-<!-- ## Extraindo um serviço Administrativo -->
+## Deixando de reinventar a roda com OAuth 2.0
 
-<!-- ## OAuth -->
+Da maneira como implementamos a autenticação anteriormente, acabamos definindo mais uma responsabilidade para o API Gateway: além de proxy e API Composer, passou a servir como autenticador e gerador de tokens. E, para isso, o API Gateway precisou conhecer tabelas dos usuários e seus respectivos roles. E mais: implementamos a geração e verificação de tokens manualmente.
 
-<!-- ## Protegendo o Config Server e o Service Registry -->
+Autenticação, autorização, tokens, usuário e roles são necessidades comuns e poderiam ser implementadas de maneira genérica. Melhor ainda se houvesse um padrão aberto, que permitisse implementação por diferentes fornecedores. Assim, os desenvolvedores poderiam focar mais em código de negócio e menos em código de segurança.
 
-<!-- ## Mutual Authentication -->
+Há um framework de autorização baseado em tokens que permite que não nos preocupemos com detalhes de implementação de autenticação e autorização: o padrão **OAuth 2.0**. Foi definido na RFC 6749 da Internet Engineering Task Force (IETF), em Outubro de 2012.
 
-<!-- ## Data at transit and data at rest -->
+Há extensões do OAuth 2.0 como o OpenID Connect (OIDC), que fornece uma camada de autenticação baseada em tokens JWT em cima do OAuth 2.0.
 
-<!-- ## Rotação de credenciais e Vault -->
+O foco original do OAuth 2.0, na verdade, é permitir que aplicações de terceiros usem informações de usuários em serviços como Google, Facebook e GitHub. Quando efetuamos login em uma aplicação com uma conta do Facebook ou quando permitimos que um serviço de Integração Contínua como o Travis CI acesse nosso repositório no GitHub, estamos usando OAuth 2.0.
+
+Um padrão como o OAuth 2.0 nos permite instalar softwares como KeyCloak ou até usar soluções prontas de _identity as a service_ (IDaaS) como Auth0 ou Okta.
+
+E, claro, podemos usar as soluções do Spring: **Spring Security OAuth**, que estende o Spring Security fornecendo implementações para OAuth 1 e OAuth 2.0. Há ainda o **Spring Cloud Security**, que traz soluções compatíveis com outros projetos do Spring Cloud.
+
+## Roles
+
+O OAuth 2.0 define quatro componentes, chamados de roles na especificação:
+
+- **Resource Owner**: em geral, o usuário que tem algum recurso protegido como sua conta no Facebook, suas fotos no Flickr, seus repositórios no GitHub ou seu restaurante no Caelum Eats.
+- **Resource Server**: provê o recurso protegido e permite o acesso mediante o uso de access tokens válidos.
+- **Client**: a aplicação, Web, Single Page Application (SPA), Desktop ou Mobile, que deseja acessar os recursos do _Resource Owner_. Um _Client_ precisa estar registrado no _Authorization Server_, sendo identificado por um _client id_ e um _client secret_.
+- **Authorization Server**: provê uma API para autenticar usuário e gerar access tokens. Pode estar na mesma aplicação do _Resource Server_.
+
+O padrão OAuth 2.0 não especifica um formato para o access token. Se for usado um **access token opaco**, como uma String randômica ou UUID, a validação feita pelo Resource Server deve invocar o Authorization Server. Já no caso de um **self-contained access token** como um JWT/JWS, o próprio token contém informações para sua validação.
+
+## Grant Types
+
+O padrão OAuth 2.0 é bastante flexível e especifica diferentes maneiras de um _Client_ obter um access token, chamadas de _grant types_:
+
+- **Password**: usada quando há uma forte relação de confiança entre o Client e o Authorization Server, como quando ambos são da mesma organização. O usuário informa suas credenciais (username e senha) diretamente para o Client, que repassa essas credenciais do usuário para o Authorization Server, junto com seu client id e client secret.
+- **Client credentials**: usada quando não há um usuário envolvido, apenas um sistema chamando um recurso protegido de outro sistema. Apenas as credenciais do Client são informadas para o Authorization Server.
+- **Authorization Code**: usada quando aplicações de terceiros desejam acessar informações de um recurso protegido sem que o Client conheça explicitamente as credenciais do usuário. Por exemplo, quando um usuário (Resource Owner) permite que o Travis CI (Client) acesse os seus repositórios do GitHub (Authorization Server e Resource Server). No momento em que o usuário cadastra seu GitHub no Travis CI, é redirecionado para uma tela de login do GitHub. Depois de efetuar o login no GitHub e escolher as permissões (ou _scopes_ nos termos do OAuth), é redirecionado para um servidor do Travis CI com um _authorization code_ como parâmetro da URL. Então, o Travis CI invoca o GitHub passando esse authorization code para obter um access token. As aplicações de terceiro que utilizam um authorization code são, em geral, aplicações Web clássicas com renderização das páginas no _serve-side_.
+- **Implicit**: o usuário é direcionado a uma página de login do Authorization Server, mas o redirect é feito diretamente para o user-agent (o navegador, no caso da Web) já enviando o access token. Dessa forma, o Client SPA ou Mobile conhece diretamente o access token. Isso traz uma maior eficiência porém traz vulnerabilidades.
+
+> A RFC 8252 (OAuth 2.0 for Native Apps), de Outubro de 2017, traz indicações de como fazer autenticação e autorização com OAuth 2.0 para aplicações mobile nativas.
+
+No OAuth 2.0, um access token deve ter um tempo de expiração. Um token expirado levaria à necessidade de nova autenticação pelo usuário. Um Authorization Server pode emitir um _refresh token_, de expiração mais longa, que seria utilizado para obter um novo access token, sem a necessidade de nova autenticação. De acordo com a especificação, o grant type Implicit não deve permitir um refresh token, já que o token é conhecido e armazenado no próprio user-agent.
+
+## OAuth no Caelum Eats
+
+Podemos dizer que o API Gateway, que conhece os dados de usuário e seus roles, gera tokens e faz autenticação, é análogo a um Authorization Server do OAuth. O monólito, com a implementação de autorização para os módulos de Restaurante e Admin, serve como um Resource Server do OAuth. O front-end em Angular seria o Client do OAuth.
+
+A autenticação no API Gateway é feita usando o nome do usuário e a respectiva senha que são informadas na própria aplicação do Angular. Ou seja, o Client conhece as credencias do usuário e as repassa para o Authorization Server para autenticá-lo. Isso é análogo a um **Password grant type** do OAuth.
+
+Poderíamos reimplementar a autenticação e autorização com OAuth usando código já pronto das bibliotecas Spring Security OAuth 2 e Spring Cloud Security, diminuindo o código que precisamos manter e  cujas vulnerabilidades temos que mitigar.
+
+## Authorization Server com Spring Security OAuth 2
+
+Para implementarmos um Authorization Server compatível com OAuth 2.0, devemos criar um novo projeto Spring Boot e adicionar como dependênciao starter do Spring Cloud OAuth2:
+
+```xml
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-oauth2</artifactId>
+</dependency>
+```
+
+Com a dependência ao `spring-cloud-starter-oauth2` definida, devemos anotar a Application com `@EnableAuthorizationServer`.
+
+No `application.properties`, devemos definir um client id e seu respectivo client secret:
+
+```properties
+security.oauth2.client.client-id=eats
+security.oauth2.client.client-secret=eats123
+```
+
+> A configuração anterior define apenas um Client. Se tivermos registro de diferentes clients, podemos fornecer uma implementação da interface `ClientDetailsService`, que define o método `loadClientByClientId`. Nesse método, recebemos uma String com o client id e devemos retornar um objeto que implementa a interface `ClientDetails`.
+
+Com essas configurações mínimas, teremos um Authorization Server que dá suporte a todos os grant types do OAuth 2.0 mencionados acima.
+
+Se quisermos usar o Password grant type, devemos fornecer uma implementação da interface `UserDetailsService`, usada pelo Spring Security para obter os detalhes dos usuários. Essa implementação é exatamente igual ao que implementamos no API Gateway, nas classes `UserService`, `User` e `Role`, `UserRepository` e `SecurityConfig`. Para obter o registro dos usuários, o Authorization Server deve ter um data source que aponte para as tabelas de usuários e seus roles.
+
+Ao executar o Authorization Server, podemos gerar um token enviando uma requisição POST ao endpoint `/oauth/token`. As credenciais do Client devem ser autenticadas com HTTP Basic. Devem ser definidos como parâmetros o grant type e o scope. Como não definimos nenhum scope, devemos usar `any`. No caso do Password grant type, devemos informar também as credenciais do usuário.
+
+```sh
+curl -i -X POST
+  --basic -u eats:eats123
+  -H 'Content-Type: application/x-www-form-urlencoded'
+  -d 'grant_type=password&username=admin&password=123456&scope=any'
+  http://localhost:8085/oauth/token
+```
+
+Como resposta, obteremos um access token e um refresh token, ambos opacos.
+
+```txt
+HTTP/1.1 200 
+Pragma: no-cache
+Cache-Control: no-store
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+X-Frame-Options: DENY
+Content-Type: application/json;charset=UTF-8
+Transfer-Encoding: chunked
+Date: Wed, 28 Aug 2019 13:54:22 GMT
+
+{"access_token":"bdb22855-5705-4533-b925-f1091d576db7","token_type":"bearer","refresh_token":"0780c97f-f1d1-4a6f-82cb-c17ba5624caa","expires_in":43199,"scope":"any"}
+```
+
+Podemos checar um token opaco por meio de uma requisição GET ao endpoint `/oauth/token`, passando o access token obtido no parâmetro `token`:
+
+```sh
+curl -i localhost:8080/oauth/check_token/?token=bdb22855-5705-4533-b925-f1091d576db7
+```
+
+O corpo da resposta deve conter o username e os roles do usuário, entre outras informações:
+
+```txt
+HTTP/1.1 200
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Pragma: no-cache
+Expires: 0
+X-Frame-Options: DENY
+Content-Type: application/json;charset=UTF-8
+Transfer-Encoding: chunked
+Date: Wed, 28 Aug 2019 14:56:32 GMT
+
+{"active":true,"exp":1567046599,"user_name":"admin","authorities":["ROLE_ADMIN"],"client_id":"eats","scope":["any"]}
+```
+
+### Erros comuns
+
+Se as credenciais do Client estiverem incorretas
+
+```sh
+curl -i -X POST --basic -u eats:SENHA_ERRADA -H 'Content-Type: application/x-www-form-urlencoded' -k -d 'grant_type=password&username=admin&password=123456&scope=any' http://localhost:8085/oauth/token
+```
+
+receberemos um status 401 (Unauthorized):
+
+```txt
+HTTP/1.1 401
+...
+{"timestamp":"2019-08-28T14:39:58.413+0000","status":401,"error":"Unauthorized","message":"Unauthorized","path":"/oauth/token"}
+```
+
+Se as credenciais do usuário estiverem incorretas, no caso de um Password grant type
+
+```sh
+curl -i -X POST --basic -u eats:eats123 -H 'Content-Type: application/x-www-form-urlencoded' -k -d 'grant_type=password&username=admin&password=SENHA_ERRADA&scope=any' http://localhost:8085/oauth/token
+```
+
+receberemos um status 400 (Bad Request), com _Bad credentials_ como mensagem de erro
+
+```txt
+HTTP/1.1 400
+...
+{"error":"invalid_grant","error_description":"Bad credentials"}
+```
+
+Se omitirmos o scope
+
+```sh
+curl -i -X POST --basic -u eats:eats123 -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=password&username=admin&password=123456' http://localhost:8085/oauth/token
+```
+
+receberemos um status 400 (Bad Request), com _Empty scope_ como mensagem de erro
+
+```txt
+HTTP/1.1 400
+...
+{"error":"invalid_scope","error_description":"Empty scope (either the client or the user is not allowed the requested scopes)"}
+```
+
+Se omitirmos o grant type
+
+```sh
+curl -i -X POST --basic -u eats:eats123 -H 'Content-Type: application/x-www-form-urlencoded' -d 'username=admin&password=123456&scope=any' http://localhost:8085/oauth/token
+```
+
+receberemos um status 400 (Bad Request), com _Missing grant type_ como mensagem de erro
+
+```txt
+HTTP/1.1 400
+...
+{"error":"invalid_request","error_description":"Missing grant type"}
+```
+
+Se informarmos um grant type incorreto
+
+```sh
+curl -i -X POST --basic -u eats:eats123 -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=NAO_EXISTE&username=admin&password=123456&scope=any' http://localhost:8085/oauth/token
+```
+
+receberemos um status 400 (Bad Request), com _Unsupported grant type_ como mensagem de erro
+
+```txt
+HTTP/1.1 400
+...
+{"error":"unsupported_grant_type","error_description":"Unsupported grant type: NAO_EXISTE"}
+```
+
+Se, ao checarmos um token, passarmos um token expirado ou inválido
+
+```sh
+curl -i localhost:8085/oauth/check_token/?token=TOKEN_INVALIDO
+```
+
+receberemos um status 400 (Bad Request), com _Token was not recognised_ como mensagem de erro
+
+```txt
+HTTP/1.1 400
+...
+{"error":"invalid_token","error_description":"Token was not recognised"}
+```
+
+## JWT como formato de token no Spring Security OAuth 2
+
+A dependência `spring-cloud-starter-oauth2` já tem como dependência transitiva a biblioteca `spring-security-jwt`, que provê suporte a JWT no Spring Security.
+
+Precisamos fazer algumas configurações para que o token gerado seja um JWT. Para isso, devemos definir uma implementação para a interface `AuthorizationServerConfigurer`. Podemos usar a classe `AuthorizationServerConfigurerAdapter` como auxílio.
+
+As configurações são as seguintes:
+
+- um objeto da classe `JwtTokenStore`, que implementa a interface `TokenStore`
+- um objeto da classe `JwtAccessTokenConverter`, que implementa a interface `AccessTokenConverter`. A classe `JwtAccessTokenConverter` gera, por padrão, um chave privada de assinatura (`signingKey`) randômica. É interessante definir uma propriedade `jwt.secret`, como havíamos feito anteriormente.
+- uma implementação de `ClientDetailsService` para que as propriedades `security.oauth2.client.client-id` e `security.oauth2.client.client-secret` funcionem e definam o id e a senha do Client com sucesso. Podemos usar a classe `ClientDetailsServiceConfigurer`. Os valores das propriedades de Client id e secret podem ser obtidas usando `OAuth2ClientProperties`.
+- devemos definir o `AuthenticationManager` configurado na classe `SecurityConfig` por meio da classe `AuthorizationServerEndpointsConfigurer`
+
+Fazemos todas essas configurações na classe `OAuthServerConfig` a seguir:
+
+```java
+@Configuration
+public class OAuthServerConfig extends AuthorizationServerConfigurerAdapter {
+
+  private final AuthenticationManager authenticationManager;
+  private final OAuth2ClientProperties clientProperties;
+  private final String jwtSecret;
+
+  public OAuthServerConfiguration(AuthenticationManager authenticationManager,
+                OAuth2ClientProperties clientProperties, 
+                @Value("${jwt.secret}") String jwtSecret) {
+    this.authenticationManager = authenticationManager;
+    this.clientProperties = clientProperties;
+    this.jwtSecret = jwtSecret;
+  }
+
+  @Override
+  public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
+    clients.inMemory()
+      .withClient(clientProperties.getClientId())
+      .secret(clientProperties.getClientSecret());
+  }
+
+  @Override
+  public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
+    endpoints.tokenStore(tokenStore())
+        .accessTokenConverter(accessTokenConverter())
+        .authenticationManager(authenticationManager);
+  }
+
+  @Bean
+  public TokenStore tokenStore() {
+    return new JwtTokenStore(accessTokenConverter());
+  }
+
+  @Bean
+  public JwtAccessTokenConverter accessTokenConverter() {
+    JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
+    converter.setSigningKey(this.jwtSecret);
+    return converter;
+  }
+
+}
+```
+
+A configuração padrão habilitada pela anotação `@EnableAuthorizationServer` usa um `NoOpsPasswordEncoder`, que faz com que as senhas sejam lidas em texto puro. Porém, como definimos o `BCryptPasswordEncoder` no nosso `SecurityConfig`, precisaremos modificar a propriedade `security.oauth2.client.client-secret` no arquivo `application.properties`:
+
+```properties
+security.oauth2.client.client-secret=$2a$10$1YJxJHAbtsSCeyqgN7S1gurPZ8NSmTVA33dgPq6NqElU6qjzlpkOa
+```
+
+Ao executar novamente o Authorization Server, os tokens serão gerados no formato JWT/JWS.
+
+Podemos testar novamente com o cURL:
+
+```sh
+curl -i -X POST --basic -u eats:eats123 -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=password&username=admin&password=123456&scope=any' http://localhost:8085/oauth/token
+```
+
+Teremos uma resposta bem sucedida, com um access token no formato JWT:
+
+```txt
+HTTP/1.1 200
+Pragma: no-cache
+Cache-Control: no-store
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+X-Frame-Options: DENY
+Content-Type: application/json;charset=UTF-8
+Transfer-Encoding: chunked
+Date: Wed, 28 Aug 2019 18:11:25 GMT
+
+{"access_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NjcwNTkwODUsInVzZXJfbmFtZSI6ImFkbWluIiwiYXV0aG9yaXRpZXMiOlsiUk9MRV9BRE1JTiJdLCJqdGkiOiI2ODlkMGE0ZS0xZjRmLTQ5OGMtOGMzMS05YjVlYjMyZWYxYjgiLCJjbGllbnRfaWQiOiJlYXRzIiwic2NvcGUiOlsiYW55Il19.ZtYpX3GJPYU8UNhHRtmEtQ7SLiiZdZOrdCRJt64ovF4","token_type":"bearer","expires_in":43199,"scope":"any","jti":"689d0a4e-1f4f-498c-8c31-9b5eb32ef1b8"}
+```
+
+O access token anterior contém, como todo JWS, 3 partes.
+
+O cabeçalho:
+
+```txt
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+```
+
+Que pode ser decodificado, usando um Base 64 URL Decoder, para:
+
+```json
+{"alg":"HS256","typ":"JWT"}
+```
+
+Já a segunda parte é o payload, que contém os claims do JWT:
+
+```txt
+eyJleHAiOjE1NjcwNTkwODUsInVzZXJfbmFtZSI6ImFkbWluIiwiYXV0aG9yaXRpZXMiOlsiUk9MRV9BRE1JTiJdLCJqdGkiOiI2ODlkMGE0ZS0xZjRmLTQ5OGMtOGMzMS05YjVlYjMyZWYxYjgiLCJjbGllbnRfaWQiOiJlYXRzIiwic2NvcGUiOlsiYW55Il19
+```
+
+Após a decodificação Base64, teremos:
+
+```json
+{
+  "exp":1567059085,
+  "user_name":"admin",
+  "authorities":["ROLE_ADMIN"],
+  "jti":"689d0a4e-1f4f-498c-8c31-9b5eb32ef1b8",
+  "client_id":"eats",
+  "scope":["any"]}
+```
+
+Perceba que temos o `user_name` e os respectivos roles em `authorities`.
+
+Há também uma propriedade `jti` (JWT ID), uma String randômica (UUID) que serve como um _nonce_: um valor é diferente a cada request e previne o sistema contra _replay attacks_.
+
+A terceira parte é a assinatura:
+
+```txt
+ZtYpX3GJPYU8UNhHRtmEtQ7SLiiZdZOrdCRJt64ovF4
+```
+
+Como usamos o algoritmo `HS256`, um algoritmo de chaves simétricas, a chave privada setada em `signingKey` precisa ser conhecida para validar a assinatura.
+
+## Exercício: um Authorization Server com Spring Security OAuth 2
+
+1. Abra um Terminal e baixe o projeto `fj33-authorization-server` para o seu Desktop usando o Git:
+
+  ```sh
+  cd ~/Desktop
+  git clone https://gitlab.com/aovs/projetos-cursos/fj33-authorization-server.git
+  ```
+
+2. No workspace de microservices do Eclipse, acesse _File > Import > Existing Maven Projects_ e clique em _Next_. Em _Root Directory_, aponte para o diretório clonado anteriormente.
+
+  Veja o código das classes `AuthorizationServerApplication` e `OAuthServerConfig`, além dos arquivos `bootstrap.properties` e `application.properties`.
+
+  Note que o `spring.application.name` é `authorizationserver`. A porta definida para o Authorization Server é `8085`.
+
+3. Crie o arquivo `authorizationserver.properties` no `config-repo`, com o seguinte conteúdo:
+
+  ```properties
+  #DATASOURCE CONFIGS
+  spring.datasource.url=jdbc:mysql://localhost/eats?createDatabaseIfNotExist=true
+  spring.datasource.username=root
+  spring.datasource.password=
+
+  jwt.secret = rm'!@N=Ke!~p8VTA2ZRK~nMDQX5Uvm!m'D&]{@Vr?G;2?XhbC:Qa#9#eMLN\}x3?JR3.2zr~v)gYF^8\:8>:XfB:Ww75N/emt9Yj[bQMNCWwW\J?N,nvH.<2\.r~w]*e~vgak)X"v8H`MH/7"2E`,^k@n<vE-wD3g9JWPy;CrY*.Kd2_D])=><D?YhBaSua5hW%{2]_FVXzb9`8FH^b[X3jzVER&:jw2<=c38=>L/zBq`}C6tT*cCSVC^c]-L}&/
+
+  security.oauth2.client.client-id=eats
+  security.oauth2.client.client-secret=$2a$10$1YJxJHAbtsSCeyqgN7S1gurPZ8NSmTVA33dgPq6NqElU6qjzlpkOa
+  ```
+
+  Note que copiamos o `jwt.secret` e os dados do BD do monólito. Isso indica que o BD será mantido de maneira monolítica. Eventualmente, seria possível fazer a migração de dados de usuário para um BD específico.
+
+  Além disso, definimos as propriedades de Client id e secret do Spring Security OAuth 2.
+
+  Não deixe de comitar o novo arquivo no repositório Git.
+
+4. Execute a classe `AuthorizationServerApplication`.
+
+  Abra um terminal e execute o seguinte comando:
+
+  ```sh
+  curl -i -X POST --basic -u eats:eats123 -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=password&username=admin&password=123456&scope=any' http://localhost:8085/oauth/token
+  ```
+
+  Se não quiser digitar, é possível encontrar o comando anterior no seguinte link: https://gitlab.com/snippets/1890014
+
+  Como resposta, deverá ser exibido algo como:
+
+  ```txt
+  HTTP/1.1 200
+
+  ...
+  {
+  "access_token":
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.
+    eyJleHAiOjE1NjcwNTkwODUsInVzZXJfbmFtZSI6ImFkbWluIiwiYXV0aG9yaXRpZXMiOlsiUk9MRV9BRE1JTiJdLCJqdGkiOiI2ODlkMGE0ZS0xZjRmLTQ5OGMtOGMzMS05YjVlYjMyZWYxYjgiLCJjbGllbnRfaWQiOiJlYXRzIiwic2NvcGUiOlsiYW55Il19.
+    ZtYpX3GJPYU8UNhHRtmEtQ7SLiiZdZOrdCRJt64ovF4",
+  "token_type": "bearer",
+  "expires_in": 43199,
+  "scope": "any",
+  "jti": "689d0a4e-1f4f-498c-8c31-9b5eb32ef1b8"
+  }
+  ```
+
+  Pegue o conteúdo da propriedade `access_token` e analise o cabeçalho e o payload em: https://jwt.io
+
+  O payload deverá conter algo semelhante a:
+
+  ```json
+  {
+    "exp": 1567059085,
+    "user_name": "admin",
+    "authorities": [
+      "ROLE_ADMIN"
+    ],
+    "jti": "689d0a4e-1f4f-498c-8c31-9b5eb32ef1b8",
+    "client_id": "eats",
+    "scope": [
+      "any"
+    ]
+  }
+  ```
+
+5. Remova o código de autenticação do API Gateway.
+
+  Para isso, delete as seguintes classes  do API Gateway:
+
+  - A̶u̶t̶h̶e̶n̶t̶i̶c̶a̶t̶i̶o̶n̶C̶o̶n̶t̶r̶o̶l̶l̶e̶r̶
+  - A̶u̶t̶h̶e̶n̶t̶i̶c̶a̶t̶i̶o̶n̶D̶t̶o̶
+  - J̶w̶t̶T̶o̶k̶e̶n̶M̶a̶n̶a̶g̶e̶r̶
+  - P̶a̶s̶s̶w̶o̶r̶d̶E̶n̶c̶o̶d̶e̶r̶C̶o̶n̶f̶i̶g̶
+  - R̶o̶l̶e̶
+  - S̶e̶c̶u̶r̶i̶t̶y̶C̶o̶n̶f̶i̶g̶
+  - U̶s̶e̶r̶
+  - U̶s̶e̶r̶I̶n̶f̶o̶D̶t̶o̶
+  - U̶s̶e̶r̶R̶e̶p̶o̶s̶i̶t̶o̶r̶y̶
+  - U̶s̶e̶r̶S̶e̶r̶v̶i̶c̶e̶
+
+  Remova as seguintes dependências do `pom.xml` do API Gateway:
+
+  - j̶j̶w̶t̶
+  - m̶y̶s̶q̶l̶-̶c̶o̶n̶n̶e̶c̶t̶o̶r̶-̶j̶a̶v̶a̶
+  - s̶p̶r̶i̶n̶g̶-̶b̶o̶o̶t̶-̶s̶t̶a̶r̶t̶e̶r̶-̶d̶a̶t̶a̶-̶j̶p̶a̶
+  - s̶p̶r̶i̶n̶g̶-̶b̶o̶o̶t̶-̶s̶t̶a̶r̶t̶e̶r̶-̶s̶e̶c̶u̶r̶i̶t̶y̶
+
+  Apague a seguinte rota do `application.properties` do API Gateway:
+
+  ```properties
+  z̶u̶u̶l̶.̶r̶o̶u̶t̶e̶s̶.̶a̶u̶t̶h̶.̶p̶a̶t̶h̶=̶/̶a̶u̶t̶h̶/̶*̶*̶
+  z̶u̶u̶l̶.̶r̶o̶u̶t̶e̶s̶.̶a̶u̶t̶h̶.̶u̶r̶l̶=̶f̶o̶r̶w̶a̶r̶d̶:̶/̶a̶u̶t̶h̶
+  ```
+
+  Delete o arquivo `apigateway.properties` do `config-repo`.
+
+6. (desafio - trabalhoso) Aplique uma estratégia de migração de dados de usuário do monólito para o BD do Authorization Server.
+
+## Extraindo um serviço Administrativo do monólito
+
+Primeiramente, vamos extrair o módulo `eats-admin` do monólito para um serviço `eats-admin-service`.
+
+Para isso, criamos um novo projeto Spring Boot com as seguintes dependências:
+
+- Spring Boot DevTools
+- Spring Boot Actuator
+- Spring Data JPA
+- Spring Web Starter
+- Config Client
+- Eureka Discovery Client
+- Zipkin Client
+
+Então, movemos as seguintes classes do módulo `eats-admin` do monólito para o novo serviço `eats-admin-service`:
+
+- FormaDePagamento
+- FormaDePagamentoController
+- FormaDePagamentoRepository
+- TipoDeCozinha
+- TipoDeCozinhaController
+- TipoDeCozinhaRepository
+
+O Admin Service deve apontar para o Config Server, definindo um `bootstrap.properties` com `admin` como _application name_. No arquivo `admin.properties` do `config-repo`, definiremos as configurações de data source apontando para o BD do monólito.
+
+No `application.properties`, deve ser definida `8084` na porta a ser utilizada.
+
+Então, o módulo `eats-admin` do monólito pode ser removido, assim como suas autorizações no módulo `eats-seguranca`.
+
+## Exercício: um serviço Administrativo
+
+1. Clone o projeto `fj33-eats-admin-service` para o seu Desktop:
+
+  ```sh
+  cd ~/Desktop
+  git clone https://gitlab.com/aovs/projetos-cursos/fj33-eats-admin-service.git
+  ```
+
+2. Crie um arquivo `admin.properties` no `config-repo`, definindo um data source que aponta para o BD do monólito:
+
+  ```properties
+  spring.datasource.url=jdbc:mysql://localhost/eats?createDatabaseIfNotExist=true
+  spring.datasource.username=root
+  spring.datasource.password=
+  ```
+
+3. Delete o módulo `eats-admin` do monólito.
+
+4. Remova, da classe  SecurityConfig` do módulo `eats-seguranca` do monólito,  as configurações de autorização dos endpoints que foram movidos:
+
+  ```java
+  class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    // código omitido ...
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+      http.authorizeRequests()
+        .antMatchers("/restaurantes/**", "/pedidos/**",̶ ̶"̶/̶t̶i̶p̶o̶s̶-̶d̶e̶-̶c̶o̶z̶i̶n̶h̶a̶/̶*̶*̶"̶,̶ ̶"̶/̶f̶o̶r̶m̶a̶s̶-̶d̶e̶-̶p̶a̶g̶a̶m̶e̶n̶t̶o̶/̶*̶*̶"̶).permitAll()
+        .antMatchers("/actuator/**").permitAll()
+        .̶a̶n̶t̶M̶a̶t̶c̶h̶e̶r̶s̶(̶"̶/̶a̶d̶m̶i̶n̶/̶*̶*̶"̶)̶.̶h̶a̶s̶R̶o̶l̶e̶(̶R̶o̶l̶e̶.̶R̶O̶L̶E̶S̶.̶A̶D̶M̶I̶N̶.̶n̶a̶m̶e̶(̶)̶)̶
+        // código omitido ...
+    }
+  
+  }
+  ```
+
+## Resource Server com Spring Security OAuth 2
+
+Para definir um Resource Server com o Spring Security OAuth 2, que consiga validar e decodificar os tokens (opacos ou JWT) emitidos pelo Authorization Server, basta anotar a aplicação ou uma configuração com `@EnableResourceServer`.
+
+Podemos definir na configuração `security.oauth2.resource.token-info-uri` a URI de validação de tokens opacos.
+
+No caso de token self-contained JWT, devemos definir a propriedade `security.oauth2.resource.jwt.key-value`. Pode ser a chave simétrica, no caso de algoritmos como o HS256, ou a chave pública, como no RS256. A chave pública em um algortimo assimétrico pode ser baixada quando definida a propriedade `security.oauth2.resource.jwt.key-uri`.
+
+Por padrão, todos os endereços requerem autenticação. Porém, é possível customizar esse e outros detalhes fornecendo uma implementação da interface `ResourceServerConfigurer`. É possível herdar da classe `ResourceServerConfigurerAdapter` para facilitar as configurações.
+
+## Exercício: protegendo o serviço Administrativo
+
+1. Adicione os starters do Spring Security OAuth 2 e Spring Cloud Security ao `pom.xml` do `eats-admin-service`:
+
+  ####### fj33-eats-admin-service/pom.xml
+
+  ```xml
+  <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-oauth2</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-security</artifactId>
+  </dependency>
+  ```
+
+2. Adicione ao `admin.properties` do `config-repo`, a mesma chave usada no Authorization Server:
+
+  ####### config-repo/admin.properties
+
+  ```properties
+  security.oauth2.resource.jwt.key-value = rm'!@N=Ke!~p8VTA2ZRK~nMDQX5Uvm!m'D&]{@Vr?G;2?XhbC:Qa#9#eMLN\}x3?JR3.2zr~v)gYF^8\:8>:XfB:Ww75N/emt9Yj[bQMNCWwW\J?N,nvH.<2\.r~w]*e~vgak)X"v8H`MH/7"2E`,^k@n<vE-wD3g9JWPy;CrY*.Kd2_D])=><D?YhBaSua5hW%{2]_FVXzb9`8FH^b[X3jzVER&:jw2<=c38=>L/zBq`}C6tT*cCSVC^c]-L}&/
+  ```
+
+3. Crie uma classe `OAuthResourceServerConfig`. Herde da classe `ResourceServerConfigurerAdapter` e permita que todos acessem a listagem de tipos de cozinha e formas de pagamento, assim como os endpoints do Spring Boot Actuator. As URLs que começam com `/admin` devem ser restritas a usuário que tem o role `ADMIN`.
+
+  ####### fj33-eats-admin-service/src/main/java/br/com/caelum/eats/admin/OAuthResourceServerConfig.java
+
+  ```java
+  @Configuration
+  public class OAuthResourceServerConfig extends ResourceServerConfigurerAdapter {
+
+    @Override
+    public void configure(HttpSecurity http) throws Exception {
+      http.authorizeRequests()
+      .antMatchers("/tipos-de-cozinha/**", "/formas-de-pagamento/**").permitAll()
+      .antMatchers("/actuator/**").permitAll()
+      .antMatchers("/admin/**").hasRole("ADMIN")
+      .anyRequest().authenticated()
+      .and().cors()
+      .and().csrf().disable()
+      .formLogin().disable()
+      .httpBasic().disable();
+    }
+
+  }
+  ```
+
+4. Abra um terminal e tente listas todas as formas de pagamento sem passar nenhum token:
+
+  ```sh
+  curl http://localhost:8084/formas-de-pagamento
+  ```
+
+  A resposta deve ser bem sucedida, contendo algo como:
+
+  ```txt
+  [{"id":4,"tipo":"VALE_REFEICAO","nome":"Alelo"},{"id":3,"tipo":"CARTAO_CREDITO","nome":"Amex Express"},{"id":2,"tipo":"CARTAO_CREDITO","nome":"MasterCard"},{"id":6,"tipo":"CARTAO_DEBITO","nome":"MasterCard Maestro"},{"id":5,"tipo":"VALE_REFEICAO","nome":"Ticket Restaurante"},{"id":1,"tipo":"CARTAO_CREDITO","nome":"Visa"},{"id":7,"tipo":"CARTAO_DEBITO","nome":"Visa Débito"}]
+  ```
+
+  Vamos tentar editar uma forma de pagamento, chamando um endpoint que começa com `/admin`, sem um token:
+
+  ```sh
+  curl -i -X PUT -H 'Content-type: application/json' -d '{"id": 3, "tipo": "CARTAO_CREDITO", "nome": "American Express"}' http://localhost:9999/admin/formas-de-pagamento/3
+  ```
+
+  O comando anterior pode ser encontrado em: https://gitlab.com/snippets/1888251
+
+  Deve ser retornado um erro `401 (Unauthorized)`, com a descrição _Full authentication is required to access this resource_, indicado que o acesso ao recurso depende de autenticação:
+
+  ```txt
+  HTTP/1.1 401 
+  Pragma: no-cache
+  WWW-Authenticate: Bearer realm="oauth2-resource", error="unauthorized", error_description="Full authentication is required to access this resource"
+  Cache-Control: no-store
+  X-Content-Type-Options: nosniff
+  X-XSS-Protection: 1; mode=block
+  X-Frame-Options: DENY
+  Content-Type: application/json;charset=UTF-8
+  Transfer-Encoding: chunked
+  Date: Thu, 29 Aug 2019 20:12:57 GMT
+
+  {"error":"unauthorized","error_description":"Full authentication is required to access this resource"}
+  ```
+
+  Devemos incluir, no cabeçalho `Authorization`, o token JWT obtido anteriormente:
+
+  ```sh
+  curl -i -X PUT -H 'Content-type: application/json' -H 'Authorization: Bearer TOKEN-JWT-AQUI' -d '{"id": 3, "tipo": "CARTAO_CREDITO", "nome": "Amex Express"}' http://localhost:8084/admin/formas-de-pagamento/3
+  ```
+
+  Observação: troque `TOKEN-JWT-AQUI` pelo token obtido do Authorization Server em exercícios anteriores.
+
+  A resposta será um sucesso!
+
+  ```txt
+  HTTP/1.1 200
+  X-Content-Type-Options: nosniff
+  X-XSS-Protection: 1; mode=block
+  Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+  X-Frame-Options: DENY
+  Content-Type: application/json;charset=UTF-8
+  Transfer-Encoding: chunked
+  Date: Thu, 29 Aug 2019 20:13:02 GMT
+
+  {"id":3,"tipo":"CARTAO_CREDITO","nome":"Amex Express"}
+  ```
+
+## Protegendo o Config Server e o Service Registry
+
+Uma vulnerabilidade da nossa aplicação é que uma vez que o endereço do Service Registry é conhecido, é possível descobrir nomes, hosts e portas de todos os serviços. A partir dos nomes dos serviços, podemos consultar o Config Server e observar detalhes de configuração de cada serviço.
+
+Podemos, de maneira bem fácil, proteger o Config Server, o Service Registry e demais serviços de infraestrutura que criamos.
+
+Basta adicionarmos, às dependências do Maven, o Spring Security:
+
+```xml
+<dependency>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+```
+
+Para que o Spring Security não use uma senha randômica, devemos definir usuário e senha como propriedades no `application.properties`. Por exemplo, para o Config Server:
+
+```properties
+security.user.name=configUser
+security.user.password=configPassword
+```
+
+Nos demais serviços, devemos adicionar ao `bootstrap.properties`:
+
+```properties
+spring.cloud.config.uri=http://localhost:8888
+spring.cloud.config.username=configUser
+spring.cloud.config.password=configPassword
+```
+
+No caso do Service Registry, faríamos o mesmo processo. Para o Eureka, definiríamos o endereço da seguinte maneira:
+
+```properties
+eureka.client.serviceUrl.defaultZone=http://eurekaUser:eurekaPassword@localhost:8082/eureka/
+```
+
+## Confidencialidade, Integridade e Autenticidade com HTTPS
+
+O protocolo HTTP é baseado em texto e, sem uma estratégia de confidencialidade, as informações serão trafegadas como texto puro da UI para o seu sistema e nas chamadas entre os serviços. Dados como usuário, senha, cartões de crédito estariam totalmente expostos.
+
+HTTPS é uma extensão ao HTTP que usa TLS (Transport Layer Security) para prover confidencialidade aos dados por meio de criptografia. O protocolo SSL (Security Sockets Layer) é o predecessor do TLS e está _deprecated_.
+
+Além disso, o HTTPS provê a integridade dos dados, evitando que sejam manipulados no meio do caminho, e a autenticidade do servidor, garantindo que o servidor é exatamente o que o cliente espera.
+
+A confidencialidade, integridade e autenticidade do servidor no HTTPS é atingida por meio de criptografia assimétrica (public-key cryptography). O servidor tem um par de chaves (key pair): uma pública e uma privada. Algo criptografado com a chave pública só pode ser descriptografado com a chave privada, garantindo confidencialidade. Algo criptografado com a chave privada pode ser verificado com a chave pública, validando a autenticidade.
+
+A chave pública faz parte de um certificado digital, que é emitido por uma Autoridade Certificadora (Certificate Authority) como Comodo, Symantec, Verizon ou Let's Encrypt. Toda a infraestrutura dos certificados digitais é baseada na confiança de ambas as partes, cliente e servidor, nessas Autoridades Certificadoras.
+
+Mas o HTTPS não é um mar de rosas: os certificados tem validade e precisam ser gerenciados. A automação do gerenciamento de certificados ainda deixa a desejar, mas tem melhorado progressivamente, Let's Encrypt sendo uma referência em automação.
+
+Certificados gerados sem uma autoridade certificadora (self-signed certificates) não são confiáveis e apresentam erros em navegadores e outros sistemas.
+
+Com o comando `keytool`, que vem com a JDK, podemos gerar um self-signed certificate:
+
+```sh
+keytool -genkey -alias eats -storetype JKS -keyalg RSA -keysize 2048 -keystore eats-keystore.jks -validity 3650
+```
+
+Será solicitada uma senha e uma série de outras informações e gerado o arquivo `eats-keystore.jks`.
+
+Podemos configurar o `application.properties` de uma aplicação Spring Boot da seguinte maneira:
+
+```properties
+server.port=8443
+server.ssl.key-store=eats-keystore.jks
+server.ssl.key-store-password=a-senha-escolhida
+server.ssl.keyAlias=eats
+```
+
+## Mutual Authentication
+
+Um outro detalhe do HTTPS é que não há garantias da autenticidade do cliente, apenas do servidor.
+
+Para garantir a autenticidade do cliente _e_ do servidor, podemos fazer com que ambos tenham certificados digitais. Quando o cliente é um navegador, isso não é possível porque é inviável exigir a cada um dos usuários a instalação de um certificado. Por isso, o uso mútuo de certificados é comumente usado na comunicação servidor-servidor.
+
+Cada serviço deve ter dois _stores_ com chaves criptográficas, que possuem a extensão `.jks` na plataforma Java:
+
+- uma _key store_, que contém a chave privada de um determinado serviço, além de um certificado com a respectiva chave pública
+- uma _trust store_, que contém os certificados com chaves públicas dos clientes e servidores ou de Autoridades Certificadoras considerados confiáveis
+
+O `application.properties` deve ter configurações tanto do key store como do trust store, além da propriedade `server.ssl.client-auth` que indica o uso de autenticação mútua e pode ter os valores `none`, `want` (não obrigatório) e `need` (obrigatório).
+
+```properties
+server.ssl.key-store=eats-keystore.jks
+server.ssl.key-store-password=a-senha-escolhida
+server.ssl.keyAlias=eats
+
+server.ssl.trust-store=eats-truststore.jks
+server.ssl.trust-store-password=senha-do-trust-store
+
+server.ssl.client-auth=need
+```
+
+## Protegendo dados armazenados
+
+Mesmo investindo esforço em proteger a rede, a comunicação entre os serviços (_data at transit_) e os serviços em si, é preciso preparar nosso ambiente para uma possível invasão.
+
+Uma vulnerabilidade são dados armazenados (_data at rest_) em BDs, arquivos de configuração e backups. Em especial, devemos proteger dados sensíveis como cartões de crédito, senhas e chaves criptográficas. Muitos ataques importantes exploraram a falta de criptografia ou falhas nos algoritmos criptográficos utilizados.
+
+Em seu livro _Building Microservices_, Sam Newman indica algumas medidas que devem ser tomadas para proteger os dados armazenados:
+
+- use implementações padrão de algoritmos criptográficos conhecidos, ficando atento a possíveis vulnerabilidades e aplicando _patches_ regularmente. Não tente criar o seu algoritmo. Para senhas, use Strings randômicas (salts) que minimizam ataques baseados em tabelas de hashes. 
+- limite a encriptação a tabelas dos BDs e a arquivos que realmente são sensíveis para evitar impactos negativos na performance da aplicação
+- criptografe os dados sensíveis logo que entrarem no sistema, descriptografe sob demanda e assegure que os dados não são armazenados em outros lugares
+- assegure que os backups estejam criptografados
+- armazene as chaves criptográficas em um software ou appliance (hardware) específico para gerenciamento de chaves.
+
+## Rotação de credenciais
+
+Em Junho de 2014, a Code Spaces, uma concorrente do GitHub que fornecia Git e SVN na nuvem, sofreu um ataque em que o invasor, após chantagem, apagou quase todos os dados, configurações de máquinas e backups da empresa. O ataque levou a empresa à falência! Isso aconteceu porque o invasor teve acesso ao painel de controle do AWS e conseguiu apagar quase todos os artefatos, incluindo os backups.
+
+Não se sabe ao certo como o invasor conseguiu o acesso indevido ao painel de controle do AWS, mas há a hipótese de que obteve informações dos credenciais de acesso de um antigo funcionário da empresa.
+
+É imprescindível ue as credenciais tenham acesso limitado aos recursos computacionais, minimizando o potencial de destruição de um possível invasor.
+
+Outra coisa importante é que as senhas dos usuários, chaves criptográficas, API keys e outras credenciais sejam modificadas de tempos em tempos. Assim, ataques feitos com a ajuda funcionários desonestos terão efeito limitado. Se possível, essa **rotação de credenciais** deve ser feita de maneira automatizada.
+
+Há alguns softwares que automatizam o gerenciamento de credenciais:
+
+- Vault, da HashiCorp
+- AWS Secrets Manager
+- KeyWiz, da Square
+- CredHyb, da Cloud Foundry
+
+> Um outro aspecto do caso da Code Spaces é que os backups eram feitos no próprio AWS. É importante que tenhamos offsite backups, em caso de comprometimento de um provedor de cloud computing.
+
+### Vault
+
+Vault é uma solução de gerenciamento de credenciais da HashiCorp, a mesma empresa que mantém o Vagrant, Consul, Terraform, entre outros.
+
+O Vault armazena de maneira segura e controla o acesso de tokens, senhas, API Keys, chaves criptográficas, e certificados digitais. Provê uma CLI, uma API HTTP e uma UI Web para gerenciamento. É possível criar, revogar e rotacionar credenciais de maneira automatizada.
+
+Para que a senha, por exemplo, de um BD seja alterada pelo Vault, é necessário que seja configurado um usuário do BD que possa criar e remover outros usuários.
+
+Exemplo dos comandos da CLI do Vault para criação de credenciais com duração de 1 hora no MySQL:
+
+```sh
+vault secrets enable mysql
+vault write mysql/config/connection connection_url="root:root-password@tcp(192.168.33.10:3306)/"
+vault write mysql/config/lease lease=1h lease_max=24h
+vault write mysql/roles/readonly sql="CREATE USER '{{name}}'@'%' IDENTIFIED BY '{{password}}';GRANT SELECT ON *.* TO '{{name}}'@'%';"
+```
+
+As credenciais dos backends precisam ser conhecidas pelo Vault. No caso do MySQL, o usuário `root` e a respectiva senha precisam ser conhecidos. Essas configurações são armazenadas de maneira criptografada na representação interna do Vault. O Vault pode usar para armazenamento Consul, Etcd, o sistema de arquivos, entre diversos outros.
+
+Os dados do Vault são criptografados com uma chave simétrica. Essa chave simétrica é criptografada com uma _master key_. E a _master key_ é criptografada usando o algortimo _Shamir's secret sharing_, em que mais de uma chave é necessária para descriptografar. Por padrão, o Vault usa 5 chaves e 3 delas são necessárias para a descriptografia.
+
+O Spring Cloud Config Server permite o uso do Vault como repositório de configurações: https://cloud.spring.io/spring-cloud-config/reference/html/#vault-backend
+
+
+Há ainda o Spring Cloud Vault, que provê um cliente Vault para aplicações Spring Boot: https://cloud.spring.io/spring-cloud-vault/reference/html/
+
 
 <!-- 
 Referências:
@@ -925,6 +1712,12 @@ https://scotch.io/tutorials/the-ins-and-outs-of-token-based-authentication
 https://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm
 
 https://microservices.io/patterns/security/access-token.html
+
+Spring Microservices in Action
+John Carnell; Kalpit Patel - Manning 2017
+Capítulo 7 - Securing Microservices
+Apêndice B - OAuth2 grant types
+https://learning.oreilly.com/library/view/spring-microservices-in/9781617293986/OEBPS/Text/B.html
 
 Microservices Patterns
 Chris Richardson - Manning
@@ -941,5 +1734,15 @@ Building Secure Microservices Architectures
 Sam Newman - O'Reilly Media, Inc.
 April 2018
 https://learning.oreilly.com/learning-paths/learning-path-building/9781492041481/
--->
 
+Building Microservices
+Sam Newman  - O'Reilly Media, Inc.
+February 2015
+https://learning.oreilly.com/library/view/building-microservices/9781491950340/
+
+CodeSpaces
+https://www.infoworld.com/article/2608076/murder-in-the-amazon-cloud.html
+
+https://pt.slideshare.net/AWSAktuell/secret-management-with-hashicorps-vault
+
+-->
