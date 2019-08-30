@@ -2,35 +2,33 @@
 
 ## Autenticação e Autorização
 
-Grande parte das aplicações tem diferentes perfis de usuário, que tem permissão de acesso a diferentes funcionalidades. Isso é o que chamamos de **Autorização**.
+Grande parte das aplicações tem diferentes perfis de usuário, que têm permissão de acesso a diferentes funcionalidades. Isso é o que chamamos de **Autorização**.
 
-No caso do Caelum Eats, qualquer usuário pode acessar a parte de pedidos. Porém, a parte de administração do sistema, que permite cadastrar tipos de cozinha, formas de pagamento e aprovar restaurantes, só é acessível pelo perfil de administrador. Já os dados de um restaurante e o gerenciamento dos pedidos pendentes só são acessíveis pelo dono de cada restaurante.
+No caso do Caelum Eats, qualquer usuário pode acessar fazer pedidos e acompanhá-los. Porém, a administração do sistema, que permite cadastrar tipos de cozinha, formas de pagamento e aprovar restaurantes, só é acessível pelo perfil de administrador. Já os dados de um restaurante e o gerenciamento dos pedidos pendentes só são acessíveis pelo dono de cada restaurante.
 
 Um usuário precisa identificar-se, ou seja, dizer quem está acessando a aplicação. Isso é o que chamamos de **Autenticação**.
 
-Uma vez que o usuário está autenticado e sua identidade é conhecida, a aplicação pode reforçar as permissões de acesso.
+Uma vez que o usuário está autenticado e sua identidade é conhecida, é possível que a aplicação reforce as permissões de acesso.
 
 Existem algumas maneiras mais comuns de um sistema confirmar a identidade de um usuário:
 
-- algo que o usuário sabe (um segredo), como uma senha
+- algo que o usuário sabe, um segredo, como uma senha
 - algo que o usuário tem, como um token físico ou por uma app mobile
-- algo que o usuário é, biometria das digitais, íris ou reconhecimento facial
-
-A maneira mais comum de autenticação é por senha
+- algo que o usuário é, como biometria das digitais, íris ou reconhecimento facial
 
 > Two-factor authentication (2FA), ou autenticação de dois fatores, é a associação de duas formas de autenticação para minimizar as chances de alguém mal intencionado identificar-se como outro usuário, no caso de apoderar-se de um dos fatores de autenticação.
 
 ## Sessões e escalabilidade
 
-Uma aplicação Web tradicional armazena a identidade do usuário, depois da autenticação, em uma **sessão**, que comumente é armazenada em memória, mas pode ser armazenada em disco ou em um BD.
+Após a autenticação, uma aplicação Web tradicional guarda a identidade do usuário em uma **sessão**, que comumente é armazenada em memória, mas pode ser armazenada em disco ou em um BD.
 
-O cliente da aplicação, comumente um navegador, deve armazenar um id da sessão. Em toda requisição, o cliente passa esse id para identificar o usuário.
+O cliente da aplicação, em geral um navegador, deve armazenar um id da sessão. Em toda requisição, o cliente passa esse id para identificar o usuário.
 
 O que acontece quando há um aumento drástico no número de usuários em momento de pico de uso, como na Black Friday?
 
-Uma aplicação que aguenta esse aumento na carga possui a característica arquitetural da **Escalabilidade**. Quando a escalabilidade é atingida aumentando o número de máquinas, dizemos que é a escalabilidade horizontal.
+Se a aplicação suportar esse aumento na carga, podemos dizer que possui a característica arquitetural da **Escalabilidade**. Quando a escalabilidade é atingida aumentando o número de máquinas, dizemos que é a escalabilidade horizontal.
 
-Onde fica armazenada a sessão se temos mais de uma máquina como servidor Web? Uma estratégia são as _sticky sessions_, em que cada usuário tem sua sessão em uma máquina específica.
+Mas, se escalarmos horizontalmente a aplicação, onde fica armazenada a sessão se temos mais de uma máquina como servidor Web? Uma estratégia são as _sticky sessions_, em que cada usuário tem sua sessão em uma máquina específica.
 
 Mas quando alguma máquina falhar, o usuário seria deslogado e não teria mais acesso às funcionalidades. Para que a experiência do usuário seja transparente, de maneira que ele não perceba a falha em uma máquina, há a técnica da **replicação de sessão**, em que cada servidor compartilha, pela rede, suas sessões com outros servidores. Isso traz uma sobrecarga de processamento, armazenamento e tráfego na rede.
 
@@ -38,7 +36,7 @@ Mas quando alguma máquina falhar, o usuário seria deslogado e não teria mais 
 
 Em sua tese de doutorado _Architectural Styles and the Design of Network-based Software Architectures_, Roy Fielding descreve o estilo arquitetural da Web e o chama de **Representational State Transfer (REST)**. Uma das características do REST é que a comunicação deve ser **Stateless**: toda informação deve estar contida na requisição do cliente ao servidor, sem a necessidade de nenhum contexto armazenado no servidor.
 
-Manter uma sessão no(s) servidor(es) é manter estado. Portanto, podemos dizem que utilizar sessões não é RESTful porque não segue a característica do REST de ser stateless.
+Manter sessões nos servidores é manter estado. Portanto, podemos dizem que utilizar sessões não é RESTful porque não segue a característica do REST de ser stateless.
 
 Mas então como fazer um mecanismo de autenticação que seja stateless e, por consequência, mais próximo do REST?
 
@@ -55,17 +53,17 @@ O Working Group da IETF chamado Javascript Object Signing and Encryption (JOSE),
 - JSON Web Signature (JWS), definido na RFC 7515, que representa em JSON conteúdo assinado digitalmente
 - JSON Web Encryption (JWE), definido na RFC 7516, que representa em JSON conteúdo criptografado
 
-Para garantir a integridade dos dados de um token, é suficiente usarmo o JWS.
+Para garantir a integridade dos dados de um token, é suficiente usarmos o JWS.
 
 Um JWS consiste de três partes, separadas por `.`:
 
 ```txt
-BASE64URL(UTF8(JWS Protected Header)) || '.' ||
-BASE64URL(JWS Payload) || '.' ||
-BASE64URL(JWS Signature)
+BASE64URL(UTF8(Cabeçalho)) || '.' ||
+BASE64URL(Payload) || '.' ||
+BASE64URL(Assinatura JWS)
 ```
 
-Todas as partes do JWS são codificadas em Base64 URL encoded. Base64 é uma representação em texto de dados binários. URL encoded significa que caracteres especiais são codificados com `%`, de maneira que possa ser passado como parâmetro em URLs.
+Todas as partes do JWS são codificadas em _Base64 URL encoded_. Base64 é uma representação em texto de dados binários. URL encoded significa que caracteres especiais são codificados com `%`, da mesma maneira como são passados via parâmetros de URLs.
 
 Um exemplo de um JWS usado no Caelum Eats seria o seguinte:
 
@@ -75,15 +73,15 @@ eyJpc3MiOiJDYWVsdW0gRWF0cyIsInN1YiI6IjIiLCJyb2xlcyI6WyJQQVJDRUlSTyJdLCJ1c2VybmFt
 GOwiEeJMP9t0tV2lQpNiDU211WKL6h5Z6OkNcA-f4EY
 ```
 
-Os trechos anteriores podem ser descodificados de base64 para texto normal usando um site como: http://www.base64url.com/
+Os trechos anteriores podem ser descodificados de Base64 para texto normal usando um site como: http://www.base64url.com/
 
-O primeiro trecho, `eyJhbGciOiJIUzI1NiJ9`, é o cabeçalho do JWS e quando desconvertido, é:
+O primeiro trecho, `eyJhbGciOiJIUzI1NiJ9`, é o cabeçalho do JWS. Quando descodificado, é:
 
 ```json
 {"alg":"HS256"}
 ```
 
-O valor de `alg` indica que foi utilizado o algoritmo HMAC (hash-based message authentication code) com SHA-256 como função de hash. Nesse algoritmo, há uma chave secreta (um texto) simétrica, que deve ser conhecida tanto pela parte que cria o token como pela parte que o validará. Se essa chave secreta for descoberta por um agente mal intencionado, pode ser usada para gerar deliberadamente tokens válidos.
+O valor de `alg` indica que foi utilizado o algoritmo HMAC (hash-based message authentication code) com SHA-256 como função de hash. Nesse algoritmo, há uma chave secreta (um texto) simétrica, que deve ser conhecida tanto pela parte que cria o token como pela parte que o validará. Se essa chave secreta for descoberta por um agente mal intencionado, pode ser usada para gerar tokens válidos deliberadamente.
 
 O segundo trecho, `eyJpc3MiOiJDYWVsdW0gRWF0cyIsInN1YiI6IjIiLCJyb2xlcyI6WyJQQVJDRUlSTyJdLCJ1c2VybmFtZSI6ImxvbmdmdSIsImlhdCI6MTU2NjQ5ODA5MSwiZXhwIjoxNTY3MTAyODkxfQ`, contém os dados (payload) do JWS:
 
@@ -100,7 +98,7 @@ O segundo trecho, `eyJpc3MiOiJDYWVsdW0gRWF0cyIsInN1YiI6IjIiLCJyb2xlcyI6WyJQQVJDR
 }
 ```
 
-O valor de `iss` é o issuer, definido pela aplicação que gerou o token.
+O valor de `iss` é o issuer, a aplicação que gerou o token.
 O valor de `sub` é o subject, que contém informações do usuário.
 Os valores de `iat` e `exp`, são as datas de geração e expiração do token, respectivamente.
 Os demais valores são _claims_ customizadas, que declaram informações adicionais do usuário.
@@ -111,7 +109,7 @@ O terceiro trecho, `GOwiEeJMP9t0tV2lQpNiDU211WKL6h5Z6OkNcA-f4EY`, é a assinatur
 
 Se soubermos a chave secreta, podemos verificar se a assinatura bate com o payload do JWS. Se sim, o token é válido. Dessa maneira, conseguimos garantir que não houve manipulação dos dados e, portanto, sua integridade.
 
-Um detalhe importante é que um JWS não garante a confidencialidade dos dados. Se houver algum software bisbilhotando os dados trafegados na rede, o payload do JWS pode ser lido, já que é apenas codificado em base64 URL encoded. A confidencialidade pode ser reforçada por meio de TLS no canal de comunicação ou por meio de JWE.
+Um detalhe importante é que um JWS não garante a confidencialidade dos dados. Se houver algum software bisbilhotando os dados trafegados na rede, o payload do JWS pode ser lido, já que é apenas codificado em Base64 URL encoded. A confidencialidade pode ser reforçada por meio de TLS no canal de comunicação ou por meio de JWE.
 
 > Uma grande desvantagem de um JWT é que o token é irrevogável antes de sua expiração. Isso implica que, enquanto o token não estiver espirado será válido. Por isso, implementar um mecanismo de logout pelo usuário passa a ser complicado. Poderíamos trabalhar com intervalos pequenos de expiração, mas isso afetaria a experiência do usuário, já que frequentemente a expiração levaria o usuário a efetuar novo login. Uma maneira comum de implementar logout é ter um cache com JWT invalidados. Porém, isso nos leva novamente a uma solução _stateful_.
 
@@ -182,7 +180,7 @@ No caso da URL começar com `/parceiros/restaurantes/{restauranteId}`, é necess
 
 ## Autenticação com Microservices e Single Sign On
 
-Poderíamos implementar a autenticação  numa Arquitetura de Microservices de duas maneiras:
+Poderíamos implementar a autenticação numa Arquitetura de Microservices de duas maneiras:
 
 - o usuário precisa autenticar novamente ao acessar cada serviço
 - a autenticação é feita apenas uma vez e as informações de identidade do usuário são repassadas para os serviços
@@ -193,7 +191,7 @@ Autenticar apenas uma vez e repassar as dados do usuário autenticado permite qu
 
 ## Autenticação no API Gateway e Autorização nos Serviços
 
-No livro Microservice Patterns, Chris Richardson descreve uma maneira comum de lidar com autenticação em uma arquitetura de Microservices: implementá-la API Gateway, o edge service único que fica exposto para o mundo externo. Dessa maneira, as chamadas a URLs protegidas já seriam barradas antes de passar para a rede interna, no caso do usuário não estar autenticado.
+No livro Microservice Patterns, Chris Richardson descreve uma maneira comum de lidar com autenticação em uma arquitetura de Microservices: implementá-la API Gateway, o único edge service que fica exposto para o mundo externo. Dessa maneira, as chamadas a URLs protegidas já seriam barradas antes de passar para a rede interna, no caso do usuário não estar autenticado.
 
 E a autorização? Poderíamos fazê-la também no API Gateway. É algo razoável para role-based authorization, em que é preciso saber apenas o ROLE do usuário. Porém, implementar ACL-based authorization no API Gateway levaria a um alto acoplamento com os serviços, já que precisamos saber se um dado usuário tem permissão para um objeto de negócio específico. Então, provavelmente uma atualização em um serviço iria querer uma atualização sincronizada no API Gateway, diminuindo a independência de cada serviço. Portanto, uma ideia melhor é fazer a autorização, role-based ou ACL-based, em cada serviço.
 
@@ -212,7 +210,7 @@ Há duas alternativas:
 
 Implementamos stateless sessions no monólito com um JWS, um tipo de JWT que é um token self-contained e assinado. Podemos usar o mesmo mecanismo, fazendo com que o API Gateway repasse o JWT para cada serviço. Cada serviço checaria a assinatura e extrairia, do payload do JWT, o subject, que contém o id do usuário, e os respectivos roles, usando essas informações para checar a permissão do usuário ao recurso solicitado.
 
-## Segurança no Caelum Eats
+## Autenticação e Autorização nos Microservices do Caelum Eats
 
 A solução de stateless sessions com JWT do Caelum Eats, foi pensada e implementada visando uma aplicação monolítica. E o resto dos serviços?
 
@@ -225,7 +223,7 @@ Temos serviços de infra-estrutura como:
 - Turbine
 - Admin Server
 
-Temos serviços alinhado a contextos delimitados da Caelum Eats, como:
+Temos serviços alinhado a contextos delimitados (bounded contexts) da Caelum Eats, como:
 
 - Distância
 - Pagamento
@@ -239,21 +237,23 @@ Há ainda módulos do monólito relacionados a contextos delimitados:
 
 Os únicos módulos cujos endpoints tem seu acesso protegido são os módulos de Admin e Restaurante do monólito.
 
-O monólito possui também um módulo de Segurança, que trata desse requisito transversal e contém código de configuração do Spring Security.
+O monólito possui também um módulo de Segurança, que trata desse requisito transversal e contém o código de configuração do Spring Security.
 
-O módulo Admin por meio de role-based authorization, bastando o usuário estar no role ADMIN para acessar os endpoints de administração de tipos de cozinha e formas de pagamento.
+O módulo Admin é protegido por meio de role-based authorization, bastando o usuário estar no role ADMIN para acessar os endpoints de administração de tipos de cozinha e formas de pagamento.
 
 Já o módulo de Restaurante efetua ACL-based authorization, limitando o acesso do usuário com role PARCEIRO a um restaurante específico.
 
 ![Geração e validação de tokens no módulo de segurança do monólito {w=39}](imagens/15-seguranca/geracao-e-validacao-de-tokens-no-modulo-de-seguranca-do-monolito.png)
 
-Vamos modificar esse cenário, passando a responsabilidade de geração de tokens JWS para o API Gateway, além do cadastro de novos usuários donos de restaurantes. A validação do token e autorização ainda ficará a cargo dos módulos Admin e Restaurante do monólito.
+Vamos modificar esse cenário, passando a responsabilidade de geração de tokens JWS para o API Gateway, que também será responsável pelo cadastro de novos usuários. A validação do token e autorização ainda ficará a cargo dos módulos Admin e Restaurante do monólito.
+
+![Geração de tokens no API Gateway e validação no módulo de segurança do monólito {w=39}](imagens/15-seguranca/geracao-de-tokens-no-api-gateway-e-validacao-no-modulo-de-seguranca-do-monolito.png)
 
 ## Exercício: Autenticação no API Gateway
 
-1. Poderíamos ter um BD específico para conter dados de usuários com as tabelas `user`, `role` e `user_authorities`. Porém, para simplificar, vamos manter o BD do API Gateway no próprio BD do monólito.
+1. Poderíamos ter um BD específico para conter dados de usuários nas tabelas `user`, `role` e `user_authorities`. Porém, para simplificar, vamos manter os dados de usuários no BD do próprio monólito.
 
-  Adicione, ao API Gateway, dependências ao JJWT, biblioteca que gera e valida tokens JWT, aos _starters_ do Spring Security e do Spring Data JPA e o driver do MySQL:
+  Adicione, ao API Gateway, dependências ao JJWT, biblioteca que gera e valida tokens JWT, aos _starters_ do Spring Security e do Spring Data JPA e ao driver do MySQL:
 
   ####### api-gateway/pom.xml
 
@@ -281,7 +281,7 @@ Vamos modificar esse cenário, passando a responsabilidade de geração de token
   </dependency>
   ```
 
-2. No `config-repo`, adicione um arquivo `apigateway.properties` com o dados de conexão do BD do monólito, além das configurações de segredo e expiração do JWT, que são usadas na geração do token:
+2. No `config-repo`, adicione um arquivo `apigateway.properties` com o dados de conexão do BD do monólito, além das configurações da chave e expiração do JWT, que são usadas na geração do token:
 
   ####### config-repo/apigateway.properties
 
@@ -305,7 +305,7 @@ Vamos modificar esse cenário, passando a responsabilidade de geração de token
   - UserService.java
   - PasswordEncoderConfig.java
 
-  Além dessas, copie as seguintes classes, mantendo-as no módulo de segurança do monólito:
+  Além dessas, copie as seguintes classes, mantendo-as também no módulo de segurança do monólito:
 
   - SecurityConfig.java
   - Role.java
@@ -415,7 +415,8 @@ Vamos modificar esse cenário, passando a responsabilidade de geração de token
   }
   ```
 
-6. Nas classes `AuthenticationDto` e `AuthenticationController`, vamos remover o `targetId`, que é usada para encontrar o restaurante de um usuário específico. Isso passará a ser responsabilidade de cada serviço:
+<!-- @todo Modificar esse trecho quando o id do restaurante for obtido por mais um request -->
+6. Nas classes `AuthenticationDto` e `AuthenticationController`, vamos remover a propriedade `targetId`, que é usada para encontrar o restaurante de um usuário específico. Isso passará a ser responsabilidade do serviço:
 
   ####### api-gateway/src/main/java/br/com/caelum/apigateway/AuthenticationDto.java
 
@@ -526,7 +527,7 @@ Vamos modificar esse cenário, passando a responsabilidade de geração de token
   {"username":"admin","roles":["ADMIN"],"token":"eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJDYWVsdW0gRWF0cyIsInN1YiI6IjEiLCJyb2xlcyI6WyJBRE1JTiJdLCJ1c2VybmFtZSI6ImFkbWluIiwiaWF0IjoxNTY2NTE4NzIyLCJleHAiOjE1NjcxMjM1MjJ9.FmH2QkryLBxWZjt2DMKHsCmjQNCmk3hrRAC0keam5_w"}
   ```
 
-  São retornados, no corpo da resposta, informações sobre o usuário, seus roles e um token. Guarde esse token que o usaremos em breve!
+  São retornados, no corpo da resposta, informações sobre o usuário, seus roles e um token. Guarde esse token: o usaremos em breve!
 
 ## Exercício: Validando o token JWT e implementando autorização no Monólito
 
@@ -854,7 +855,7 @@ Vamos modificar esse cenário, passando a responsabilidade de geração de token
 
   Isso indica que o módulo de segurança do monólito reconheceu o token como válido e extraiu a informação dos roles do usuário, reconhecendo-o no role ADMIN.
 
-  Altere o payload do JWT, definindo um valor diferente para o `sub`, o Subject, que indica o id do usuário.
+8. Altere o payload do JWT, definindo um valor diferente para o `sub`, o Subject, que indica o id do usuário.
 
   Para isso, vá até um site como o http://www.base64url.com/ e defina no campo _Base 64 URL Encoding_ o payload do token JWT recebido do API Gateway:
 
@@ -915,7 +916,7 @@ Há extensões do OAuth 2.0 como o OpenID Connect (OIDC), que fornece uma camada
 
 O foco original do OAuth 2.0, na verdade, é permitir que aplicações de terceiros usem informações de usuários em serviços como Google, Facebook e GitHub. Quando efetuamos login em uma aplicação com uma conta do Facebook ou quando permitimos que um serviço de Integração Contínua como o Travis CI acesse nosso repositório no GitHub, estamos usando OAuth 2.0.
 
-Um padrão como o OAuth 2.0 nos permite instalar softwares como KeyCloak ou até usar soluções prontas de _identity as a service_ (IDaaS) como Auth0 ou Okta.
+Um padrão como o OAuth 2.0 nos permite instalar softwares como KeyCloak, WSO2 Identity Server, OpenAM ou Gluu e até usar soluções prontas de _identity as a service_ (IDaaS) como Auth0 ou Okta.
 
 E, claro, podemos usar as soluções do Spring: **Spring Security OAuth**, que estende o Spring Security fornecendo implementações para OAuth 1 e OAuth 2.0. Há ainda o **Spring Cloud Security**, que traz soluções compatíveis com outros projetos do Spring Cloud.
 
@@ -947,13 +948,15 @@ No OAuth 2.0, um access token deve ter um tempo de expiração. Um token expirad
 
 Podemos dizer que o API Gateway, que conhece os dados de usuário e seus roles, gera tokens e faz autenticação, é análogo a um Authorization Server do OAuth. O monólito, com a implementação de autorização para os módulos de Restaurante e Admin, serve como um Resource Server do OAuth. O front-end em Angular seria o Client do OAuth.
 
-A autenticação no API Gateway é feita usando o nome do usuário e a respectiva senha que são informadas na própria aplicação do Angular. Ou seja, o Client conhece as credencias do usuário e as repassa para o Authorization Server para autenticá-lo. Isso é análogo a um **Password grant type** do OAuth.
+A autenticação no API Gateway é feita usando o nome do usuário e a respectiva senha que são informadas na própria aplicação do Angular. Ou seja, o Client conhece as credenciais do usuário e as repassa para o Authorization Server para autenticá-lo. Isso é análogo a um **Password grant type** do OAuth.
 
-Poderíamos reimplementar a autenticação e autorização com OAuth usando código já pronto das bibliotecas Spring Security OAuth 2 e Spring Cloud Security, diminuindo o código que precisamos manter e  cujas vulnerabilidades temos que mitigar.
+Poderíamos reimplementar a autenticação e autorização com OAuth usando código já pronto das bibliotecas Spring Security OAuth 2 e Spring Cloud Security, diminuindo o código que precisamos manter e cujas vulnerabilidades temos que sanar. Para isso, podemos definir um Authorization Server separado do API Gateway, responsável apenas pela autenticação e gerenciamento de tokens.
+
+![Roles OAuth no Caelum Eats {w=54}](imagens/15-seguranca/roles-oauth-no-caelum-eats.png)
 
 ## Authorization Server com Spring Security OAuth 2
 
-Para implementarmos um Authorization Server compatível com OAuth 2.0, devemos criar um novo projeto Spring Boot e adicionar como dependênciao starter do Spring Cloud OAuth2:
+Para implementarmos um Authorization Server compatível com OAuth 2.0, devemos criar um novo projeto Spring Boot e adicionar como dependência o starter do Spring Cloud OAuth2:
 
 ```xml
 <dependency>
@@ -1003,7 +1006,7 @@ Date: Wed, 28 Aug 2019 13:54:22 GMT
 {"access_token":"bdb22855-5705-4533-b925-f1091d576db7","token_type":"bearer","refresh_token":"0780c97f-f1d1-4a6f-82cb-c17ba5624caa","expires_in":43199,"scope":"any"}
 ```
 
-Podemos checar um token opaco por meio de uma requisição GET ao endpoint `/oauth/token`, passando o access token obtido no parâmetro `token`:
+Podemos checar um token opaco por meio de uma requisição GET ao endpoint `/oauth/check_token`, passando o access token obtido no parâmetro `token`:
 
 ```sh
 curl -i localhost:8080/oauth/check_token/?token=bdb22855-5705-4533-b925-f1091d576db7
@@ -1275,6 +1278,8 @@ Como usamos o algoritmo `HS256`, um algoritmo de chaves simétricas, a chave pri
   security.oauth2.client.client-secret=$2a$10$1YJxJHAbtsSCeyqgN7S1gurPZ8NSmTVA33dgPq6NqElU6qjzlpkOa
   ```
 
+  O código anterior pode ser encontrado em: https://gitlab.com/snippets/1890756
+
   Note que copiamos o `jwt.secret` e os dados do BD do monólito. Isso indica que o BD será mantido de maneira monolítica. Eventualmente, seria possível fazer a migração de dados de usuário para um BD específico.
 
   Além disso, definimos as propriedades de Client id e secret do Spring Security OAuth 2.
@@ -1283,7 +1288,7 @@ Como usamos o algoritmo `HS256`, um algoritmo de chaves simétricas, a chave pri
 
 4. Execute a classe `AuthorizationServerApplication`.
 
-  Abra um terminal e execute o seguinte comando:
+  Então, abra um terminal e execute o seguinte comando:
 
   ```sh
   curl -i -X POST --basic -u eats:eats123 -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=password&username=admin&password=123456&scope=any' http://localhost:8085/oauth/token
@@ -1359,7 +1364,7 @@ Como usamos o algoritmo `HS256`, um algoritmo de chaves simétricas, a chave pri
 
   Delete o arquivo `apigateway.properties` do `config-repo`.
 
-6. (desafio - trabalhoso) Aplique uma estratégia de migração de dados de usuário do monólito para o BD do Authorization Server.
+6. (desafio - trabalhoso) Aplique uma estratégia de migração de dados de usuário do monólito para um BD específico para o Authorization Server.
 
 ## Extraindo um serviço Administrativo do monólito
 
@@ -1409,7 +1414,7 @@ Então, o módulo `eats-admin` do monólito pode ser removido, assim como suas a
 
 3. Delete o módulo `eats-admin` do monólito.
 
-4. Remova, da classe  SecurityConfig` do módulo `eats-seguranca` do monólito,  as configurações de autorização dos endpoints que foram movidos:
+4. Remova, da classe `SecurityConfig` do módulo `eats-seguranca` do monólito,  as configurações de autorização dos endpoints que foram movidos:
 
   ```java
   class SecurityConfig extends WebSecurityConfigurerAdapter {
@@ -1432,9 +1437,9 @@ Então, o módulo `eats-admin` do monólito pode ser removido, assim como suas a
 
 Para definir um Resource Server com o Spring Security OAuth 2, que consiga validar e decodificar os tokens (opacos ou JWT) emitidos pelo Authorization Server, basta anotar a aplicação ou uma configuração com `@EnableResourceServer`.
 
-Podemos definir na configuração `security.oauth2.resource.token-info-uri` a URI de validação de tokens opacos.
+Podemos definir, na configuração `security.oauth2.resource.token-info-uri`, a URI de validação de tokens opacos.
 
-No caso de token self-contained JWT, devemos definir a propriedade `security.oauth2.resource.jwt.key-value`. Pode ser a chave simétrica, no caso de algoritmos como o HS256, ou a chave pública, como no RS256. A chave pública em um algortimo assimétrico pode ser baixada quando definida a propriedade `security.oauth2.resource.jwt.key-uri`.
+No caso de token self-contained JWT, devemos definir a propriedade `security.oauth2.resource.jwt.key-value`. Pode ser a chave simétrica, no caso de algoritmos como o HS256, ou a chave pública, como no RS256. A chave pública em um algoritmo assimétrico pode ser baixada do servidor quando definida a propriedade `security.oauth2.resource.jwt.key-uri`.
 
 Por padrão, todos os endereços requerem autenticação. Porém, é possível customizar esse e outros detalhes fornecendo uma implementação da interface `ResourceServerConfigurer`. É possível herdar da classe `ResourceServerConfigurerAdapter` para facilitar as configurações.
 
@@ -1455,7 +1460,7 @@ Por padrão, todos os endereços requerem autenticação. Porém, é possível c
   </dependency>
   ```
 
-2. Adicione ao `admin.properties` do `config-repo`, a mesma chave usada no Authorization Server:
+2. Adicione ao `admin.properties` do `config-repo`, a mesma chave usada no Authorization Server na propriedade `security.oauth2.resource.jwt.key-value`:
 
   ####### config-repo/admin.properties
 
@@ -1507,7 +1512,7 @@ Por padrão, todos os endereços requerem autenticação. Porém, é possível c
 
   O comando anterior pode ser encontrado em: https://gitlab.com/snippets/1888251
 
-  Deve ser retornado um erro `401 (Unauthorized)`, com a descrição _Full authentication is required to access this resource_, indicado que o acesso ao recurso depende de autenticação:
+  Deve ser retornado um erro `401 (Unauthorized)`, com a descrição _Full authentication is required to access this resource_, indicando que o acesso ao recurso depende de autenticação:
 
   ```txt
   HTTP/1.1 401 
@@ -1529,6 +1534,8 @@ Por padrão, todos os endereços requerem autenticação. Porém, é possível c
   ```sh
   curl -i -X PUT -H 'Content-type: application/json' -H 'Authorization: Bearer TOKEN-JWT-AQUI' -d '{"id": 3, "tipo": "CARTAO_CREDITO", "nome": "Amex Express"}' http://localhost:8084/admin/formas-de-pagamento/3
   ```
+
+  O comando acima pode ser encontrado em: https://gitlab.com/snippets/1890417
 
   Observação: troque `TOKEN-JWT-AQUI` pelo token obtido do Authorization Server em exercícios anteriores.
 
@@ -1591,13 +1598,13 @@ O protocolo HTTP é baseado em texto e, sem uma estratégia de confidencialidade
 
 HTTPS é uma extensão ao HTTP que usa TLS (Transport Layer Security) para prover confidencialidade aos dados por meio de criptografia. O protocolo SSL (Security Sockets Layer) é o predecessor do TLS e está _deprecated_.
 
-Além disso, o HTTPS provê a integridade dos dados, evitando que sejam manipulados no meio do caminho, e a autenticidade do servidor, garantindo que o servidor é exatamente o que o cliente espera.
+Além disso, o HTTPS provê a integridade dos dados, evitando que sejam manipulados no meio do caminho, bem como a autenticidade do servidor, garantindo que o servidor é exatamente o que o cliente espera.
 
 A confidencialidade, integridade e autenticidade do servidor no HTTPS é atingida por meio de criptografia assimétrica (public-key cryptography). O servidor tem um par de chaves (key pair): uma pública e uma privada. Algo criptografado com a chave pública só pode ser descriptografado com a chave privada, garantindo confidencialidade. Algo criptografado com a chave privada pode ser verificado com a chave pública, validando a autenticidade.
 
 A chave pública faz parte de um certificado digital, que é emitido por uma Autoridade Certificadora (Certificate Authority) como Comodo, Symantec, Verizon ou Let's Encrypt. Toda a infraestrutura dos certificados digitais é baseada na confiança de ambas as partes, cliente e servidor, nessas Autoridades Certificadoras.
 
-Mas o HTTPS não é um mar de rosas: os certificados tem validade e precisam ser gerenciados. A automação do gerenciamento de certificados ainda deixa a desejar, mas tem melhorado progressivamente, Let's Encrypt sendo uma referência em automação.
+Mas o HTTPS não é um mar de rosas: os certificados tem validade e precisam ser gerenciados. A automação do gerenciamento de certificados ainda deixa a desejar, mas tem melhorado progressivamente. Let's Encrypt sendo uma referência nessa automação.
 
 Certificados gerados sem uma autoridade certificadora (self-signed certificates) não são confiáveis e apresentam erros em navegadores e outros sistemas.
 
@@ -1646,11 +1653,11 @@ server.ssl.client-auth=need
 
 Mesmo investindo esforço em proteger a rede, a comunicação entre os serviços (_data at transit_) e os serviços em si, é preciso preparar nosso ambiente para uma possível invasão.
 
-Uma vulnerabilidade são dados armazenados (_data at rest_) em BDs, arquivos de configuração e backups. Em especial, devemos proteger dados sensíveis como cartões de crédito, senhas e chaves criptográficas. Muitos ataques importantes exploraram a falta de criptografia ou falhas nos algoritmos criptográficos utilizados.
+Uma vulnerabilidade está nos dados armazenados (_data at rest_) em BDs, arquivos de configuração e backups. Em especial, devemos proteger dados sensíveis como cartões de crédito, senhas e chaves criptográficas. Muitos ataques importantes exploraram a falta de criptografia de dados armazenados ou falhas nos algoritmos criptográficos utilizados.
 
 Em seu livro _Building Microservices_, Sam Newman indica algumas medidas que devem ser tomadas para proteger os dados armazenados:
 
-- use implementações padrão de algoritmos criptográficos conhecidos, ficando atento a possíveis vulnerabilidades e aplicando _patches_ regularmente. Não tente criar o seu algoritmo. Para senhas, use Strings randômicas (salts) que minimizam ataques baseados em tabelas de hashes. 
+- use implementações padrão de algoritmos criptográficos conhecidos, ficando atento a possíveis vulnerabilidades e aplicando _patches_ regularmente. Não tente criar o seu algoritmo. Para senhas, use Strings randômicas (salts) que minimizam ataques baseados em tabelas de hashes.
 - limite a encriptação a tabelas dos BDs e a arquivos que realmente são sensíveis para evitar impactos negativos na performance da aplicação
 - criptografe os dados sensíveis logo que entrarem no sistema, descriptografe sob demanda e assegure que os dados não são armazenados em outros lugares
 - assegure que os backups estejam criptografados
@@ -1660,9 +1667,9 @@ Em seu livro _Building Microservices_, Sam Newman indica algumas medidas que dev
 
 Em Junho de 2014, a Code Spaces, uma concorrente do GitHub que fornecia Git e SVN na nuvem, sofreu um ataque em que o invasor, após chantagem, apagou quase todos os dados, configurações de máquinas e backups da empresa. O ataque levou a empresa à falência! Isso aconteceu porque o invasor teve acesso ao painel de controle do AWS e conseguiu apagar quase todos os artefatos, incluindo os backups.
 
-Não se sabe ao certo como o invasor conseguiu o acesso indevido ao painel de controle do AWS, mas há a hipótese de que obteve informações dos credenciais de acesso de um antigo funcionário da empresa.
+Não se sabe ao certo como o invasor conseguiu o acesso indevido ao painel de controle do AWS, mas há a hipótese de que obteve as credenciais de acesso de um antigo funcionário da empresa.
 
-É imprescindível ue as credenciais tenham acesso limitado aos recursos computacionais, minimizando o potencial de destruição de um possível invasor.
+É imprescindível que as credenciais tenham acesso limitado, minimizando o potencial de destruição de um possível invasor.
 
 Outra coisa importante é que as senhas dos usuários, chaves criptográficas, API keys e outras credenciais sejam modificadas de tempos em tempos. Assim, ataques feitos com a ajuda funcionários desonestos terão efeito limitado. Se possível, essa **rotação de credenciais** deve ser feita de maneira automatizada.
 
@@ -1683,7 +1690,7 @@ O Vault armazena de maneira segura e controla o acesso de tokens, senhas, API Ke
 
 Para que a senha, por exemplo, de um BD seja alterada pelo Vault, é necessário que seja configurado um usuário do BD que possa criar e remover outros usuários.
 
-Exemplo dos comandos da CLI do Vault para criação de credenciais com duração de 1 hora no MySQL:
+Segue um exemplo dos comandos da CLI do Vault para criação de credenciais com duração de 1 hora no MySQL:
 
 ```sh
 vault secrets enable mysql
@@ -1692,15 +1699,13 @@ vault write mysql/config/lease lease=1h lease_max=24h
 vault write mysql/roles/readonly sql="CREATE USER '{{name}}'@'%' IDENTIFIED BY '{{password}}';GRANT SELECT ON *.* TO '{{name}}'@'%';"
 ```
 
-As credenciais dos backends precisam ser conhecidas pelo Vault. No caso do MySQL, o usuário `root` e a respectiva senha precisam ser conhecidos. Essas configurações são armazenadas de maneira criptografada na representação interna do Vault. O Vault pode usar para armazenamento Consul, Etcd, o sistema de arquivos, entre diversos outros.
+As credenciais dos backends precisam ser conhecidas pelo Vault. No caso do MySQL, o usuário `root` e a respectiva senha precisam ser conhecidos. Essas configurações são armazenadas de maneira criptografada na representação interna do Vault. O Vault pode usar para armazenamento Consul, Etcd, o sistema de arquivos, entre diversos outros mecanismos.
 
 Os dados do Vault são criptografados com uma chave simétrica. Essa chave simétrica é criptografada com uma _master key_. E a _master key_ é criptografada usando o algoritmo _Shamir's secret sharing_, em que mais de uma chave é necessária para descriptografar os dados. Por padrão, o Vault usa 5 chaves ao todo, sendo 3 delas necessárias para a descriptografia.
 
 O Spring Cloud Config Server permite o uso do Vault como repositório de configurações: https://cloud.spring.io/spring-cloud-config/reference/html/#vault-backend
 
-
 Há ainda o Spring Cloud Vault, que provê um cliente Vault para aplicações Spring Boot: https://cloud.spring.io/spring-cloud-vault/reference/html/
-
 
 <!-- 
 Referências:
