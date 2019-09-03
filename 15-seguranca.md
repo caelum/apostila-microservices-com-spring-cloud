@@ -119,7 +119,39 @@ Até o momento, um login de um dono de restaurante ou do administrador do sistem
 
 O token JWS é armazenado em um `localStorage` no front-end. Há um _interceptor_ do Angular que, antes de cada requisição AJAX, adiciona o cabeçalho `Authorization: Bearer` com o valor do token armazenado.
 
-No back-end, a classe `JwtAuthenticationFilter` é executada a cada requisição e o token JWS é extraído dos cabeçalhos HTTP e validado. Caso seja válido, é recuperado o `sub` (Subject) e obtido o usuário do BD com seus ROLEs (`ADMIN` ou `PARCEIRO`), setando um `Authentication` no contexto de segurança.
+No back-end, a classe `JwtAuthenticationFilter` é executada a cada requisição e o token JWS é extraído dos cabeçalhos HTTP e validado. Caso seja válido, é recuperado o `sub` (Subject) e obtido o usuário do BD com seus ROLEs (`ADMIN` ou `PARCEIRO`), setando um `Authentication` no contexto de segurança:
+
+####### fj33-eats-monolito-modular/eats/eats-seguranca/src/main/java/br/com/caelum/eats/seguranca/JwtAuthenticationFilter.java
+
+```java
+@Component
+@AllArgsConstructor
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+  private JwtTokenManager tokenManager;
+  private UserService usersService;
+
+  @Override
+  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+      throws ServletException, IOException {
+    String jwt = getTokenFromRequest(request);
+    if (tokenManager.isValid(jwt)) {
+      Long userId = tokenManager.getUserIdFromToken(jwt);
+      UserDetails userDetails = usersService.loadUserById(userId);
+      UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails,
+          null, userDetails.getAuthorities());
+      SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+
+    chain.doFilter(request, response);
+  }
+
+  private String getTokenFromRequest(HttpServletRequest request) {
+   // código omitido ...
+  }
+
+}
+```
 
 A geração, validação e recuperação dos dados do token é feita por meio da classe `JwtTokenManager`, que utiliza a biblioteca `jjwt`:
 
@@ -144,8 +176,6 @@ class JwtTokenManager {
     return Jwts.builder()
               .setIssuer("Caelum Eats")
               .setSubject(Long.toString(user.getId()))
-              .claim("roles", user.getRoles())
-              .claim("username", user.getUsername())
               .setIssuedAt(now)
               .setExpiration(expiration)
               .signWith(SignatureAlgorithm.HS256, this.secret)
@@ -177,6 +207,8 @@ As configurações de autorização estão definidas na classe `SecurityConfig` 
 Para URLs que começam com `/admin`, o ROLE do usuário deve ser `ADMIN` e terá acesso a tudo relativo a administração da aplicação. Esse tipo de autorização, em que um determinado ROLE tem acesso a qualquer endpoint relacionado é o que chamamos de _role-based authorization_.
 
 No caso da URL começar com `/parceiros/restaurantes/{restauranteId}`, é necessária uma autorização mais elaborada, que verifica se o usuário tem permissão ao restaurante por meio da classe `AuthorizationService`. Esse tipo de autorização, em que um usuário ter permissão em apenas alguns objetos de negócio é o que chamamos de _ACL-based authorization_. A sigla ACL significa _Access Control List_.
+
+![Geração e validação de tokens no módulo de segurança do monólito {w=39}](imagens/15-seguranca/geracao-e-validacao-de-tokens-no-modulo-de-seguranca-do-monolito.png)
 
 ## Autenticação com Microservices e Single Sign On
 
@@ -243,13 +275,11 @@ O módulo Admin é protegido por meio de role-based authorization, bastando o us
 
 Já o módulo de Restaurante efetua ACL-based authorization, limitando o acesso do usuário com role PARCEIRO a um restaurante específico.
 
-![Geração e validação de tokens no módulo de segurança do monólito {w=39}](imagens/15-seguranca/geracao-e-validacao-de-tokens-no-modulo-de-seguranca-do-monolito.png)
-
 Vamos modificar esse cenário, passando a responsabilidade de geração de tokens JWS para o API Gateway, que também será responsável pelo cadastro de novos usuários. A validação do token e autorização ainda ficará a cargo dos módulos Admin e Restaurante do monólito.
 
 ![Geração de tokens no API Gateway e validação no módulo de segurança do monólito {w=39}](imagens/15-seguranca/geracao-de-tokens-no-api-gateway-e-validacao-no-modulo-de-seguranca-do-monolito.png)
 
-## Exercício: Autenticação no API Gateway
+## Exercício Opcional: Autenticação no API Gateway
 
 1. Poderíamos ter um BD específico para conter dados de usuários nas tabelas `user`, `role` e `user_authorities`. Porém, para simplificar, vamos manter os dados de usuários no BD do próprio monólito.
 
@@ -529,7 +559,7 @@ Vamos modificar esse cenário, passando a responsabilidade de geração de token
 
   São retornados, no corpo da resposta, informações sobre o usuário, seus roles e um token. Guarde esse token: o usaremos em breve!
 
-## Exercício: Validando o token JWT e implementando autorização no Monólito
+## Exercício Opcional: Validando o token JWT e implementando autorização no Monólito
 
 1. Modifique o `JwtTokenManager` do módulo de segurança do monólito, removendo o código de geração de token (e o atributo `expirationInMillis`) e deixando apenas a validação e extração de dados. Modifique o método `getUserIdFromToken` para que obtenha os dados do usuário somente a partir dos claims do token JWT.
 
@@ -1460,7 +1490,24 @@ Por padrão, todos os endereços requerem autenticação. Porém, é possível c
   </dependency>
   ```
 
-2. Adicione ao `admin.properties` do `config-repo`, a mesma chave usada no Authorization Server na propriedade `security.oauth2.resource.jwt.key-value`:
+2. Anote a  classe `EatsAdminServiceApplication` com `@EnableResourceServer`:
+
+  ####### fj33-eats-admin-service/src/main/java/br/com/caelum/eats/admin/EatsAdminServiceApplication.java
+
+  ```java
+  @EnableResourceServer // adicionado
+  @EnableDiscoveryClient
+  @SpringBootApplication
+  public class EatsAdminServiceApplication {
+
+    public static void main(String[] args) {
+      SpringApplication.run(EatsAdminServiceApplication.class, args);
+    }
+
+  }
+  ```
+
+3. Adicione ao `admin.properties` do `config-repo`, a mesma chave usada no Authorization Server na propriedade `security.oauth2.resource.jwt.key-value`:
 
   ####### config-repo/admin.properties
 
@@ -1468,7 +1515,7 @@ Por padrão, todos os endereços requerem autenticação. Porém, é possível c
   security.oauth2.resource.jwt.key-value = rm'!@N=Ke!~p8VTA2ZRK~nMDQX5Uvm!m'D&]{@Vr?G;2?XhbC:Qa#9#eMLN\}x3?JR3.2zr~v)gYF^8\:8>:XfB:Ww75N/emt9Yj[bQMNCWwW\J?N,nvH.<2\.r~w]*e~vgak)X"v8H`MH/7"2E`,^k@n<vE-wD3g9JWPy;CrY*.Kd2_D])=><D?YhBaSua5hW%{2]_FVXzb9`8FH^b[X3jzVER&:jw2<=c38=>L/zBq`}C6tT*cCSVC^c]-L}&/
   ```
 
-3. Crie uma classe `OAuthResourceServerConfig`. Herde da classe `ResourceServerConfigurerAdapter` e permita que todos acessem a listagem de tipos de cozinha e formas de pagamento, assim como os endpoints do Spring Boot Actuator. As URLs que começam com `/admin` devem ser restritas a usuário que tem o role `ADMIN`.
+4. Crie uma classe `OAuthResourceServerConfig`. Herde da classe `ResourceServerConfigurerAdapter` e permita que todos acessem a listagem de tipos de cozinha e formas de pagamento, assim como os endpoints do Spring Boot Actuator. As URLs que começam com `/admin` devem ser restritas a usuário que tem o role `ADMIN`.
 
   ####### fj33-eats-admin-service/src/main/java/br/com/caelum/eats/admin/OAuthResourceServerConfig.java
 
@@ -1492,7 +1539,7 @@ Por padrão, todos os endereços requerem autenticação. Porém, é possível c
   }
   ```
 
-4. Abra um terminal e tente listas todas as formas de pagamento sem passar nenhum token:
+5. Abra um terminal e tente listas todas as formas de pagamento sem passar nenhum token:
 
   ```sh
   curl http://localhost:8084/formas-de-pagamento
@@ -1586,10 +1633,12 @@ spring.cloud.config.username=configUser
 spring.cloud.config.password=configPassword
 ```
 
-No caso do Service Registry, faríamos o mesmo processo. Para o Eureka, definiríamos o endereço da seguinte maneira:
+No caso do Service Registry, faríamos o mesmo processo.
+
+Definiríamos o endereço nos clientes do Eureka da seguinte maneira:
 
 ```properties
-eureka.client.serviceUrl.defaultZone=http://eurekaUser:eurekaPassword@localhost:8082/eureka/
+eureka.client.serviceUrl.defaultZone=http://eurekaUser:eurekaPassword@localhost:8761/eureka/
 ```
 
 ## Confidencialidade, Integridade e Autenticidade com HTTPS
