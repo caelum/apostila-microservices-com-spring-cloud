@@ -128,6 +128,43 @@ Também é tarefa do administrador do Caelum Eats revisar o cadastro de novos re
 
 ![Administrador aprova novo restaurante {w=60}](imagens/01-conhecendo-o-projeto/admin-5-aprova-restaurante.png)
 
+## A Arquitetura do Caelum Eats
+
+![Arquitetura do Caelum Eats {w=25}](imagens/01-conhecendo-o-projeto/arquitetura-caelum-eats.png)
+
+### Back-end
+
+O back-end do Caelum Eats provẽ uma API REST. A porta usada é a `8080`.
+
+O Banco de Dados utilizado é o MySQL, na versão 5.6 e executado na porta `3306`.
+
+É implementado com as seguintes tecnologias:
+
+- Spring Boot
+- Spring Boot Web
+- Spring Boot Validation
+- Spring Data JPA
+- MySQL Connector/J
+- Flyway DB, para migrations
+- Lombok, para um Java menos verboso
+- Spring Security
+- jjwt, para gerar e validar tokens JWT
+- Spring Boot Actuator
+
+As migrations do Flyway DB, que ficam no diretório `src/main/resources/db/migration`, além de criar a estrutura das tabelas, já popula o BD com dados iniciais.
+
+### Front-end
+
+O front-end do Caelum Eats é uma SPA (Single Page Application), implementada em Angular 7. A porta usada em desenvolvimento é a `4200`.
+
+Para a folha de estilos, é utilizado o Bootstrap 4.
+
+São utilizados alguns componentes open-source:
+
+- ngx-toastr
+- angular2-text-mask
+- ng-bootstrap
+
 ## Exercício: Executando o back-end
 
 1. Clone o projeto do back-end para seu Desktop com os seguintes comandos:
@@ -184,4 +221,8 @@ Atualmente, só são aceitos cartões de débito, crédito e vale refeição. En
 
 Entre especialistas de negócio, desenvolvedores e operações, a equipe passou a ter algumas dezenas de pessoas, o que complica incrivelmente a comunicação.
 
+Os desenvolvedores passaram a reclamar do código, dizendo que é difícil de entender e de encontrar onde devem ser implementadas manutenções, correções e novas funcionalidades.
+
 Há ainda problemas de performance, especialmente no cálculo dos restaurantes mais próximos ao CEP informado por um cliente. Essa degradação da performance acaba afetando todas as outras partes da aplicação.
+
+Será que esses problemas impedirão a Caelum Eats de expandir os negócios?
