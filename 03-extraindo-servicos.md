@@ -72,7 +72,7 @@
 
   Há alguns erros de compilação. Os corrigiremos nos próximos passos.
 
-2. Na classe `Pagamento`, há erros de compilação nas referências às classes `Pedido` e `FormaDePagamento` que são, respectivamente, dos módulos `eats-pedido` e `eats-admin` do monólito.
+2. Na classe `Pagamento`, há erros de compilação nas referências às classes `Pedido` e `FormaDePagamento` que são, respectivamente, dos módulos `eats-pedido` e `eats-administrativo` do monólito.
   Será que devemos colocar dependências Maven a esses módulos? Não parece uma boa, não é mesmo?
   Vamos, então, trocar as referências a essas classes pelos respectivos ids, de maneira a referenciar as raízes dos agregados `Pedido` e `FormaDePagamento`:
 
@@ -372,7 +372,7 @@
 
   ```xml
   <modules>
-    <module>eats-admin</module>
+    <module>eats-administrativo</module>
     <̶m̶o̶d̶u̶l̶e̶>̶e̶a̶t̶s̶-̶p̶a̶g̶a̶m̶e̶n̶t̶o̶<̶/̶m̶o̶d̶u̶l̶e̶>̶
     <module>eats-restaurante</module>
     <module>eats-pedido</module>
@@ -676,7 +676,7 @@
 
   ```xml
   <modules>
-    <module>eats-admin</module>
+    <module>eats-administrativo</module>
     <module>eats-restaurante</module>
     <module>eats-pedido</module>
     <̶m̶o̶d̶u̶l̶e̶>̶e̶a̶t̶s̶-̶d̶i̶s̶t̶a̶n̶c̶i̶a̶<̶/̶m̶o̶d̶u̶l̶e̶>̶

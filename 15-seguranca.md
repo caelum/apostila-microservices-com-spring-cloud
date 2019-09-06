@@ -1,5 +1,80 @@
 # Segurança
 
+## Extraindo um serviço Administrativo do monólito
+
+Primeiramente, vamos extrair o módulo `eats-administrativo` do monólito para um serviço `eats-administrativo-service`.
+
+Para isso, criamos um novo projeto Spring Boot com as seguintes dependências:
+
+- Spring Boot DevTools
+- Spring Boot Actuator
+- Spring Data JPA
+- Spring Web Starter
+- Config Client
+- Eureka Discovery Client
+- Zipkin Client
+
+Então, movemos as seguintes classes do módulo `eats-administrativo` do monólito para o novo serviço `eats-administrativo-service`:
+
+- FormaDePagamento
+- FormaDePagamentoController
+- FormaDePagamentoRepository
+- TipoDeCozinha
+- TipoDeCozinhaController
+- TipoDeCozinhaRepository
+
+O serviço administrativo deve apontar para o Config Server, definindo um `bootstrap.properties` com `administrativo` como _application name_. No arquivo `administrativo.properties` do `config-repo`, definiremos as configurações de data source.
+
+Inicialmente, o serviço administrativo pode apontar para o mesmo BD do monólito. Aos poucos, deve ser feita a migração das tabelas `forma_de_pagamento` e `tipo_de_cozinha` para um BD próprio.
+
+No `application.properties`, deve ser definida `8084` na porta a ser utilizada.
+
+Então, o módulo `eats-administrativo` do monólito pode ser removido, assim como suas autorizações no módulo `eats-seguranca`.
+
+![Serviço administrativo extraído do monólito {w=93}](imagens/15-seguranca/administrativo-extraido-do-monolito.png)
+
+## Exercício: um serviço Administrativo
+
+1. Clone o projeto `fj33-eats-administrativo-service` para o seu Desktop:
+
+  ```sh
+  cd ~/Desktop
+  git clone https://gitlab.com/aovs/projetos-cursos/fj33-eats-administrativo-service.git
+  ```
+
+2. Crie um arquivo `administrativo.properties` no `config-repo`, definindo um data source que aponta para o BD do monólito:
+
+  ####### config-repo/administrativo.properties
+
+  ```properties
+  spring.datasource.url=jdbc:mysql://localhost/eats?createDatabaseIfNotExist=true
+  spring.datasource.username=root
+  spring.datasource.password=
+  ```
+
+3. Delete o módulo `eats-administrativo` do monólito.
+
+4. Remova, da classe `SecurityConfig` do módulo `eats-seguranca` do monólito,  as configurações de autorização dos endpoints que foram movidos:
+
+  ####### fj33-eats-monolito-modular/eats/eats-seguranca/src/main/java/br/com/caelum/eats/SecurityConfig.java
+
+  ```java
+  class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    // código omitido ...
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+      http.authorizeRequests()
+        .antMatchers("/restaurantes/**", "/pedidos/**",̶ ̶"̶/̶t̶i̶p̶o̶s̶-̶d̶e̶-̶c̶o̶z̶i̶n̶h̶a̶/̶*̶*̶"̶,̶ ̶"̶/̶f̶o̶r̶m̶a̶s̶-̶d̶e̶-̶p̶a̶g̶a̶m̶e̶n̶t̶o̶/̶*̶*̶"̶).permitAll()
+        .antMatchers("/actuator/**").permitAll()
+        .̶a̶n̶t̶M̶a̶t̶c̶h̶e̶r̶s̶(̶"̶/̶a̶d̶m̶i̶n̶/̶*̶*̶"̶)̶.̶h̶a̶s̶R̶o̶l̶e̶(̶R̶o̶l̶e̶.̶R̶O̶L̶E̶S̶.̶A̶D̶M̶I̶N̶.̶n̶a̶m̶e̶(̶)̶)̶
+        // código omitido ...
+    }
+  
+  }
+  ```
+
 ## Autenticação e Autorização
 
 Grande parte das aplicações tem diferentes perfis de usuário, que têm permissão de acesso a diferentes funcionalidades. Isso é o que chamamos de **Autorização**.
@@ -176,6 +251,8 @@ class JwtTokenManager {
     return Jwts.builder()
               .setIssuer("Caelum Eats")
               .setSubject(Long.toString(user.getId()))
+              .claim("username", user.getName())
+              .claim("roles", user.getRoles())
               .setIssuedAt(now)
               .setExpiration(expiration)
               .signWith(SignatureAlgorithm.HS256, this.secret)
@@ -204,11 +281,15 @@ class JwtTokenManager {
 
 As configurações de autorização estão definidas na classe `SecurityConfig` do módulo `eats-seguranca` do monólito.
 
-Para URLs que começam com `/admin`, o ROLE do usuário deve ser `ADMIN` e terá acesso a tudo relativo a administração da aplicação. Esse tipo de autorização, em que um determinado ROLE tem acesso a qualquer endpoint relacionado é o que chamamos de _role-based authorization_.
+Antes da extração do serviço administrativo, para as URLs que começavam com `/admin`, o ROLE do usuário deveria ser `ADMIN` e teria acesso a tudo relativo à administração da aplicação. Esse tipo de autorização, em que um determinado ROLE tem acesso a qualquer endpoint relacionado é o que chamamos de _role-based authorization_.
 
-No caso da URL começar com `/parceiros/restaurantes/{restauranteId}`, é necessária uma autorização mais elaborada, que verifica se o usuário tem permissão ao restaurante por meio da classe `AuthorizationService`. Esse tipo de autorização, em que um usuário ter permissão em apenas alguns objetos de negócio é o que chamamos de _ACL-based authorization_. A sigla ACL significa _Access Control List_.
+Porém, ao extrairmos o serviço administrativo, perdemos a autorização feita no módulo de segurança do monólito. Ainda não implementamos autorização no novo serviço.
+
+No caso da URL começar com `/parceiros/restaurantes/do-usuario/{username}` ou `/parceiros/restaurantes/{restauranteId}`, é necessária uma autorização mais elaborada, que verifica se o usuário tem permissão a um restaurante específico, por meio da classe `RestauranteAuthorizationService`. Esse tipo de autorização, em que um usuário ter permissão em apenas alguns objetos de negócio é o que chamamos de _ACL-based authorization_. A sigla ACL significa _Access Control List_.
 
 ![Geração e validação de tokens no módulo de segurança do monólito {w=39}](imagens/15-seguranca/geracao-e-validacao-de-tokens-no-modulo-de-seguranca-do-monolito.png)
+
+<!-- TODO: continuar daqui a alterar o fluxo para considerar a autorização no serviço Administrativo -->
 
 ## Autenticação com Microservices e Single Sign On
 
@@ -1396,73 +1477,6 @@ Como usamos o algoritmo `HS256`, um algoritmo de chaves simétricas, a chave pri
 
 6. (desafio - trabalhoso) Aplique uma estratégia de migração de dados de usuário do monólito para um BD específico para o Authorization Server.
 
-## Extraindo um serviço Administrativo do monólito
-
-Primeiramente, vamos extrair o módulo `eats-admin` do monólito para um serviço `eats-admin-service`.
-
-Para isso, criamos um novo projeto Spring Boot com as seguintes dependências:
-
-- Spring Boot DevTools
-- Spring Boot Actuator
-- Spring Data JPA
-- Spring Web Starter
-- Config Client
-- Eureka Discovery Client
-- Zipkin Client
-
-Então, movemos as seguintes classes do módulo `eats-admin` do monólito para o novo serviço `eats-admin-service`:
-
-- FormaDePagamento
-- FormaDePagamentoController
-- FormaDePagamentoRepository
-- TipoDeCozinha
-- TipoDeCozinhaController
-- TipoDeCozinhaRepository
-
-O Admin Service deve apontar para o Config Server, definindo um `bootstrap.properties` com `admin` como _application name_. No arquivo `admin.properties` do `config-repo`, definiremos as configurações de data source apontando para o BD do monólito.
-
-No `application.properties`, deve ser definida `8084` na porta a ser utilizada.
-
-Então, o módulo `eats-admin` do monólito pode ser removido, assim como suas autorizações no módulo `eats-seguranca`.
-
-## Exercício: um serviço Administrativo
-
-1. Clone o projeto `fj33-eats-admin-service` para o seu Desktop:
-
-  ```sh
-  cd ~/Desktop
-  git clone https://gitlab.com/aovs/projetos-cursos/fj33-eats-admin-service.git
-  ```
-
-2. Crie um arquivo `admin.properties` no `config-repo`, definindo um data source que aponta para o BD do monólito:
-
-  ```properties
-  spring.datasource.url=jdbc:mysql://localhost/eats?createDatabaseIfNotExist=true
-  spring.datasource.username=root
-  spring.datasource.password=
-  ```
-
-3. Delete o módulo `eats-admin` do monólito.
-
-4. Remova, da classe `SecurityConfig` do módulo `eats-seguranca` do monólito,  as configurações de autorização dos endpoints que foram movidos:
-
-  ```java
-  class SecurityConfig extends WebSecurityConfigurerAdapter {
-
-    // código omitido ...
-
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-      http.authorizeRequests()
-        .antMatchers("/restaurantes/**", "/pedidos/**",̶ ̶"̶/̶t̶i̶p̶o̶s̶-̶d̶e̶-̶c̶o̶z̶i̶n̶h̶a̶/̶*̶*̶"̶,̶ ̶"̶/̶f̶o̶r̶m̶a̶s̶-̶d̶e̶-̶p̶a̶g̶a̶m̶e̶n̶t̶o̶/̶*̶*̶"̶).permitAll()
-        .antMatchers("/actuator/**").permitAll()
-        .̶a̶n̶t̶M̶a̶t̶c̶h̶e̶r̶s̶(̶"̶/̶a̶d̶m̶i̶n̶/̶*̶*̶"̶)̶.̶h̶a̶s̶R̶o̶l̶e̶(̶R̶o̶l̶e̶.̶R̶O̶L̶E̶S̶.̶A̶D̶M̶I̶N̶.̶n̶a̶m̶e̶(̶)̶)̶
-        // código omitido ...
-    }
-  
-  }
-  ```
-
 ## Resource Server com Spring Security OAuth 2
 
 Para definir um Resource Server com o Spring Security OAuth 2, que consiga validar e decodificar os tokens (opacos ou JWT) emitidos pelo Authorization Server, basta anotar a aplicação ou uma configuração com `@EnableResourceServer`.
@@ -1475,9 +1489,9 @@ Por padrão, todos os endereços requerem autenticação. Porém, é possível c
 
 ## Exercício: protegendo o serviço Administrativo
 
-1. Adicione os starters do Spring Security OAuth 2 e Spring Cloud Security ao `pom.xml` do `eats-admin-service`:
+1. Adicione os starters do Spring Security OAuth 2 e Spring Cloud Security ao `pom.xml` do `eats-administrativo-service`:
 
-  ####### fj33-eats-admin-service/pom.xml
+  ####### fj33-eats-administrativo-service/pom.xml
 
   ```xml
   <dependency>
@@ -1490,18 +1504,18 @@ Por padrão, todos os endereços requerem autenticação. Porém, é possível c
   </dependency>
   ```
 
-2. Anote a  classe `EatsAdminServiceApplication` com `@EnableResourceServer`:
+2. Anote a  classe `EatsAdministrativoServiceApplication` com `@EnableResourceServer`:
 
-  ####### fj33-eats-admin-service/src/main/java/br/com/caelum/eats/admin/EatsAdminServiceApplication.java
+  ####### fj33-eats-administrativo-service/src/main/java/br/com/caelum/eats/admin/EatsAdministrativoServiceApplication.java
 
   ```java
   @EnableResourceServer // adicionado
   @EnableDiscoveryClient
   @SpringBootApplication
-  public class EatsAdminServiceApplication {
+  public class EatsAdministrativoServiceApplication {
 
     public static void main(String[] args) {
-      SpringApplication.run(EatsAdminServiceApplication.class, args);
+      SpringApplication.run(EatsAdministrativoServiceApplication.class, args);
     }
 
   }
@@ -1517,7 +1531,7 @@ Por padrão, todos os endereços requerem autenticação. Porém, é possível c
 
 4. Crie uma classe `OAuthResourceServerConfig`. Herde da classe `ResourceServerConfigurerAdapter` e permita que todos acessem a listagem de tipos de cozinha e formas de pagamento, assim como os endpoints do Spring Boot Actuator. As URLs que começam com `/admin` devem ser restritas a usuário que tem o role `ADMIN`.
 
-  ####### fj33-eats-admin-service/src/main/java/br/com/caelum/eats/admin/OAuthResourceServerConfig.java
+  ####### fj33-eats-administrativo-service/src/main/java/br/com/caelum/eats/admin/OAuthResourceServerConfig.java
 
   ```java
   @Configuration

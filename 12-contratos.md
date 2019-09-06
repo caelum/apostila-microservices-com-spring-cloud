@@ -231,7 +231,7 @@
   import org.springframework.test.context.junit4.SpringRunner;
   import org.springframework.web.client.RestTemplate;
 
-  import br.com.caelum.eats.admin.TipoDeCozinha;
+  import br.com.caelum.eats.administrativo.TipoDeCozinha;
   import br.com.caelum.eats.restaurante.DistanciaRestClient;
   import br.com.caelum.eats.restaurante.Restaurante;
   ```
