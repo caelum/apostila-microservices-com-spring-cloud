@@ -1,78 +1,143 @@
 # API Gateway
 
-## Exercício: implementando um API Gateway com Zuul
+## Implementando um API Gateway com Zuul
 
-1. Pelo navegador, abra `https://start.spring.io/`.
-  Em _Project_, mantenha _Maven Project_.
-  Em _Language_, mantenha _Java_.
-  Em _Spring Boot_, mantenha a versão padrão.
-  No trecho de _Project Metadata_, defina:
+Pelo navegador, abra `https://start.spring.io/`.
 
-  - `br.com.caelum` em _Group_
-  - `api-gateway` em _Artifact_
+Em _Project_, mantenha _Maven Project_.
+Em _Language_, mantenha _Java_.
+Em _Spring Boot_, mantenha a versão padrão.
+No trecho de _Project Metadata_, defina:
 
-  Mantenha os valores em _More options_.
- 
-  Mantenha o _Packaging_ como `Jar`.
-  Mantenha a _Java Version_ em `8`.
+- `br.com.caelum` em _Group_
+- `api-gateway` em _Artifact_
 
-  Em _Dependencies_, adicione:
+Mantenha os valores em _More options_.
 
-  - Zuul
-  - DevTools
+Mantenha o _Packaging_ como `Jar`.
+Mantenha a _Java Version_ em `8`.
 
-  Clique em _Generate Project_.
-2. Extraia o `api-gateway.zip` e copie a pasta para seu Desktop.
-3. No Eclipse, no workspace de microservices, importe o projeto `api-gateway`, usando o menu _File > Import > Existing Maven Projects_.
-4. Adicione a anotação `@EnableZuulProxy` à classe `ApiGatewayApplication`:
+Em _Dependencies_, adicione:
 
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/ApiGatewayApplication.java
+- Zuul
+- DevTools
 
-  ```java
-  @EnableZuulProxy
-  @SpringBootApplication
-  public class ApiGatewayApplication {
+Clique em _Generate Project_.
 
-    public static void main(String[] args) {
-      SpringApplication.run(ApiGatewayApplication.class, args);
-    }
+Extraia o `api-gateway.zip` e copie a pasta para seu Desktop.
 
+No Eclipse, no workspace de microservices, importe o projeto `api-gateway`, usando o menu _File > Import > Existing Maven Projects_.
+
+Adicione a anotação `@EnableZuulProxy` à classe `ApiGatewayApplication`:
+
+####### api-gateway/src/main/java/br/com/caelum/apigateway/ApiGatewayApplication.java
+
+```java
+@EnableZuulProxy
+@SpringBootApplication
+public class ApiGatewayApplication {
+
+  public static void main(String[] args) {
+    SpringApplication.run(ApiGatewayApplication.class, args);
   }
+
+}
+```
+
+Não deixe de adicionar o import:
+
+```java
+import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
+```
+
+No arquivo `src/main/resources/application.properties`:
+
+- modifique a porta para 9999
+- desabilite o Eureka, por enquanto (o abordaremos mais adiante)
+- para as URLs do serviço de pagamento, parecidas com `http://localhost:9999/pagamentos/algum-recurso`, redirecione para `http://localhost:8081`. Para manter o prefixo `/pagamentos`, desabilite a propriedade `stripPrefix`.
+- para as URLs do serviço de distância, algo como `http://localhost:9999/distancia/algum-recurso`, redirecione para `http://localhost:8082`. O prefixo `/distancia` será removido, já que esse é o comportamento padrão.
+- para as demais URLs, redirecione para `http://localhost:8080`, o monólito.
+
+O arquivo ficará semelhante a:
+
+####### api-gateway/src/main/resources/application.properties
+
+```properties
+server.port = 9999
+
+ribbon.eureka.enabled=false
+
+zuul.routes.pagamentos.url=http://localhost:8081
+zuul.routes.pagamentos.stripPrefix=false
+
+zuul.routes.distancia.url=http://localhost:8082
+
+zuul.routes.monolito.path=/**
+zuul.routes.monolito.url=http://localhost:8080
+```
+
+## Fazendo a UI usar o API Gateway
+
+Remova as URLs específicas dos serviços de distância e pagamento, mantendo apenas a `baseUrl`, que deve apontar para o API Gateway:
+
+####### fj33-eats-ui/src/environments/environment.ts
+
+```typescript
+export const environment = {
+  production: false,
+
+  b̶a̶s̶e̶U̶r̶l̶:̶ ̶'̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶0̶'̶
+  baseUrl: '//localhost:9999' // modificado
+
+  ,̶ ̶p̶a̶g̶a̶m̶e̶n̶t̶o̶U̶r̶l̶:̶ ̶'̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶1̶'̶
+  ,̶ ̶d̶i̶s̶t̶a̶n̶c̶i̶a̶U̶r̶l̶:̶ ̶'̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶2̶'̶
+};
+```
+
+Em `PagamentoService`, troque `pagamentoUrl` por `baseUrl`:
+
+####### fj33-eats-ui/src/app/services/pagamento.service.ts
+
+```typescript
+export class PagamentoService {
+
+  p̶r̶i̶v̶a̶t̶e̶ ̶A̶P̶I̶ ̶=̶ ̶e̶n̶v̶i̶r̶o̶n̶m̶e̶n̶t̶.̶p̶a̶g̶a̶m̶e̶n̶t̶o̶U̶r̶l̶ ̶+̶ ̶'̶/̶p̶a̶g̶a̶m̶e̶n̶t̶o̶s̶'̶;̶
+  private API = environment.baseUrl + '/pagamentos'; // modificado
+
+  // restante do código ...
+
+}
+```
+
+Use apenas `baseUrl` em `RestauranteService`, alterando o atributo `DISTANCIA_API`:
+
+####### fj33-eats-ui/src/app/services/restaurante.service.ts
+
+```typescript
+export class RestauranteService {
+
+  private API = environment.baseUrl;
+
+  p̶r̶i̶v̶a̶t̶e̶ ̶D̶I̶S̶T̶A̶N̶C̶I̶A̶_̶A̶P̶I̶ ̶=̶ ̶e̶n̶v̶i̶r̶o̶n̶m̶e̶n̶t̶.̶d̶i̶s̶t̶a̶n̶c̶i̶a̶U̶r̶l̶;̶
+  private DISTANCIA_API = environment.baseUrl + '/distancia'; // modificado
+
+  // código omitido ...
+
+}
+```
+
+## Exercício: API Gateway com Zuul
+
+1. Em um Terminal, clone o repositório `fj33-api-gateway` para o seu Desktop:
+
+  ```sh
+  cd ~/Desktop
+  git clone https://gitlab.com/aovs/projetos-cursos/fj33-api-gateway.git
   ```
 
-  Não deixe de adicionar o import:
+  No workspace de microservices do Eclipse, importe o projeto `api-gateway`, usando o menu _File > Import > Existing Maven Projects_ e apontato para o diretório `fj33-api-gateway` do Desktop.
 
-  ```java
-  import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
-  ```
-
-5. No arquivo `src/main/resources/application.properties`:
-
-  - modifique a porta para 9999
-  - desabilite o Eureka, por enquanto (o abordaremos mais adiante)
-  - para as URLs do serviço de pagamento, parecidas com `http://localhost:9999/pagamentos/algum-recurso`, redirecione para `http://localhost:8081`. Para manter o prefixo `/pagamentos`, desabilite a propriedade `stripPrefix`.
-  - para as URLs do serviço de distância, algo como `http://localhost:9999/distancia/algum-recurso`, redirecione para `http://localhost:8082`. O prefixo `/distancia` será removido, já que esse é o comportamento padrão.
-  - para as demais URLs, redirecione para `http://localhost:8080`, o monólito.
-
-  O arquivo ficará semelhante a:
-
-  ####### api-gateway/src/main/resources/application.properties
-
-  ```properties
-  server.port = 9999
-
-  ribbon.eureka.enabled=false
-
-  zuul.routes.pagamentos.url=http://localhost:8081
-  zuul.routes.pagamentos.stripPrefix=false
-
-  zuul.routes.distancia.url=http://localhost:8082
-
-  zuul.routes.monolito.path=/**
-  zuul.routes.monolito.url=http://localhost:8080
-  ```
-
-6. Execute a classe `ApiGatewayApplication`, certificando-se que os serviços de pagamento e distância estão no ar, assim como o monólito.
+2. Execute a classe `ApiGatewayApplication`, certificando-se que os serviços de pagamento e distância estão no ar, assim como o monólito.
 
   Alguns exemplos de URLs:
 
@@ -82,59 +147,20 @@
 
   Note que as URLs anteriores, apesar de serem invocados no API Gateway, invocam o serviço de pagamento, o de distância e o monólito, respectivamente.
 
-## Exercício: fazendo a UI usar o API Gateway
+3. Vá até a branch `cap7-ui-chama-api-gateway` do projeto `fj33-eats-ui`:
 
-1. Remova as URLs específicas dos serviços de distância e pagamento, mantendo apenas a `baseUrl`, que deve apontar para o API Gateway:
-
-  ####### fj33-eats-ui/src/environments/environment.ts
-
-  ```typescript
-  export const environment = {
-    production: false,
-
-    b̶a̶s̶e̶U̶r̶l̶:̶ ̶'̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶0̶'̶
-    baseUrl: '//localhost:9999' // modificado
-
-    ,̶ ̶p̶a̶g̶a̶m̶e̶n̶t̶o̶U̶r̶l̶:̶ ̶'̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶1̶'̶
-    ,̶ ̶d̶i̶s̶t̶a̶n̶c̶i̶a̶U̶r̶l̶:̶ ̶'̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶2̶'̶
-  };
+  ```sh
+  cd ~/Desktop/fj33-eats-ui
+  git checkout -g cap7-ui-chama-api-gateway
   ```
 
-2. Em `PagamentoService`, troque `pagamentoUrl` por `baseUrl`:
+4. Com o monólito, os serviços de pagamentos e distância e o API Gateway no ar, suba o front-end por meio do comando `ng serve`.
 
-  ####### fj33-eats-ui/src/app/services/pagamento.service.ts
+  Faça um novo pedido e efetue o pagamento. Deve funcionar!
 
-  ```typescript
-  export class PagamentoService {
+  Tente fazer o login como administrador (`admin`/`123456`) e acessar a página de restaurantes em aprovação. Deve ocorrer um erro _401 Unauthorized_, que não acontecia antes da UI passar pelo API Gateway. Por que será que acontece esse erro?
 
-    p̶r̶i̶v̶a̶t̶e̶ ̶A̶P̶I̶ ̶=̶ ̶e̶n̶v̶i̶r̶o̶n̶m̶e̶n̶t̶.̶p̶a̶g̶a̶m̶e̶n̶t̶o̶U̶r̶l̶ ̶+̶ ̶'̶/̶p̶a̶g̶a̶m̶e̶n̶t̶o̶s̶'̶;̶
-    private API = environment.baseUrl + '/pagamentos'; // modificado
-
-    // restante do código ...
-
-  }
-  ```
-
-3. Use apenas `baseUrl` em `RestauranteService`, alterando o atributo `DISTANCIA_API`:
-
-  ####### fj33-eats-ui/src/app/services/restaurante.service.ts
-
-  ```typescript
-  export class RestauranteService {
-
-    private API = environment.baseUrl;
-
-    p̶r̶i̶v̶a̶t̶e̶ ̶D̶I̶S̶T̶A̶N̶C̶I̶A̶_̶A̶P̶I̶ ̶=̶ ̶e̶n̶v̶i̶r̶o̶n̶m̶e̶n̶t̶.̶d̶i̶s̶t̶a̶n̶c̶i̶a̶U̶r̶l̶;̶
-    private DISTANCIA_API = environment.baseUrl + '/distancia'; // modificado
-
-    // código omitido ...
-
-  }
-  ```
-
-4. Faça um novo pedido e efetue o pagamento. Deve funcionar!
-
-5. Teste fazer o login como administrador e acessar a página de restaurantes em aprovação. Deve ocorrer um erro _401 Unauthorized_, que não acontecia antes da UI passar pelo API Gateway. Por que será que acontece esse erro?
+## Desabilitando a remoção de cabeçalhos sensíveis no Zuul
 
 <!--@note
 
@@ -150,335 +176,336 @@
 
 -->
 
-## Exercício: desabilitando a remoção de cabeçalhos sensíveis no Zuul
+Por padrão, o Zuul remove os cabeçalhos HTTP `Cookie`, `Set-Cookie`, `Authorization`. Vamos desabilitar essa remoção no `application.properties`:
 
-1. Por padrão, o Zuul remove os cabeçalhos HTTP `Cookie`, `Set-Cookie`, `Authorization`. Vamos desabilitar essa remoção no `application.properties`:
+####### api-gateway/src/main/resources/application.properties
 
-  ####### api-gateway/src/main/resources/application.properties
+```properties
+zuul.sensitiveHeaders=
+```
 
-  ```properties
-  zuul.sensitiveHeaders=
+## Exercício: cabeçalhos sensíveis no Zuul
+
+1. Pare o API Gateway.
+
+  Obtenha o código da branch `cap7-cabecalhos-sensiveis-no-zuul` do projeto `fj33-api-gateway`:
+
+  ```sh
+  cd ~/Desktop/fj33-api-gateway
+  git checkout -f cap7-cabecalhos-sensiveis-no-zuul
   ```
 
-2. Reinicie o `ApiGatewayApplication` e faça o login como administrador. Acesse a página de restaurantes em aprovação. Deve funcionar!
+  Execute a classe `ApiGatewayApplication`. Zuul no ar!
 
-<!--@note
-Ao acessarmos a página que detalha um restaurante, como com a URL `http://localhost:4200/pedidos/71503510/restaurante/1`, são feitas duas chamadas pela UI:
+2. Faça novamente login como administrador (`admin`/`123456`) e acesse a página de restaurantes em aprovação. Deve funcionar!
 
-  - `http://localhost:9999/restaurantes/1` busca os detalhes do restaurante do monólito
-  - `http://localhost:9999/distancia/restaurantes/71503510/restaurante/1` busca os km entre o CEP e o restaurante do serviço de distância
+## Invocando o serviço de distância a partir do API Gateway com RestTemplate
 
-Faça com que a UI obtenha tanto os detalhes do restaurante como a quilometragem até o CEP informado com apenas uma chamada a uma URL como `http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1`.
+Adicione o Lombok como dependência no `pom.xml` do projeto `api-gateway`:
 
-Invoque o serviço de distância com o `RestTemplate` do Spring e o monólito com o Feign. Usaremos isso mais adiante.
--->
+####### api-gateway/pom.xml
 
-## Exercício: invocando serviço de distância a partir do API Gateway com RestTemplate
+```xml
+<dependency>
+  <groupId>org.projectlombok</groupId>
+  <artifactId>lombok</artifactId>
+  <optional>true</optional>
+</dependency>
+```
 
-1. Crie uma classe `RestClientConfig` no pacote `br.com.caelum.apigateway`, que fornece um `RestTemplate` do Spring:
+Crie uma classe `RestClientConfig` no pacote `br.com.caelum.apigateway`, que fornece um `RestTemplate` do Spring:
 
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/RestClientConfig.java
+####### api-gateway/src/main/java/br/com/caelum/apigateway/RestClientConfig.java
 
-  ```java
-  @Configuration
-  public class RestClientConfig {
+```java
+@Configuration
+class RestClientConfig {
 
-    @Bean
-    public RestTemplate restTemplate() {
-      return new RestTemplate();
-    }
-
+  @Bean
+  RestTemplate restTemplate() {
+    return new RestTemplate();
   }
-  ```
 
-  Faça os imports adequados:
+}
+```
 
-  ```java
-  import org.springframework.context.annotation.Bean;
-  import org.springframework.context.annotation.Configuration;
-  import org.springframework.web.client.RestTemplate;
-  ```
+Faça os imports adequados:
 
-  _Observação: estamos usando o `RestTemplate` ao invés do Feign porque estudaremos a diferença entre os dois mais adiante._
+```java
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
+```
 
-2. Adicione o Lombok como dependência no `pom.xml` do projeto `api-gateway`:
+_Observação: estamos usando o `RestTemplate` ao invés do Feign porque estudaremos a diferença entre os dois mais adiante._
 
-  ####### api-gateway/pom.xml
+Ainda no pacote `br.com.caelum.apigateway`, crie um `@Service` chamado `DistanciaRestClient` que recebe um `RestTemplate` e o valor de `zuul.routes.distancia.url`, que contém a URL do serviço de distância.
 
-  ```xml
-  <dependency>
-    <groupId>org.projectlombok</groupId>
-    <artifactId>lombok</artifactId>
-    <optional>true</optional>
-  </dependency>
-  ```
+No método `comDistanciaPorCepEId`, dispare um `GET` à URL do serviço de distância que retorna a quilometragem de um restaurante a um dado CEP.
 
-3. Crie uma classe `RestauranteComDistanciaDto`, que deve conter os atributos `restauranteId` e `distancia`, um `Long` e um `BigDecimal`, respectivamente.
+Como queremos apenas mesclar as respostas na API Composition, não precisamos de um _domain model_. Por isso, podemos usar um `Map` como tipo de retorno.
 
-  Defina as anotações `@Data`, `@AllArgsConstructor` e `@NoArgsConstructor` do Lombok.
+####### api-gateway/src/main/java/br/com/caelum/apigateway/DistanciaRestClient.java
 
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/RestauranteComDistanciaDto.java
+```java
+@Service
+class DistanciaRestClient {
 
-  ```java
-  @Data
-  @AllArgsConstructor
-  @NoArgsConstructor
-  public class RestauranteComDistanciaDto {
+  private RestTemplate restTemplate;
+  private String distanciaServiceUrl;
 
-    private Long restauranteId;
-    private BigDecimal distancia;
-
+  DistanciaRestClient(RestTemplate restTemplate,
+      @Value("${zuul.routes.distancia.url}") String distanciaServiceUrl) {
+    this.restTemplate = restTemplate;
+    this.distanciaServiceUrl = distanciaServiceUrl;
   }
-  ```
 
-  Certifique-se dos imports corretos:
-
-  ```java
-  import java.math.BigDecimal;
-
-  import lombok.AllArgsConstructor;
-  import lombok.Data;
-  import lombok.NoArgsConstructor;
-  ```
-
-5. Ainda no pacote `br.com.caelum.apigateway`, crie um `@Service` chamado `DistanciaRestClient` que recebe um `RestTemplate` e o valor de `zuul.routes.distancia.url`, que contém a URL do serviço de distância.
-
-  No método `comDistanciaPorCepEId`, dispare um `GET` à URL do serviço de distância que retorna a quilometragem de um restaurante a um dado CEP:
-
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/DistanciaRestClient.java
-
-  ```java
-  @Service
-  public class DistanciaRestClient {
-
-    private RestTemplate restTemplate;
-    private String distanciaServiceUrl;
-
-    public DistanciaRestClient(RestTemplate restTemplate,
-        @Value("${zuul.routes.distancia.url}") String distanciaServiceUrl) {
-      this.restTemplate = restTemplate;
-      this.distanciaServiceUrl = distanciaServiceUrl;
-    }
-
-    public RestauranteComDistanciaDto porCepEId(String cep, Long restauranteId) {
-      String url = distanciaServiceUrl + "/restaurantes/" + cep + "/restaurante/" + restauranteId;
-      return restTemplate.getForObject(url, RestauranteComDistanciaDto.class);
-    }
-
+  Map<String,Object> porCepEId(String cep, Long restauranteId) {
+    String url = distanciaServiceUrl + "/restaurantes/" + cep + "/restaurante/" + restauranteId;
+    return restTemplate.getForObject(url, Map.class);
   }
-  ```
 
-## Exercício: invocando monólito a partir do API Gateway com Feign
+}
+```
 
-1. Crie uma classe `TipoDeCozinhaDto` que contém o `id` e nome do tipo de cozinha.
+Ajuste os imports:
 
-  Crie também uma classe `RestauranteDto`, que contém todos dos dados informados na tela de detalhes de um restaurante, incluindo o tipo de cozinha.
+```java
+import java.util.Map;
 
-  Defina, em ambas, as anotações `@Data`, `@AllArgsConstructor` e `@NoArgsConstructor` do Lombok.
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+```
 
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/TipoDeCozinhaDto.java
+Observação: é possível resolver o warning de _unchecked conversion_ usando um `ParameterizedTypeReference` com o método `exchange` do `RestTemplate`.
 
-  ```java
-  @Data
-  @AllArgsConstructor
-  @NoArgsConstructor
-  public class TipoDeCozinhaDto {
+## Invocando o monólito a partir do API Gateway com Feign
 
-    private Long id;
-    private String nome;
+Adicione o Feign como dependência no `pom.xml` do projeto `api-gateway`:
 
+####### api-gateway/pom.xml
+
+```xml
+<dependency>
+  <groupId>org.springframework.cloud</groupId>
+  <artifactId>spring-cloud-starter-openfeign</artifactId>
+</dependency>
+```
+
+Na classe `ApiGatewayApplication`, adicione a anotação `@EnableFeignClients`:
+
+####### api-gateway/src/main/java/br/com/caelum/apigateway/ApiGatewayApplication.java
+
+```java
+@EnableFeignClients // adicionado
+@EnableZuulProxy
+@SpringBootApplication
+public class ApiGatewayApplication {
+
+  public static void main(String[] args) {
+    SpringApplication.run(ApiGatewayApplication.class, args);
   }
-  ```
 
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/RestauranteDto.java
+}
+```
 
-  ```java
-  @Data
-  @AllArgsConstructor
-  @NoArgsConstructor
-  public class RestauranteDto {
+O import a ser adicionado está a seguir:
 
-    private Long id;
+```java
+import org.springframework.cloud.openfeign.EnableFeignClients;
+```
 
-    private String nome;
+Crie uma interface `RestauranteRestClient`, que define um método `porId` que recebe um `id` e retorna um `Map`. Anote esse método com as anotações do Spring Web, para que dispare um GET à URL do monólito que detalha um restaurante.
 
-    private String descricao;
+A interface deve ser anotada com `@FeignClient`, apontando para a configuração do monólito no Zuul. 
 
-    private String cep;
+```java
+@FeignClient("monolito")
+interface RestauranteRestClient {
 
-    private String endereco;
+  @GetMapping("/restaurantes/{id}")
+  Map<String,Object> porId(@PathVariable("id") Long id);
 
-    private BigDecimal taxaDeEntregaEmReais;
+}
+```
 
-    private Integer tempoDeEntregaMinimoEmMinutos;
+Ajuste os imports:
 
-    private Integer tempoDeEntregaMaximoEmMinutos;
+```java
+import java.util.Map;
 
-    private TipoDeCozinhaDto tipoDeCozinha;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+```
 
-  }
-  ```
+A configuração do monólito no Zuul precisa ser ligeiramente alterada para que o Feign funcione:
 
-  Os imports são os que seguem:
+####### api-gateway/src/main/resources/application.properties
 
-  ```java
-  import lombok.AllArgsConstructor;
-  import lombok.Data;
-  import lombok.NoArgsConstructor;
-  ```
+```properties
+z̶u̶u̶l̶.̶r̶o̶u̶t̶e̶s̶.̶m̶o̶n̶o̶l̶i̶t̶o̶.̶u̶r̶l̶=̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶0̶
+monolito.ribbon.listOfServers=http://localhost:8080
+```
 
-2. Adicione o Feign como dependência no `pom.xml` do projeto `api-gateway`:
+Mais adiante estudaremos cuidadosamente o Ribbon.
 
-  ####### api-gateway/pom.xml
+## Compondo chamadas no API Gateway
 
-  ```xml
-  <dependency>
-    <groupId>org.springframework.cloud</groupId>
-    <artifactId>spring-cloud-starter-openfeign</artifactId>
-  </dependency>
-  ```
+No `api-gateway`, crie um `RestauranteComDistanciaController`, que invoca dado um CEP e um id de restaurante obtém:
 
-3. Na classe `ApiGatewayApplication`, adicione a anotação `@EnableFeignClients`:
+- os detalhes do restaurante usando `RestauranteRestClient`
+- a quilometragem entre o restaurante e o CEP usando `DistanciaRestClient`
 
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/ApiGatewayApplication.java
+####### api-gateway/src/main/java/br/com/caelum/apigateway/RestauranteComDistanciaController.java
 
-  ```java
-  @EnableFeignClients // adicionado
-  @EnableZuulProxy
-  @SpringBootApplication
-  public class ApiGatewayApplication {
+```java
+@RestController
+@AllArgsConstructor
+class RestauranteComDistanciaController {
 
-    public static void main(String[] args) {
-      SpringApplication.run(ApiGatewayApplication.class, args);
-    }
-
-  }
-  ```
-
-  O import a ser adicionado está a seguir:
-
-  ```java
-  import org.springframework.cloud.openfeign.EnableFeignClients;
-  ```
-
-5. Crie uma interface `RestauranteRestClient`, que define um método `porId` que recebe um `id` e retorna um `RestauranteDto`. Anote esse método com as anotações do Spring Web, para que dispare um GET à URL do monólito que detalha um restaurante.
-
-  A interface deve ser anotada com `@FeignClient`, apontando para a configuração do monólito no Zuul. 
-
-  ```java
-  @FeignClient("monolito")
-  public interface RestauranteRestClient {
-
-    @GetMapping("/restaurantes/{id}")
-    public RestauranteDto porId(@PathVariable("id") Long id);
-
-  }
-  ```
-
-  Ajuste os imports:
-
-  ```java
-  import org.springframework.cloud.openfeign.FeignClient;
-  import org.springframework.web.bind.annotation.GetMapping;
-  import org.springframework.web.bind.annotation.PathVariable;
-  ```
-
-6. A configuração do monólito no Zuul precisa ser ligeiramente alterada para que o Feign funcione:
-
-  ####### api-gateway/src/main/resources/application.properties
-
-  ```properties
-  z̶u̶u̶l̶.̶r̶o̶u̶t̶e̶s̶.̶m̶o̶n̶o̶l̶i̶t̶o̶.̶u̶r̶l̶=̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶0̶
-  monolito.ribbon.listOfServers=http://localhost:8080
-  ```
-
-  Mais adiante estudaremos cuidadosamente o Ribbon.
-
-## Exercício: compondo chamadas no API Gateway
-
-1. Adicione, à classe `RestauranteComDistanciaDto`, um atributo `restaurante` do tipo `RestauranteDto`.
-
-  Para incorporar todos os atributos do restaurante na própria classe `RestauranteComDistanciaDto`, coloque o restaurante como um `@Delegate` do Lombok.
-  
-  Esse novo atributo não deve ser serializado no JSON resultante.
-
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/RestauranteComDistanciaDto.java
-
-  ```java
-  // anotações ...
-  public class RestauranteComDistanciaDto {
-
-    // outros atributos ...
-
-    // adicionado
-    @Delegate @JsonIgnore
-    private RestauranteDto restaurante;
-
-  }
-  ```
-
-  Adicione os imports corretos:
-
-  ```java
-  import com.fasterxml.jackson.annotation.JsonIgnore;
-
-  import lombok.experimental.Delegate;
-  ```
-
-2. No `api-gateway`, crie um `RestauranteComDistanciaController`, que invoca dado um CEP e um id de restaurante obtém:
-
-  - os detalhes do restaurante usando `RestauranteRestClient`
-  - a quilometragem entre o restaurante e o CEP usando `DistanciaRestClient`
-
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/RestauranteComDistanciaController.java
-
-  ```java
-  @RestController
-  @AllArgsConstructor
-  public class RestauranteComDistanciaController {
-
-    private RestauranteRestClient restauranteRestClient;
+  private RestauranteRestClient restauranteRestClient;
     private DistanciaRestClient distanciaRestClient;
 
     @GetMapping("/restaurantes-com-distancia/{cep}/restaurante/{restauranteId}")
-    public RestauranteComDistanciaDto porCepEIdComDistancia(@PathVariable("cep") String cep, @PathVariable("restauranteId") Long restauranteId) {
-      RestauranteDto restaurante = restauranteRestClient.porId(restauranteId);
-      RestauranteComDistanciaDto restauranteComDistancia = distanciaRestClient.porCepEId(cep, restauranteId);
-      restauranteComDistancia.setRestaurante(restaurante);
-      return restauranteComDistancia;
+    public Map<String, Object> porCepEIdComDistancia(@PathVariable("cep") String cep,
+                                                     @PathVariable("restauranteId") Long restauranteId) {
+      Map<String, Object> dadosRestaurante = restauranteRestClient.porId(restauranteId);
+      Map<String, Object> dadosDistancia = distanciaRestClient.porCepEId(cep, restauranteId);
+      dadosRestaurante.putAll(dadosDistancia);
+      return dadosRestaurante;
     }
+}
+```
+
+Não esqueça dos imports:
+
+```java
+import java.util.Map;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RestController;
+
+import lombok.AllArgsConstructor;
+```
+
+Se tentarmos acessar, pelo navegador ou pelo cURL, a URL `http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1` termos como status da resposta um `401 Unauthorized`.
+
+Isso ocorre porque, como o prefixo não é `pagamentos` nem `distancia`, a requisição é repassada ao monólito pelo Zuul.
+
+Devemos configurar uma rota no Zuul, usando o `forward` para o endereço local:
+
+####### api-gateway/src/main/resources/application.properties
+
+```properties
+zuul.routes.local.path=/restaurantes-com-distancia/**
+zuul.routes.local.url=forward:/restaurantes-com-distancia
+```
+
+A rota acima deve ficar logo antes da rota do monólito, porque esta última é `/**`,  um "coringa" que corresponde a qualquer URL solicitada.
+
+Um novo acesso a URL `http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1` terá como resposta um JSON com os dados do restaurante e de distância mesclados.
+
+## Chamando a composição do API Gateway a partir da UI
+
+No projeto `eats-ui`, adicione um método que chama a nova URL do API Gateway em `RestauranteService`:
+
+####### fj33-eats-ui/src/app/services/restaurante.service.ts
+
+```typescript
+export class RestauranteService {
+
+  // código omitido ...
+
+  porCepEIdComDistancia(cep: string, restauranteId: string): Observable<any> {
+    return this.http.get(`${this.API}/restaurantes-com-distancia/${cep}/restaurante/${restauranteId}`);
+  }
+
+}
+```
+
+Altere ao `RestauranteComponent` para que chame o novo método `porCepEIdComDistancia`.
+
+Não será mais necessário invocar o método `distanciaPorCepEId`, porque o restaurante já terá a distância.
+
+####### fj33-eats-ui/src/app/pedido/restaurante/restaurante.component.ts
+
+```java
+export class RestauranteComponent implements OnInit {
+
+  // código omitido ...
+
+  ngOnInit() {
+
+    t̶h̶i̶s̶.̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶S̶e̶r̶v̶i̶c̶e̶.̶p̶o̶r̶I̶d̶(̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶I̶d̶)̶
+    this.restaurantesService.porCepEIdComDistancia(this.cep, restauranteId) // modificado
+      .subscribe(restaurante => {
+
+        this.restaurante = restaurante;
+        this.pedido.restaurante = restaurante;
+
+        t̶h̶i̶s̶.̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶S̶e̶r̶v̶i̶c̶e̶.̶d̶i̶s̶t̶a̶n̶c̶i̶a̶P̶o̶r̶C̶e̶p̶E̶I̶d̶(̶t̶h̶i̶s̶.̶c̶e̶p̶,̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶I̶d̶)̶
+          .̶s̶u̶b̶s̶c̶r̶i̶b̶e̶(̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶C̶o̶m̶D̶i̶s̶t̶a̶n̶c̶i̶a̶ ̶=̶>̶ ̶{̶
+            t̶h̶i̶s̶.̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶.̶d̶i̶s̶t̶a̶n̶c̶i̶a̶ ̶=̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶C̶o̶m̶D̶i̶s̶t̶a̶n̶c̶i̶a̶.̶d̶i̶s̶t̶a̶n̶c̶i̶a̶;̶
+        }̶)̶;̶
+
+        // código omitido ...
+
+      });
 
   }
+
+  // restante do código ...
+
+}
+```
+
+Ao buscar os restaurantes a partir de um CEP e escolhermos um deles ou também ao acessar diretamente uma URL como `http://localhost:4200/pedidos/71503510/restaurante/1`, deve ocorrer um _Erro no servidor_.
+
+No Console do navegador, podemos perceber que o erro é relacionado a CORS:
+
+_Access to XMLHttpRequest at 'http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource._
+
+Para resolver o erro de CORS, devemos adicionar ao API Gateway uma classe `CorsConfig` semelhante a que temos nos serviços de pagamentos e distância e também no monólito:
+
+####### api-gateway/src/main/java/br/com/caelum/apigateway/CorsConfig.java
+
+```java
+@Configuration
+class CorsConfig implements WebMvcConfigurer {
+
+  @Override
+  public void addCorsMappings(CorsRegistry registry) {
+    registry.addMapping("/**").allowedMethods("*").allowCredentials(true);
+  }
+
+}
+```
+
+Depois de reiniciar o API Gateway,  os detalhes do restaurante devem ser exibidos, assim como sua distância a um CEP informado.
+
+CORS é uma tecnologia do front-end, já que é uma maneira de relaxar a _same origin policy_ de chamadas AJAX de um navegador.
+
+Como apenas o API Gateway será chamado diretamente pelo navegador e não há restrições de chamadas entre servidores Web, podemos apagar as classes `CorsConfig` dos serviços de pagamento e distância, assim como a do módulo `eats-application` do monólito.
+
+## Exercício: API Composition no API Gateway
+
+1. Para o API Gateway.
+
+  Faça o checkout da branch `cap7-api-composition-no-api-gateway` do projeto `fj33-api-gateway`:
+
+  ```sh
+  cd ~/Desktop/fj33-api-gateway
+  git checkout -f cap7-api-composition-no-api-gateway
   ```
 
-  Não esqueça dos imports:
+  Certifique-se que o monólito e o serviço de distância estejam no ar.
+  
+  Rode novamente a classe `ApiGatewayApplication`.
 
-  ```java
-  import org.springframework.web.bind.annotation.GetMapping;
-  import org.springframework.web.bind.annotation.PathVariable;
-  import org.springframework.web.bind.annotation.RestController;
-
-  import lombok.AllArgsConstructor;
-  ```
-
-3. Tente acessar, pelo navegador ou pelo cURL, a URL: `http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1`
-
-  Note que o status da resposta é `401 Unauthorized`.
-
-  Isso ocorre porque, como o prefixo não é `pagamentos` nem `distancia`, a requisição é repassada ao monólito pelo Zuul.
-
-  Devemos configurar uma rota no Zuul, usando o `forward` para o endereço local:
-
-  ####### api-gateway/src/main/resources/application.properties
-
-  ```properties
-  zuul.routes.local.path=/restaurantes-com-distancia/**
-  zuul.routes.local.url=forward:/restaurantes-com-distancia
-  ```
-
-  A rota acima deve ficar logo antes da rota do monólito, porque esta última é `/**`,  um "coringa" que corresponde a qualquer URL solicitada.
-
-4. Tente novamente acessar a URL `http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1`
+  Tente acessar a URL `http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1`
 
   Deve ser retornado algo parecido com:
 
@@ -501,90 +528,69 @@ Invoque o serviço de distância com o `RestTemplate` do Spring e o monólito co
   }
   ```
 
-## Exercício: chamando a composição do API Gateway a partir da UI
+2. Obtenha o código da branch `cap7-api-composition-no-api-gateway` do projeto `fj33-eats-ui`:
 
-1. No projeto `eats-ui`, adicione um método que chama a nova URL do API Gateway em `RestauranteService`:
-
-  ####### fj33-eats-ui/src/app/services/restaurante.service.ts
-
-  ```typescript
-  export class RestauranteService {
-
-    // código omitido ...
-
-    porCepEIdComDistancia(cep: string, restauranteId: string): Observable<any> {
-      return this.http.get(`${this.API}/restaurantes-com-distancia/${cep}/restaurante/${restauranteId}`);
-    }
-
-  }
+  ```sh
+  cd ~/Desktop/fj33-eats-ui
+  git checkout -f cap7-api-composition-no-api-gateway
   ```
 
-2. Altere ao `RestauranteComponent` para que chame o novo método `porCepEIdComDistancia`.
+  Com os serviços de distância e o monólito rodando, inicie o front-end com o comando `ng serve`.
 
-  Não será mais necessário invocar o método `distanciaPorCepEId`, porque o restaurante já terá a distância.
+  Digite um CEP, busque os restaurantes próximos e escolha algum. Na página de detalhes de um restaurantes, chamamos a API Composition. Veja se os dados do restaurante e a distância são exibidos corretamente.
 
-  ####### fj33-eats-ui/src/app/pedido/restaurante/restaurante.component.ts
+3. (opcional) Como a UI chama apenas o API Gateway e CORS é uma tecnologia de front-end, podemos remover a classe `CorsConfig` dos serviço de pagamento e distância, assim como do monólito modular. Se desejar, faça checkout da branch `cap7-api-composition-no-api-gateway` desses projetos.
 
-  ```java
-  export class RestauranteComponent implements OnInit {
+## LocationRewriteFilter no Zuul para além de redirecionamentos
 
-    // código omitido ...
+Ao usar um API Gateway como Proxy, precisamos ficar atentos a URLs retornadas nos payloads e cabeçalhos HTTP.
 
-    ngOnInit() {
+O cabeçalho `Location` é comumente utilizado por redirects (status `301 Moved Permanently`, `302 Found`, entre outros). Esse cabeçalho contém um novo endereço que o cliente HTTP, em geral um navegador, tem que acessar logo em seguida.
 
-      t̶h̶i̶s̶.̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶S̶e̶r̶v̶i̶c̶e̶.̶p̶o̶r̶I̶d̶(̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶I̶d̶)̶
-      this.restaurantesService.porCepEIdComDistancia(this.cep, restauranteId) // modificado
-        .subscribe(restaurante => {
+Esse cabeçalho `Location` também é utilizado, por exemplo, quando um novo recurso é criado no servidor (status `201 Created`).
 
-          this.restaurante = restaurante;
-          this.pedido.restaurante = restaurante;
+O Zuul tem um Filter padrão, o `LocationRewriteFilter`,que reescreve as URLs, colocando no `Location` o endereço do próprio Zuul, ao invés de manter o endereço do serviço.
 
-          t̶h̶i̶s̶.̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶S̶e̶r̶v̶i̶c̶e̶.̶d̶i̶s̶t̶a̶n̶c̶i̶a̶P̶o̶r̶C̶e̶p̶E̶I̶d̶(̶t̶h̶i̶s̶.̶c̶e̶p̶,̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶I̶d̶)̶
-            .̶s̶u̶b̶s̶c̶r̶i̶b̶e̶(̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶C̶o̶m̶D̶i̶s̶t̶a̶n̶c̶i̶a̶ ̶=̶>̶ ̶{̶
-              t̶h̶i̶s̶.̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶.̶d̶i̶s̶t̶a̶n̶c̶i̶a̶ ̶=̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶C̶o̶m̶D̶i̶s̶t̶a̶n̶c̶i̶a̶.̶d̶i̶s̶t̶a̶n̶c̶i̶a̶;̶
-          }̶)̶;̶
+Porém, esse Filter só funciona para redirecionamentos (`3XX`) e não para outros status como `2XX`.
 
-          // código omitido ...
+Vamos customizá-lo, para que funcione com respostas bem sucedidas, de status `2XX`.
 
-        });
+Para isso, crie uma classe `LocationRewriteConfig` no pacote `br.com.caelum.apigateway`, definindo uma subclasse anônima  de `LocationRewriteFilter`, modificando alguns detalhes.
 
-    }
+####### api-gateway/src/main/java/br/com/caelum/apigateway/LocationRewriteConfig.java
 
-    // restante do código ...
+```java
+@Configuration
+class LocationRewriteConfig {
 
+  @Bean
+  LocationRewriteFilter locationRewriteFilter() {
+    return new LocationRewriteFilter() {
+      @Override
+      public boolean shouldFilter() {
+        int statusCode = RequestContext.getCurrentContext().getResponseStatusCode();
+        return HttpStatus.valueOf(statusCode).is3xxRedirection() || HttpStatus.valueOf(statusCode).is2xxSuccessful();
+      }
+    };
   }
-  ```
 
-3. Busque os restaurantes a partir de um CEP e escolha um deles. Você também pode acessar, diretamente pelo navegador, uma URL como: `http://localhost:4200/pedidos/71503510/restaurante/1`.
+}
+```
 
-  Deve ocorrer um _Erro no servidor_.
+Tome bastante cuidado com os imports:
 
-  No Console do navegador, podemos perceber que o erro é relacionado a CORS:
+```java
+import org.springframework.cloud.netflix.zuul.filters.post.LocationRewriteFilter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 
-  _Access to XMLHttpRequest at 'http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource._
+import com.netflix.zuul.context.RequestContext;
+```
 
-4. Adicione ao método `porCepEIdComDistancia` de `RestauranteComDistanciaController` a anotação `@CrossOrigin`:
+Agora sim! Ao receber um status `201 Created`, depois de criar algum recurso em um serviço, o API Gateway terá o `Location` dele próprio, e não do serviço original.
 
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/RestauranteComDistanciaController.java
-
-  ```java
-  // anotações ...
-  public class RestauranteComDistanciaController {
-
-    // atributos ...
-
-    @CrossOrigin // adicionado
-    @GetMapping("/restaurantes-com-distancia/{cep}/restaurante/{restauranteId}")
-    public RestauranteComDistanciaDto porCepEIdComDistancia(@PathVariable("cep") String cep, @PathVariable("restauranteId") Long restauranteId) {
-      // código omitido ...
-    }
-
-  }
-  ```
-
-5. Teste novamente. Perceba que os detalhes do restaurante são exibidos, assim como a distância ao CEP.
-
-## Exercício: LocationRewriteFilter no Zuul
+## Exercício: Customizando o LocationRewriteFilter do Zuul
 
 1. Através de um cliente REST, tente adicionar um pagamento passando pelo API Gateway. Para isso, utilize a porta `9999`.
 
@@ -598,7 +604,7 @@ Invoque o serviço de distância com o `RestTemplate` do Spring e o monólito co
     http://localhost:9999/pagamentos
   ```
 
-  Lembrando que um comando semalhante ao anterio, mas com a porta `8081`, está disponível em: https://gitlab.com/snippets/1859389
+  Lembrando que um comando semelhante ao anterior, mas com a porta `8081`, está disponível em: https://gitlab.com/snippets/1859389
 
   Note no cabeçalho `Location` do response que, mesmo utilizando a porta `9999` na requisição, a porta da resposta é a `8081`.
 
@@ -606,40 +612,16 @@ Invoque o serviço de distância com o `RestTemplate` do Spring e o monólito co
   Location: http://localhost:8081/pagamentos/40
   ```
 
-2. O `LocationRewriteFilter` padrão do Spring Cloud Zuul só funciona para chamadas com status de resposta `3XX`, de redirecionamentos. Vamos customizá-lo, para que funcione com respostas bem sucedidas, de status `2XX`.
+2. Pare o API Gateway.
 
-  Para isso, crie uma classe `LocationRewriteConfig` no pacote `br.com.caelum.apigateway`, definindo uma subclasse anônima  de `LocationRewriteFilter`, modificando alguns detalhes.
+  No projeto `fj33-api-gateway`, faça o checkout da branch `cap7-customizando-location-filter-do-zuul`:
 
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/LocationRewriteConfig.java
-
-  ```java
-  @Configuration
-  public class LocationRewriteConfig {
-
-    @Bean
-    public LocationRewriteFilter locationRewriteFilter() {
-      return new LocationRewriteFilter() {
-        @Override
-        public boolean shouldFilter() {
-          int statusCode = RequestContext.getCurrentContext().getResponseStatusCode();
-          return HttpStatus.valueOf(statusCode).is3xxRedirection() || HttpStatus.valueOf(statusCode).is2xxSuccessful();
-        }
-      };
-    }
-
-  }
+  ```sh
+  cd ~/Desktop/fj33-api-gateway
+  git checkout -f cap7-customizando-location-filter-do-zuul
   ```
 
-  Tome bastante cuidado com os imports:
-
-  ```java
-  import org.springframework.cloud.netflix.zuul.filters.post.LocationRewriteFilter;
-  import org.springframework.context.annotation.Bean;
-  import org.springframework.context.annotation.Configuration;
-  import org.springframework.http.HttpStatus;
-
-  import com.netflix.zuul.context.RequestContext;
-  ```
+  Execute a classe `ApiGatewayApplication`.
 
 3. Teste novamente a criação de um pagamento com um cliente REST. Perceba que o cabeçalho `Location` agora tem a porta `9999`, do API Gateway.
 

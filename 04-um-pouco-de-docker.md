@@ -206,13 +206,7 @@
   docker-compose logs mysql.pagamento
   ```
 
-5. Para parar todos os _services_ e remover os containers, volumes e imagens associados, use:
-
-  ```sh
-  docker-compose down
-  ```
-
-  Se desejar apenas parar os _services_, sem remover nada, o seguinte comando dever ser usado:
+5. Para interromper todos os _services_ sem remover os containers, volumes e imagens associados, use:
 
   ```sh
   docker-compose stop
@@ -222,4 +216,4 @@
 
   É possível parar e remover um _service_ específico, passando seu nome no final do comando.
 
-  _ATENÇÃO: evite usar o comando `docker-compose down` durante o curso. Esse comando apagará todos os dados dos seus BD. Use apenas o `docker-compose stop`._
+  _ATENÇÃO: **evite** usar o comando `docker-compose down` durante o curso. Esse comando apagará todos os dados dos seus BD. Use apenas o comando `docker-compose stop`._

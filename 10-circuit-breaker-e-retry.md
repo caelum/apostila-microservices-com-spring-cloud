@@ -350,9 +350,9 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
   }
   ```
 
-2. No módulo `eats-common` do monólito, adicione o Spring Retry como dependência:
+2. No módulo `eats-application` do monólito, adicione o Spring Retry como dependência:
 
-  ####### fj33-eats-monolito-modular/eats/eats-common/pom.xml
+  ####### fj33-eats-monolito-modular/eats/eats-application/pom.xml
 
   ```xml
   <dependency>

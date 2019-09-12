@@ -1,353 +1,417 @@
 # Integração síncrona (e RESTful)
 
-## Exercício: cliente REST com RestTemplate do Spring
+## Cliente REST com RestTemplate do Spring
 
-1. No `eats-distancia-service`, crie um Controller chamado `RestaurantesController` no pacote `br.com.caelum.eats.distancia` com um método que insere um novo restaurante e outro que atualiza um restaurante existente. Defina mensagens de log em cada método.
+No `eats-distancia-service`, crie um Controller chamado `RestaurantesController` no pacote `br.com.caelum.eats.distancia` com um método que insere um novo restaurante e outro que atualiza um restaurante existente. Defina mensagens de log em cada método.
 
-  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RestaurantesController.java
+####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RestaurantesController.java
 
-  ```java
-  @RestController
-  @AllArgsConstructor
-  @Slf4j
-  public class RestaurantesController {
+```java
+@RestController
+@AllArgsConstructor
+@Slf4j
+class RestaurantesController {
 
-    private RestauranteMongoRepository repo;
+  private RestauranteRepository repo;
 
-    @PostMapping("/restaurantes")
-    public ResponseEntity<RestauranteMongo> adiciona(@RequestBody RestauranteMongo restaurante, UriComponentsBuilder uriBuilder) {
-      log.info("Insere novo restaurante: " + restaurante);
-      RestauranteMongo salvo = repo.insert(restaurante);
-      UriComponents uriComponents = uriBuilder.path("/restaurantes/{id}").buildAndExpand(salvo.getId());
-      URI uri = uriComponents.toUri();
-      return ResponseEntity.created(uri).contentType(MediaType.APPLICATION_JSON).body(salvo);
-    }
-
-    @PutMapping("/restaurantes/{id}")
-    public RestauranteMongo atualiza(@PathVariable Long id, @RequestBody RestauranteMongo restaurante) {
-      if (!repo.existsById(id)) {
-        throw new ResourceNotFoundException();
-      }
-      log.info("Atualiza restaurante: " + restaurante);
-      return repo.save(restaurante);
-    }
-
+  @PostMapping("/restaurantes")
+  ResponseEntity<Restaurante> adiciona(@RequestBody Restaurante restaurante, UriComponentsBuilder uriBuilder) {
+    log.info("Insere novo restaurante: " + restaurante);
+    Restaurante salvo = repo.insert(restaurante);
+    UriComponents uriComponents = uriBuilder.path("/restaurantes/{id}").buildAndExpand(salvo.getId());
+    URI uri = uriComponents.toUri();
+    return ResponseEntity.created(uri).contentType(MediaType.APPLICATION_JSON).body(salvo);
   }
-  ```
 
-  Certifique-se que os imports estão corretos:
-
-  ```java
-  import org.springframework.web.bind.annotation.PathVariable;
-  import org.springframework.web.bind.annotation.PostMapping;
-  import org.springframework.web.bind.annotation.PutMapping;
-  import org.springframework.web.bind.annotation.RequestBody;
-  import org.springframework.web.bind.annotation.RestController;
-
-  import br.com.caelum.eats.distancia.mongo.RestauranteMongo;
-  import br.com.caelum.eats.distancia.mongo.RestauranteMongoRepository;
-  import br.com.caelum.eats.exception.ResourceNotFoundException;
-  import lombok.AllArgsConstructor;
-  import lombok.extern.slf4j.Slf4j;
-  ```
-
-2. No `application.properties` do módulo `eats-application` do monólito, crie uma propriedade `configuracao.distancia.service.url` para indicar a URL do serviço de distância:
-
-  ####### fj33-eats-monolito-modular/eats/eats-application/src/main/resources/application.properties
-
-  ```properties
-  configuracao.distancia.service.url=http://localhost:8082
-  ```
-
-3. No módulo `eats-common` do monólito, crie uma classe `RestClientConfig` no pacote `br.com.caelum.eats`, que fornece um `RestTemplate` do Spring:
-
-  ####### fj33-eats-monolito-modular/eats/eats-common/src/main/java/br/com/caelum/eats/RestClientConfig.java
-
-  ```java
-  @Configuration
-  public class RestClientConfig {
-
-    @Bean
-    public RestTemplate restTemplate() {
-      return new RestTemplate();
-    }
-
-  }
-  ```
-
-  Faça os imports adequados:
-
-  ```java
-  import org.springframework.context.annotation.Bean;
-  import org.springframework.context.annotation.Configuration;
-  import org.springframework.web.client.RestTemplate;
-  ```
-
-4. No módulo `eats-restaurante` do monólito, crie uma classe `RestauranteParaServicoDeDistancia` no pacote `br.com.caelum.eats.restaurante` que contém apenas as informações adequadas para o serviço de distância. Crie um construtor que recebe um `Restaurante` e popula os dados necessários:
-
-  ####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/RestauranteParaServicoDeDistancia.java
-
-  ```java
-  @Data
-  @AllArgsConstructor
-  @NoArgsConstructor
-  class RestauranteParaServicoDeDistancia {
-
-    private Long id;
-    private String cep;
-    private Long tipoDeCozinhaId;
-
-    RestauranteParaServicoDeDistancia(Restaurante restaurante){
-      this(restaurante.getId(), restaurante.getCep(), restaurante.getTipoDeCozinha().getId());
-    }
-
-  }
-  ```
-
-  Observação: a anotação `@Data` do Lombok define um Java Bean com getters, setters para campos mutáveis, `equals` e `hashcode` e `toString`.
-
-5. Crie uma classe `DistanciaRestClient` no pacote `br.com.caelum.eats.restaurante` do módulo `eats-restaurante` do monólito. Defina como dependências um `RestTemplate` e uma `String` para armazenar a propriedade `configuracao.distancia.service.url`.
-
-  Anote a classe com `@Service` do Spring.
-
-  Defina métodos que chamam o serviço de distância para:
-
-  - inserir um novo restaurante aprovado, enviando um POST para `/restaurantes` com o `RestauranteParaServicoDeDistancia` como corpo da requisição
-  - atualizar um restaurante já existente, enviando um PUT para `/restaurantes/{id}`, com o `id` adequado e um `RestauranteParaServicoDeDistancia` no corpo da requisição
-
-  ####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/DistanciaRestClient.java
-
-  ```java
-  @Service
-  public class DistanciaRestClient {
-
-    private String distanciaServiceUrl;
-    private RestTemplate restTemplate;
-
-    public DistanciaRestClient(RestTemplate restTemplate,
-                                        @Value("${configuracao.distancia.service.url}") String distanciaServiceUrl) {
-      this.distanciaServiceUrl = distanciaServiceUrl;
-      this.restTemplate = restTemplate;
-    }
-
-    public void novoRestauranteAprovado(Restaurante restaurante) {
-      RestauranteParaServicoDeDistancia restauranteParaDistancia = new RestauranteParaServicoDeDistancia(restaurante);
-      String url = distanciaServiceUrl+"/restaurantes";
-      ResponseEntity<RestauranteParaServicoDeDistancia> responseEntity =
-          restTemplate.postForEntity(url, restauranteParaDistancia, RestauranteParaServicoDeDistancia.class);
-      HttpStatus statusCode = responseEntity.getStatusCode();
-      if (!HttpStatus.CREATED.equals(statusCode)) {
-        throw new RuntimeException("Status diferente do esperado: " + statusCode);
-      }
-    }
-
-    public void restauranteAtualizado(Restaurante restaurante) {
-      RestauranteParaServicoDeDistancia restauranteParaDistancia = new RestauranteParaServicoDeDistancia(restaurante);
-      String url = distanciaServiceUrl+"/restaurantes/" + restaurante.getId();
-      restTemplate.put(url, restauranteParaDistancia, RestauranteParaServicoDeDistancia.class);
-    }
-
-  }
-  ```
-
-  Os imports corretos são:
-
-  ```java
-  import org.springframework.beans.factory.annotation.Value;
-  import org.springframework.stereotype.Service;
-  import org.springframework.web.client.RestTemplate;
-  ```
-
-6. Altere a classe `RestauranteController` do módulo `eats-restaurante` do monólito para que:
-
-  - tenha um `DistanciaRestClient` como dependência
-  - no caso de aprovação de um restaurante, invoque o método `novoRestauranteAprovado` de `DistanciaRestClient`
-  - no caso de atualização do CEP ou tipo de cozinha de um restaurante já aprovado, invoque o método `restauranteAtualizado` de `DistanciaRestClient`
-
-  ####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/RestauranteController.java
-
-  ```java
-  // anotações ...
-  class RestauranteController {
-
-    private RestauranteRepository restauranteRepo;
-    private CardapioRepository cardapioRepo;
-
-    private DistanciaRestClient distanciaRestClient; // adicionado
-
-    // métodos omitidos ...
-
-    @PutMapping("/parceiros/restaurantes/{id}")
-    public Restaurante atualiza(@RequestBody Restaurante restaurante) {
-      Restaurante doBD = restauranteRepo.getOne(restaurante.getId());
-      restaurante.setUser(doBD.getUser());
-      restaurante.setAprovado(doBD.getAprovado());
-
-      // adicionado
-      if (doBD.getAprovado() &&
-              (cepDiferente(restaurante, doBD) || tipoDeCozinhaDiferente(restaurante, doBD))) {
-        distanciaRestClient.restauranteAtualizado(restaurante);
-      }
-
-      return restauranteRepo.save(restaurante);
-    }
-
-    // adicionado
-    private boolean tipoDeCozinhaDiferente(Restaurante restaurante, Restaurante doBD) {
-      return !doBD.getTipoDeCozinha().getId().equals(restaurante.getTipoDeCozinha().getId());
-    }
-
-    // adicionado
-    private boolean cepDiferente(Restaurante restaurante, Restaurante doBD) {
-      return !doBD.getCep().equals(restaurante.getCep());
-    }
-
-    // método omitido ...
-
-    @Transactional
-    @PatchMapping("/admin/restaurantes/{id}")
-    public void aprova(@PathVariable("id") Long id) {
-      restauranteRepo.aprovaPorId(id);
-
-      // adicionado
-      Restaurante restaurante = restauranteRepo.getOne(id);
-      distanciaRestClient.novoRestauranteAprovado(restaurante);
-    }
-
-  }
-  ```
-
-7. Teste a aprovação de novos restaurantes e a mudança de CEP ou tipo de cozinha de um restaurante existente. Verifique nos logs que o serviço de distância foi chamado.
-
-8 (opcional) Será que os métodos auxiliares `tipoDeCozinhaDiferente` e `cepDiferente` deveriam ficar em `RestauranteController` mesmo?
-
-## Exercício: cliente REST declarativo com Feign
-
-1. Adicione ao `PedidoController`, do módulo `eats-pedido` do monólito, um método que muda o status do pedido para _PAGO_:
-
-  ####### fj33-eats-monolito-modular/eats/eats-pedido/src/main/java/br/com/caelum/eats/pedido/PedidoController.java
-
-  ```java
-  @PutMapping("/pedidos/{id}/pago")
-  public void pago(@PathVariable("id") Long id) {
-    Pedido pedido = repo.porIdComItens(id);
-    if (pedido == null) {
+  @PutMapping("/restaurantes/{id}")
+  Restaurante atualiza(@PathVariable Long id, @RequestBody Restaurante restaurante) {
+    if (!repo.existsById(id)) {
       throw new ResourceNotFoundException();
     }
-    pedido.setStatus(Pedido.Status.PAGO);
-    repo.atualizaStatus(Pedido.Status.PAGO, pedido);
+    log.info("Atualiza restaurante: " + restaurante);
+    return repo.save(restaurante);
   }
-  ```
 
-2. No arquivo `application.properties` de `eats-pagamento-service`, adicione uma propriedade `configuracao.pedido.service.url` que contém a URL do monólito:
+}
+```
 
-  ####### eats-pagamento-service/src/main/resources/application.properties
+Certifique-se que os imports estão corretos:
 
-  ```properties
-  configuracao.pedido.service.url=http://localhost:8080
-  ```
+```java
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
-3. No `pom.xml` de `eats-pagamento-service`, adicione uma dependência ao _Spring Cloud_ na versão `Greenwich.RELEASE`, em `dependencyManagement`:
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+```
 
-  ####### eats-pagamento-service/pom.xml
+No `application.properties` do módulo `eats-application` do monólito, crie uma propriedade `configuracao.distancia.service.url` para indicar a URL do serviço de distância:
 
-  ```xml
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-dependencies</artifactId>
-        <version>Greenwich.RELEASE</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-  ```
+####### fj33-eats-monolito-modular/eats/eats-application/src/main/resources/application.properties
 
-  Feito isso, adicione o _starter_ do OpenFeign como dependência:
-  
-  ```xml
-  <dependency>
-    <groupId>org.springframework.cloud</groupId>
-    <artifactId>spring-cloud-starter-openfeign</artifactId>
-  </dependency>
-  ```
+```properties
+configuracao.distancia.service.url=http://localhost:8082
+```
 
-4. Anote a classe `EatsPagamentoServiceApplication` com `@EnableFeignClients` para habilitar o Feign:
+No módulo `eats-application` do monólito, crie uma classe `RestClientConfig` no pacote `br.com.caelum.eats`, que fornece um `RestTemplate` do Spring:
 
-  ####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/EatsPagamentoServiceApplication.java
+####### fj33-eats-monolito-modular/eats/eats-application/src/main/java/br/com/caelum/eats/RestClientConfig.java
 
-  ```java
-  @EnableFeignClients // adicionado
-  @SpringBootApplication
-  public class EatsPagamentoServiceApplication {
+```java
+@Configuration
+class RestClientConfig {
 
-    // código omitido ...
-
+  @Bean
+  RestTemplate restTemplate() {
+    return new RestTemplate();
   }
-  ```
 
-  O import correto é o seguinte:
+}
+```
 
-  ```java
-  import org.springframework.cloud.openfeign.EnableFeignClients;
-  ```
+Faça os imports adequados:
 
-4. Defina, no pacote `br.com.caelum.eats.pagamento` de `eats-pagamento-service`, uma interface `PedidoRestClient` com um método `avisaQueFoiPago`, anotados da seguinte maneira:
+```java
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
+```
 
-  ####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PedidoRestClient.java
+No módulo `eats-restaurante` do monólito, crie uma classe `RestauranteParaServicoDeDistancia` no pacote `br.com.caelum.eats.restaurante` que contém apenas as informações adequadas para o serviço de distância. Crie um construtor que recebe um `Restaurante` e popula os dados necessários:
 
-  ```java
-  @FeignClient(url="${configuracao.pedido.service.url}", name="pedido")
-  public interface PedidoRestClient {
+####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/RestauranteParaServicoDeDistancia.java
 
-    @PutMapping("/pedidos/{pedidoId}/pago")
-    public void avisaQueFoiPago(@PathVariable("pedidoId") Long pedidoId);
+```java
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+class RestauranteParaServicoDeDistancia {
 
+  private Long id;
+  private String cep;
+  private Long tipoDeCozinhaId;
+
+  RestauranteParaServicoDeDistancia(Restaurante restaurante){
+    this(restaurante.getId(), restaurante.getCep(), restaurante.getTipoDeCozinha().getId());
   }
-  ```
 
-  Ajuste os imports:
+}
+```
 
-  ```java
-  import org.springframework.cloud.openfeign.FeignClient;
-  import org.springframework.web.bind.annotation.PathVariable;
-  import org.springframework.web.bind.annotation.PutMapping;
-  ```
+Não esqueça de definir os imports:
 
-5. Em `PagamentoController`, do serviço de pagamento, defina um `PedidoRestClient` como atributo e use o método `avisaQueFoiPago` passando o id do pedido:
+```java
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+```
 
-  ####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoController.java
+Observação: a anotação `@Data` do Lombok define um Java Bean com getters, setters para campos mutáveis, `equals` e `hashcode` e `toString`.
 
-  ```java
-  // anotações ...
-  public class PagamentoController {
+Crie uma classe `DistanciaRestClient` no pacote `br.com.caelum.eats.restaurante` do módulo `eats-restaurante` do monólito. Defina como dependências um `RestTemplate` e uma `String` para armazenar a propriedade `configuracao.distancia.service.url`.
 
-    private PagamentoRepository pagamentoRepo;
-    private PedidoRestClient pedidoClient; // adicionado
+Anote a classe com `@Service` do Spring.
 
-    // código omitido ...
+Defina métodos que chamam o serviço de distância para:
 
-    @PutMapping("/{id}")
-    public PagamentoDto confirma(@PathVariable Long id) {
-      Pagamento pagamento = pagamentoRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException());
-      pagamento.setStatus(Pagamento.Status.CONFIRMADO);
-      pagamentoRepo.save(pagamento);
+- inserir um novo restaurante aprovado, enviando um POST para `/restaurantes` com o `RestauranteParaServicoDeDistancia` como corpo da requisição
+- atualizar um restaurante já existente, enviando um PUT para `/restaurantes/{id}`, com o `id` adequado e um `RestauranteParaServicoDeDistancia` no corpo da requisição
 
-      // adicionado
-      Long pedidoId = pagamento.getPedidoId();
-      pedidoClient.avisaQueFoiPago(pedidoId);
+####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/DistanciaRestClient.java
 
-      return new PagamentoDto(pagamento);
+```java
+@Service
+class DistanciaRestClient {
+
+  private String distanciaServiceUrl;
+  private RestTemplate restTemplate;
+
+  DistanciaRestClient(RestTemplate restTemplate,
+                                      @Value("${configuracao.distancia.service.url}") String distanciaServiceUrl) {
+    this.distanciaServiceUrl = distanciaServiceUrl;
+    this.restTemplate = restTemplate;
+  }
+
+  void novoRestauranteAprovado(Restaurante restaurante) {
+    RestauranteParaServicoDeDistancia restauranteParaDistancia = new RestauranteParaServicoDeDistancia(restaurante);
+    String url = distanciaServiceUrl+"/restaurantes";
+    ResponseEntity<RestauranteParaServicoDeDistancia> responseEntity =
+        restTemplate.postForEntity(url, restauranteParaDistancia, RestauranteParaServicoDeDistancia.class);
+    HttpStatus statusCode = responseEntity.getStatusCode();
+    if (!HttpStatus.CREATED.equals(statusCode)) {
+      throw new RuntimeException("Status diferente do esperado: " + statusCode);
+    }
+  }
+
+  void restauranteAtualizado(Restaurante restaurante) {
+    RestauranteParaServicoDeDistancia restauranteParaDistancia = new RestauranteParaServicoDeDistancia(restaurante);
+    String url = distanciaServiceUrl+"/restaurantes/" + restaurante.getId();
+    restTemplate.put(url, restauranteParaDistancia, RestauranteParaServicoDeDistancia.class);
+  }
+
+}
+```
+
+Os imports corretos são:
+
+```java
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+```
+
+Altere a classe `RestauranteController` do módulo `eats-restaurante` do monólito para que:
+
+- tenha um `DistanciaRestClient` como dependência
+- no caso de aprovação de um restaurante, invoque o método `novoRestauranteAprovado` de `DistanciaRestClient`
+- no caso de atualização do CEP ou tipo de cozinha de um restaurante já aprovado, invoque o método `restauranteAtualizado` de `DistanciaRestClient`
+
+####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/RestauranteController.java
+
+```java
+// anotações ...
+class RestauranteController {
+
+  private RestauranteRepository restauranteRepo;
+  private CardapioRepository cardapioRepo;
+  private DistanciaRestClient distanciaRestClient; // adicionado
+
+  // métodos omitidos ...
+
+  @PutMapping("/parceiros/restaurantes/{id}")
+  Restaurante atualiza(@RequestBody Restaurante restaurante) {
+    Restaurante doBD = restauranteRepo.getOne(restaurante.getId());
+    restaurante.setUser(doBD.getUser());
+    restaurante.setAprovado(doBD.getAprovado());
+
+    Restaurante salvo = restauranteRepo.save(restaurante);
+
+    if (restaurante.getAprovado() &&
+              (cepDiferente(restaurante, doBD) || tipoDeCozinhaDiferente(restaurante, doBD))) {
+
+      distanciaRestClient.restauranteAtualizado(restaurante);
+
     }
 
-    // restante do código ...
-
+    return salvo;
   }
+
+  // método omitido ...
+
+  @Transactional
+  @PatchMapping("/admin/restaurantes/{id}")
+  void aprova(@PathVariable("id") Long id) {
+    restauranteRepo.aprovaPorId(id);
+
+    // adicionado
+    Restaurante restaurante = restauranteRepo.getOne(id);
+    distanciaRestClient.novoRestauranteAprovado(restaurante);
+  }
+
+  private boolean tipoDeCozinhaDiferente(Restaurante restaurante, Restaurante doBD) {
+    return !doBD.getTipoDeCozinha().getId().equals(restaurante.getTipoDeCozinha().getId());
+  }
+
+  private boolean cepDiferente(Restaurante restaurante, Restaurante doBD) {
+    return !doBD.getCep().equals(restaurante.getCep());
+  }
+
+}
+```
+
+Observação: pensando em design de código, será que os métodos auxiliares `tipoDeCozinhaDiferente` e `cepDiferente` deveriam ficar em `RestauranteController` mesmo?
+
+## Exercício: Testando a integração entre o módulo de restaurantes do monólito e o serviço de distância
+
+1. Interrompa o monólito e o serviço de distância.
+
+  Em um terminal, vá até a branch `cap6-integracao-monolito-distancia-com-rest-template` dos projetos `fj33-eats-monolito-modular` e `fj33-eats-distancia-service`:
+
+  ```sh
+  cd ~/Desktop/fj33-eats-monolito-modular
+  git checkout -f cap6-integracao-monolito-distancia-com-rest-template
+  
+  cd ~/Desktop/fj33-eats-distancia-service
+  git checkout -f cap6-integracao-monolito-distancia-com-rest-template
   ```
 
-6. Certifique-se que o serviço de pagamento foi reiniciado e que os demais serviços e o front-end estão no ar. Faça um novo pedido, realizando o pagamento. Veja que o status do pedido fica como _PAGO_.
+  Suba o monólito executando a classe `EatsApplication` e o serviço de distância por meio da classe `EatsDistanciaServiceApplication`.
+
+2. Efetue login como um dono de restaurante.
+
+  O restaurante Long Fu, que já vem pré-cadastrado, tem o usuário `longfu` e a senha `123456`.
+
+  Faça uma mudança no tipo de cozinha ou CEP do restaurante.
+
+  Verifique nos logs que o restaurante foi atualizado no serviço de distância.
+
+  Se desejar, cadastre um novo restaurante. Então, faça login como Adminstrador do Caelum Eats: o usuário é `admin` e a senha é `123456`.
+  
+  Aprove o novo restaurante. O serviço de distância deve ter sido chamado. Veja nos logs.
+
+  No diretório do `docker-compose.yml`, acesse o database de distância no MongoDB com o Mongo Shell:
+
+  ```sh
+  cd ~/Desktop
+  docker-compose exec mongo.distancia mongo eats_distancia
+  ```
+
+  Então, veja o conteúdo da collection restaurantes com o comando:
+
+  ```js
+  db.restaurantes.find();
+  ```
+
+## Cliente REST declarativo com Feign
+
+Adicione ao `PedidoController`, do módulo `eats-pedido` do monólito, um método que muda o status do pedido para _PAGO_:
+
+####### fj33-eats-monolito-modular/eats/eats-pedido/src/main/java/br/com/caelum/eats/pedido/PedidoController.java
+
+```java
+@PutMapping("/pedidos/{id}/pago")
+void pago(@PathVariable("id") Long id) {
+  Pedido pedido = repo.porIdComItens(id);
+  if (pedido == null) {
+    throw new ResourceNotFoundException();
+  }
+  pedido.setStatus(Pedido.Status.PAGO);
+  repo.atualizaStatus(Pedido.Status.PAGO, pedido);
+}
+```
+
+No arquivo `application.properties` de `eats-pagamento-service`, adicione uma propriedade `configuracao.pedido.service.url` que contém a URL do monólito:
+
+####### eats-pagamento-service/src/main/resources/application.properties
+
+```properties
+configuracao.pedido.service.url=http://localhost:8080
+```
+
+No `pom.xml` de `eats-pagamento-service`, adicione uma dependência ao _Spring Cloud_ na versão `Greenwich.SR2`, em `dependencyManagement`:
+
+####### eats-pagamento-service/pom.xml
+
+```xml
+<dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-dependencies</artifactId>
+      <version>Greenwich.SR2</version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+  </dependencies>
+</dependencyManagement>
+```
+
+Feito isso, adicione o _starter_ do OpenFeign como dependência:
+
+```xml
+<dependency>
+  <groupId>org.springframework.cloud</groupId>
+  <artifactId>spring-cloud-starter-openfeign</artifactId>
+</dependency>
+```
+
+Anote a classe `EatsPagamentoServiceApplication` com `@EnableFeignClients` para habilitar o Feign:
+
+####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/EatsPagamentoServiceApplication.java
+
+```java
+@EnableFeignClients // adicionado
+@SpringBootApplication
+public class EatsPagamentoServiceApplication {
+
+  // código omitido ...
+
+}
+```
+
+O import correto é o seguinte:
+
+```java
+import org.springframework.cloud.openfeign.EnableFeignClients;
+```
+
+Defina, no pacote `br.com.caelum.eats.pagamento` de `eats-pagamento-service`, uma interface `PedidoRestClient` com um método `avisaQueFoiPago`, anotados da seguinte maneira:
+
+####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PedidoRestClient.java
+
+```java
+@FeignClient(url="${configuracao.pedido.service.url}", name="pedido")
+interface PedidoRestClient {
+
+  @PutMapping("/pedidos/{pedidoId}/pago")
+  void avisaQueFoiPago(@PathVariable("pedidoId") Long pedidoId);
+
+}
+```
+
+Ajuste os imports:
+
+```java
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+```
+
+Em `PagamentoController`, do serviço de pagamento, defina um `PedidoRestClient` como atributo e use o método `avisaQueFoiPago` passando o id do pedido:
+
+####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoController.java
+
+```java
+// anotações ...
+public class PagamentoController {
+
+  private PagamentoRepository pagamentoRepo;
+  private PedidoRestClient pedidoClient; // adicionado
+
+  // código omitido ...
+
+  @PutMapping("/{id}")
+  public PagamentoDto confirma(@PathVariable Long id) {
+    Pagamento pagamento = pagamentoRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException());
+    pagamento.setStatus(Pagamento.Status.CONFIRMADO);
+    pagamentoRepo.save(pagamento);
+
+    // adicionado
+    Long pedidoId = pagamento.getPedidoId();
+    pedidoClient.avisaQueFoiPago(pedidoId);
+
+    return new PagamentoDto(pagamento);
+  }
+
+  // restante do código ...
+
+}
+```
+
+## Exercício: Testando a integração entre o serviço de pagamento e o módulo de pedidos do monólito
+
+1. Interrompa o monólito e o serviço de pagamentos.
+
+  Em um terminal, vá até a branch `cap6-integracao-pagamento-monolito-com-feign` dos projetos `fj33-eats-monolito-modular` e `fj33-eats-pagamento-service`:
+
+  ```sh
+  cd ~/Desktop/fj33-eats-monolito-modular
+  git checkout -f cap6-integracao-pagamento-monolito-com-feign
+  
+  cd ~/Desktop/fj33-eats-pagamento-service
+  git checkout -f cap6-integracao-pagamento-monolito-com-feign
+  ```
+
+  Suba o monólito executando a classe `EatsApplication` e o serviço de pagamentos por meio da classe `EatsPagamentoServiceApplication`.
+
+2. Certifique-se que o serviço de pagamento foi reiniciado e que os demais serviços e o front-end estão no ar.
+
+  Faça um novo pedido, realizando e confirmando um pagamento.
+  
+  Veja que, depois dessa mudança, o status do pedido fica como **_PAGO_** e não apenas como _REALIZADO_.
 
 ## Exercício opcional: Spring HATEOAS e HAL
 

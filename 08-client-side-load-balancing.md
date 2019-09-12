@@ -80,9 +80,9 @@
   </dependencyManagement>
   ```
 
-2. Adicione o _starter_ do Ribbon como dependência do módulo `eats-common` do monólito:
+2. Adicione o _starter_ do Ribbon como dependência do módulo `eats-application` do monólito:
   
-  ####### fj33-eats-monolito-modular/eats/eats-common/pom.xml
+  ####### fj33-eats-monolito-modular/eats/eats-application/pom.xml
 
   ```xml
   <dependency>
@@ -91,9 +91,9 @@
   </dependency>
   ```
 
-3. Para que a instância do `RestTemplate` configurada no módulo `eats-common` do monólito use o Ribbon, anote o método `restTemplate` de `RestClientConfig` com `@LoadBalanced`:
+3. Para que a instância do `RestTemplate` configurada no módulo `eats-application` do monólito use o Ribbon, anote o método `restTemplate` de `RestClientConfig` com `@LoadBalanced`:
 
-  ####### fj33-eats-monolito-modular/eats/eats-common/src/main/java/br/com/caelum/eats/RestClientConfig.java
+  ####### fj33-eats-monolito-modular/eats/eats-application/src/main/java/br/com/caelum/eats/RestClientConfig.java
 
   ```java
   @Configuration

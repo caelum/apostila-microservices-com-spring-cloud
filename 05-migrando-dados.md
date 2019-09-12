@@ -1,84 +1,112 @@
 # Migrando dados
 
-## Exercício: separando schema do BD de pagamentos do monólito
+## Separando schema do BD de pagamentos do monólito
 
-1. Antes de começar o exercício, é importante que o serviço de pagamentos esteja parado. Certifique-se que a classe `EatsPagamentoServiceApplication` **não** esteja rodando.
-2. O Flyway será usado como ferramenta de migração de dados do `eats-pagamento-service`. Para isso, vamos alterar o `pom.xml`:
+O Flyway será usado como ferramenta de migração de dados do `eats-pagamento-service`. Deve ser adicionada uma dependência no `pom.xml`:
 
-  ####### eats-pagamento-service/pom.xml
+####### eats-pagamento-service/pom.xml
 
-  ```xml
-  <dependency>
-    <groupId>org.flywaydb</groupId>
-    <artifactId>flyway-core</artifactId>
-  </dependency>
+```xml
+<dependency>
+  <groupId>org.flywaydb</groupId>
+  <artifactId>flyway-core</artifactId>
+</dependency>
+```
+
+O database do serviço de pagamentos precisa ser modificado para um novo. Podemos chamá-lo de `eats_pagamento`.
+
+####### eats-pagamento-service/src/main/resources/application.properties
+
+```properties
+s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶u̶r̶l̶=̶j̶d̶b̶c̶:̶m̶y̶s̶q̶l̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶/̶e̶a̶t̶s̶?̶c̶r̶e̶a̶t̶e̶D̶a̶t̶a̶b̶a̶s̶e̶I̶f̶N̶o̶t̶E̶x̶i̶s̶t̶=̶t̶r̶u̶e̶
+spring.datasource.url=jdbc:mysql://localhost/eats_pagamento?createDatabaseIfNotExist=true
+```
+
+O mesmo usuário `root` deve ter acesso a ambos os databases: `eats`, do monólito, e `eats_pagamento`, do serviço de pagamentos. Dessa maneira, é possível executar scripts que migram dados de um database para outro.
+
+Numa nova pasta `db/migration` em  `src/main/resources` deve ser criada uma primeira migration, que cria a tabela de `pagamento`. O arquivo pode ter o nome `V0001__cria-tabela-pagamento.sql` e o seguinte conteúdo:
+
+####### eats-pagamento-service/src/main/resources/db/migration/V0001__cria-tabela-pagamento.sql
+
+```sql
+CREATE TABLE pagamento (
+  id bigint(20) NOT NULL AUTO_INCREMENT,
+  valor decimal(19,2) NOT NULL,
+  nome varchar(100) DEFAULT NULL,
+  numero varchar(19) DEFAULT NULL,
+  expiracao varchar(7) NOT NULL,
+  codigo varchar(3) DEFAULT NULL,
+  status varchar(255) NOT NULL,
+  forma_de_pagamento_id bigint(20) NOT NULL,
+  pedido_id bigint(20) NOT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+```
+
+O conteúdo acima pode ser encontrado na seguinte URL: https://gitlab.com/snippets/1859564
+
+Uma segunda migration, de nome `V0002__migra-dados-de-pagamento.sql`, obtem os dados do database `eats`, do monólito, e os insere no database `eats_pagamento`. Crie o arquivo  em `db/migration`, conforme a seguir:
+
+####### eats-pagamento-service/src/main/resources/db/migration/V0002__migra-dados-de-pagamento.sql
+
+```sql
+insert into eats_pagamento.pagamento
+  (id, valor, nome, numero, expiracao, codigo, status, forma_de_pagamento_id, pedido_id)
+    select id, valor, nome, numero, expiracao, codigo, status, forma_de_pagamento_id, pedido_id
+      from eats.pagamento;
+```
+
+O trecho de código acima pode ser encontrado em: https://gitlab.com/snippets/1859568
+
+Essa migração só é possível porque o usuário tem acesso aos dois databases.
+
+Após executar `EatsPagamentoServiceApplication`, nos logs, devem aparecer informações sobre a execução dos scripts `.sql`. Algo como:
+
+```txt
+2019-05-22 18:33:56.439  INFO 30484 --- [  restartedMain] o.f.c.internal.license.VersionPrinter    : Flyway Community Edition 5.2.4 by Boxfuse
+2019-05-22 18:33:56.448  INFO 30484 --- [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2019-05-22 18:33:56.632  INFO 30484 --- [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2019-05-22 18:33:56.635  INFO 30484 --- [  restartedMain] o.f.c.internal.database.DatabaseFactory  : Database: jdbc:mysql://localhost/eats_pagamento (MySQL 5.6)
+2019-05-22 18:33:56.708  INFO 30484 --- [  restartedMain] o.f.core.internal.command.DbValidate     : Successfully validated 2 migrations (execution time 00:00.016s)
+2019-05-22 18:33:56.840  INFO 30484 --- [  restartedMain] o.f.c.i.s.JdbcTableSchemaHistory         : Creating Schema History table: `eats_pagamento`.`flyway_schema_history`
+2019-05-22 18:33:57.346  INFO 30484 --- [  restartedMain] o.f.core.internal.command.DbMigrate      : Current version of schema `eats_pagamento`: << Empty Schema >>
+2019-05-22 18:33:57.349  INFO 30484 --- [  restartedMain] o.f.core.internal.command.DbMigrate      : Migrating schema `eats_pagamento` to version 0001 - cria-tabela-pagamento
+2019-05-22 18:33:57.596  INFO 30484 --- [  restartedMain] o.f.core.internal.command.DbMigrate      : Migrating schema `eats_pagamento` to version 0002 - migra-dados-de-pagamento
+2019-05-22 18:33:57.650  INFO 30484 --- [  restartedMain] o.f.core.internal.command.DbMigrate      : Successfully applied 2 migrations to schema `eats_pagamento` (execution time 00:00.810s)
+```
+
+Para verificar se o conteúdo do database `eats_pagamento` condiz com o esperado, podemos acessar o MySQL em um Terminal:
+
+```sh
+mysql -u <SEU USUÁRIO> -p eats_pagamento
+```
+
+`<SEU USUÁRIO>` deve ser trocado pelo usuário do banco de dados. Deve ser solicitada uma senha.
+
+Dentro do MySQL, deve ser executada a seguinte query:
+
+```sql
+select * from pagamento;
+```
+
+Os pagamentos devem ter sido migrados.
+
+![Schema separado para o BD de pagamentos {w=35}](imagens/05-migrando-dados/separando-schema-do-bd-de-pagamentos.png)
+
+## Exercício: migrando dados de pagamento para schema separado
+
+1. Pare a execução de `EatsPagamentoServiceApplication`.
+
+  Obtenha as configurações e scripts de migração para outro schema da branch `cap5_migrando_pagamentos_para_schema_separado` do serviço de pagamentos:
+
+  ```sh
+  cd ~/Desktop/fj33-eats-pagamento-service
+  git checkout -f cap5_migrando_pagamentos_para_schema_separado
   ```
 
-3. Vamos modificar para `eats_pagamento` o database que o serviço de pagamentos utiliza, alterando o `application.properties`:
+  Execute `EatsPagamentoServiceApplication`. Observe o resultado da execução das migrations nos logs.
 
-  ####### eats-pagamento-service/src/main/resources/application.properties
-
-  ```properties
-  s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶u̶r̶l̶=̶j̶d̶b̶c̶:̶m̶y̶s̶q̶l̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶/̶e̶a̶t̶s̶?̶c̶r̶e̶a̶t̶e̶D̶a̶t̶a̶b̶a̶s̶e̶I̶f̶N̶o̶t̶E̶x̶i̶s̶t̶=̶t̶r̶u̶e̶
-  spring.datasource.url=jdbc:mysql://localhost/eats_pagamento?createDatabaseIfNotExist=true
-  ```
-
-  Mantenha o mesmo usuário, que terá acesso a ambos os databases: `eats`, do monólito, e `eats_pagamento`, do serviço de pagamentos.
-
-4. Crie uma pasta `db` em `src/main/resources`. Dentro da pasta criada, crie uma outra chamada `migration`.
-
-  Vamos, então, criar uma primeira migration, que cria a tabela de `pagamento`. Em `db/migration`, crie um arquivo com o nome `V0001__cria-tabela-pagamento.sql` e o seguinte conteúdo:
-
-  ####### eats-pagamento-service/src/main/resources/db/migration/V0001__cria-tabela-pagamento.sql
-
-  ```sql
-  CREATE TABLE pagamento (
-    id bigint(20) NOT NULL AUTO_INCREMENT,
-    valor decimal(19,2) NOT NULL,
-    nome varchar(100) DEFAULT NULL,
-    numero varchar(19) DEFAULT NULL,
-    expiracao varchar(7) NOT NULL,
-    codigo varchar(3) DEFAULT NULL,
-    status varchar(255) NOT NULL,
-    forma_de_pagamento_id bigint(20) NOT NULL,
-    pedido_id bigint(20) NOT NULL,
-    PRIMARY KEY (id)
-  ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-  ```
-
-  Se você achar que é muita digitação, copie o conteúdo acima da seguinte URL: https://gitlab.com/snippets/1859564
-
-5. Então, vamos criar uma segunda migration, que obtem os dados do database `eats`, do monólito, e os insere no database `eats_pagamento`. Crie o arquivo `V0002__migra-dados-de-pagamento.sql` em `db/migration`, conforme a seguir:
-
-  ####### eats-pagamento-service/src/main/resources/db/migration/V0002__migra-dados-de-pagamento.sql
-
-  ```sql
-  insert into eats_pagamento.pagamento
-    (id, valor, nome, numero, expiracao, codigo, status, forma_de_pagamento_id, pedido_id)
-      select id, valor, nome, numero, expiracao, codigo, status, forma_de_pagamento_id, pedido_id
-        from eats.pagamento;
-  ```
-
-  O trecho de código acima pode ser encontrado em: https://gitlab.com/snippets/1859568
-
-  Essa migração só é possível porque o usuário tem acesso aos dois databases.
-
-6. Execute `EatsPagamentoServiceApplication`. Nos logs, devem aparecer informações sobre a execução dos scripts `.sql`. Algo como:
-
-  ```txt
-  2019-05-22 18:33:56.439  INFO 30484 --- [  restartedMain] o.f.c.internal.license.VersionPrinter    : Flyway Community Edition 5.2.4 by Boxfuse
-  2019-05-22 18:33:56.448  INFO 30484 --- [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
-  2019-05-22 18:33:56.632  INFO 30484 --- [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
-  2019-05-22 18:33:56.635  INFO 30484 --- [  restartedMain] o.f.c.internal.database.DatabaseFactory  : Database: jdbc:mysql://localhost/eats_pagamento (MySQL 5.6)
-  2019-05-22 18:33:56.708  INFO 30484 --- [  restartedMain] o.f.core.internal.command.DbValidate     : Successfully validated 2 migrations (execution time 00:00.016s)
-  2019-05-22 18:33:56.840  INFO 30484 --- [  restartedMain] o.f.c.i.s.JdbcTableSchemaHistory         : Creating Schema History table: `eats_pagamento`.`flyway_schema_history`
-  2019-05-22 18:33:57.346  INFO 30484 --- [  restartedMain] o.f.core.internal.command.DbMigrate      : Current version of schema `eats_pagamento`: << Empty Schema >>
-  2019-05-22 18:33:57.349  INFO 30484 --- [  restartedMain] o.f.core.internal.command.DbMigrate      : Migrating schema `eats_pagamento` to version 0001 - cria-tabela-pagamento
-  2019-05-22 18:33:57.596  INFO 30484 --- [  restartedMain] o.f.core.internal.command.DbMigrate      : Migrating schema `eats_pagamento` to version 0002 - migra-dados-de-pagamento
-  2019-05-22 18:33:57.650  INFO 30484 --- [  restartedMain] o.f.core.internal.command.DbMigrate      : Successfully applied 2 migrations to schema `eats_pagamento` (execution time 00:00.810s)
-  ```
-
-7. Verifique se o conteúdo do database `eats_pagamento` condiz com o esperado, digitando os seguintes comandos em um Terminal:
+2. Verifique se o conteúdo do database `eats_pagamento` condiz com o esperado, digitando os seguintes comandos em um Terminal:
 
   ```sh
   mysql -u <SEU USUÁRIO> -p eats_pagamento
@@ -117,6 +145,14 @@
     - `--quick`, que lê os registros um a um
     - `--set-charset`, que adiciona `default_character_set` ao dump
 
+  > Caso o MYSQL monolítico esteja dockerizado, execute o comando `mysqldump` pelo Docker:
+  > 
+  > ```sh
+  >  docker exec -it <NOME-DO-CONTAINER> mysqldump -u root -p --opt eats_pagamento > eats_pagamento.sql
+  > ```
+  > 
+  > O valor de `<NOME-DO-CONTAINER>` deve ser o nome do container do MySQL do monólito, que pode ser descoberto com o comando `docker ps`.
+
 2. Garanta que o container MySQL do serviço de pagamentos está sendo executado. Para isso, execute em um Terminal:
 
   ```sh
@@ -135,6 +171,27 @@
 
   Quando for solicitada a senha, informe a que definimos no arquivo do Docker Compose: `pagamento123`.
 
+  > No caso do comando anterior não funcionar, copie o arquivo `eats_pagamento.sql` para o container do MySQL de pagamentos usando o Docker:
+  > 
+  > ```sh
+  > docker cp eats_pagamento.sql <NOME-DO-CONTAINER>:/eats_pagamento.sql
+  > ```
+  >
+  >  Então, execute o `bash` no container do MySQL de pagamentos:
+  > 
+  > ```sh
+  > docker exec -it <NOME-DO-CONTAINER> bash
+  > ```
+  > 
+  > Finalmente, dentro do container do MySQL de pagamentos, faça o import do dump:
+  > 
+  > ```
+  > mysql -upagamento -p < eats_pagamento.sql
+  > ```
+  >
+  > Lembrando que o `<NOME-DO-CONTAINER>` pode ser descoberto com um `docker ps`.
+
+
 4. Para verificar se a importação do dump foi realizada com sucesso, vamos acessar o comando `mysql` sem passar nenhum arquivo:
 
   ```sh
@@ -144,6 +201,19 @@
   Informe a senha `pagamento123`.
 
   Perceba que o MySQL deve estar na versão _5.7.26 MySQL Community Server (GPL)_, a que definimos no arquivo do Docker Compose.
+
+  > Se o comando `mysql` não funcionar, execute o `bash` no container do MySQL de pagamentos:
+  > 
+  > ```sh
+  > docker exec -it <NOME-DO-CONTAINER> bash
+  > ```
+  > 
+  > Dentro do container, execute o comando `mysql`:
+  > 
+  > ```sh
+  > mysql -upagamento -p
+  > ```
+  >
 
   Digite o seguinte comando SQL e verifique o resultado:
 
@@ -155,26 +225,39 @@
 
   Para sair, digite `exit`.
 
-## Exercício: apontando serviço de pagamentos para o BD específico
+## Apontando serviço de pagamentos para o BD específico
 
-1. Altere a URL, usuário e senha de BD do serviço de pagamentos, para que apontem para o container Docker do `mysql.pagamento`:
+O serviço de pagamentos deve deixar de usar o MySQL do monólito e passar a usar a sua própria instância do MySQL, que contém seu próprio schema e apenas os dados necessários.
 
-  ####### eats-pagamento-service/src/main/resources/application.properties
+Para isso, basta alterarmos a URL, usuário e senha de BD do serviço de pagamentos, para que apontem para o container Docker do `mysql.pagamento`:
 
-  ```properties
-  s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶u̶r̶l̶=̶j̶d̶b̶c̶:̶m̶y̶s̶q̶l̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶/̶e̶a̶t̶s̶_̶p̶a̶g̶a̶m̶e̶n̶t̶o̶?̶c̶r̶e̶a̶t̶e̶D̶a̶t̶a̶b̶a̶s̶e̶I̶f̶N̶o̶t̶E̶x̶i̶s̶t̶=̶t̶r̶u̶e̶
-  spring.datasource.url=jdbc:mysql://localhost:3307/eats_pagamento?createDatabaseIfNotExist=true
+####### eats-pagamento-service/src/main/resources/application.properties
 
-  s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶u̶s̶e̶r̶n̶a̶m̶e̶=̶<̶S̶E̶U̶ ̶U̶S̶U̶A̶R̶I̶O̶>̶
-  spring.datasource.username=pagamento
+```properties
+s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶u̶r̶l̶=̶j̶d̶b̶c̶:̶m̶y̶s̶q̶l̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶/̶e̶a̶t̶s̶_̶p̶a̶g̶a̶m̶e̶n̶t̶o̶?̶c̶r̶e̶a̶t̶e̶D̶a̶t̶a̶b̶a̶s̶e̶I̶f̶N̶o̶t̶E̶x̶i̶s̶t̶=̶t̶r̶u̶e̶
+spring.datasource.url=jdbc:mysql://localhost:3307/eats_pagamento?createDatabaseIfNotExist=true
 
-  s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶p̶a̶s̶s̶w̶o̶r̶d̶=̶<̶S̶U̶A̶ ̶S̶E̶N̶H̶A̶>̶
-  spring.datasource.password=pagamento123
+s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶u̶s̶e̶r̶n̶a̶m̶e̶=̶<̶S̶E̶U̶ ̶U̶S̶U̶A̶R̶I̶O̶>̶
+spring.datasource.username=pagamento
+
+s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶p̶a̶s̶s̶w̶o̶r̶d̶=̶<̶S̶U̶A̶ ̶S̶E̶N̶H̶A̶>̶
+spring.datasource.password=pagamento123
+```
+
+Note que a porta `3307` foi incluída na URL, mas mantivemos ainda `localhost`.
+
+## Exercício: fazendo serviço de pagamentos apontar para o BD específico
+
+1. Obtenha as alterações no datasource do serviço de pagamentos da branch `cap5_apontando_pagamentos_para_BD_proprio`:
+
+  ```sh
+  cd ~/Desktop/fj33-eats-pagamento-service
+  git checkout -f cap5_apontando_pagamentos_para_BD_proprio
   ```
 
-  Note que a porta `3307` foi incluída na URL, mas mantivemos ainda `localhost`.
+  Execute `EatsPagamentoServiceApplication`.
 
-2. Com a classe `EatsPagamentoServiceApplication` sendo executada, abra um Terminal e crie um novo pagamento:
+2. Abra um Terminal e crie um novo pagamento:
 
    ```sh
   curl -X POST
@@ -192,85 +275,40 @@
 
 4. (opcional) Apague a tabela `pagamento` do database `eats`, do monólito. Remova também o database `eats_pagamento` do MySQL do monólito. Atenção: muito cuidado para não remover dados indesejados!
 
+## Exercício: migrando dados de restaurantes do MySQL para o MongoDB
 
-## Exercício: simplificando o restaurante do serviço de distância
+1. Em um Terminal, acesse o MySQL do monólito com o usuário `root`, já acessando `eats`, o database monolítico:
 
-1. O `eats-distancia-service` necessita apenas de um subconjunto das informações do restaurante: o `id`, o `cep`, se o restaurante está `aprovado` e o `tipoDeCozinhaId`.
-
-  Enxugue a classe `Restaurante` do pacote `br.com.caelum.eats.distancia`, deixando apenas as informações realmente necessárias:
-
-  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/Restaurante.java
-
-  ```java
-  // anotações ...
-  public class Restaurante {
-
-    @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
-    private Long id;
-
-    @̶N̶o̶t̶B̶l̶a̶n̶k̶ ̶@̶S̶i̶z̶e̶(̶m̶a̶x̶=̶1̶8̶)̶
-    p̶r̶i̶v̶a̶t̶e̶ ̶S̶t̶r̶i̶n̶g̶ ̶c̶n̶p̶j̶;̶
-
-    @̶N̶o̶t̶B̶l̶a̶n̶k̶ ̶@̶S̶i̶z̶e̶(̶m̶a̶x̶=̶2̶5̶5̶)̶
-    p̶r̶i̶v̶a̶t̶e̶ ̶S̶t̶r̶i̶n̶g̶ ̶n̶o̶m̶e̶;̶ 
-
-    @̶S̶i̶z̶e̶(̶m̶a̶x̶=̶1̶0̶0̶0̶)̶
-    p̶r̶i̶v̶a̶t̶e̶ ̶S̶t̶r̶i̶n̶g̶ ̶d̶e̶s̶c̶r̶i̶c̶a̶o̶;̶
-
-    @̶N̶o̶t̶B̶l̶a̶n̶k̶ ̶@̶S̶i̶z̶e̶(̶m̶a̶x̶=̶9̶)̶
-    private String cep;
-
-    @̶N̶o̶t̶B̶l̶a̶n̶k̶ ̶@̶S̶i̶z̶e̶(̶m̶a̶x̶=̶3̶0̶0̶)̶
-    p̶r̶i̶v̶a̶t̶e̶ ̶S̶t̶r̶i̶n̶g̶ ̶e̶n̶d̶e̶r̶e̶c̶o̶;̶
-
-    @̶P̶o̶s̶i̶t̶i̶v̶e̶
-    ̶p̶r̶i̶v̶a̶t̶e̶ ̶B̶i̶g̶D̶e̶c̶i̶m̶a̶l̶ ̶t̶a̶x̶a̶D̶e̶E̶n̶t̶r̶e̶g̶a̶E̶m̶R̶e̶a̶i̶s̶;̶
-
-    @̶P̶o̶s̶i̶t̶i̶v̶e̶ ̶@̶M̶i̶n̶(̶1̶0̶)̶ ̶@̶M̶a̶x̶(̶1̶8̶0̶)̶
-    p̶r̶i̶v̶a̶t̶e̶ ̶I̶n̶t̶e̶g̶e̶r̶ ̶t̶e̶m̶p̶o̶D̶e̶E̶n̶t̶r̶e̶g̶a̶M̶i̶n̶i̶m̶o̶E̶m̶M̶i̶n̶u̶t̶o̶s̶;̶
-
-    @̶P̶o̶s̶i̶t̶i̶v̶e̶ ̶@̶M̶i̶n̶(̶1̶0̶)̶ ̶@̶M̶a̶x̶(̶1̶8̶0̶)̶
-    p̶r̶i̶v̶a̶t̶e̶ ̶I̶n̶t̶e̶g̶e̶r̶ ̶t̶e̶m̶p̶o̶D̶e̶E̶n̶t̶r̶e̶g̶a̶M̶a̶x̶i̶m̶o̶E̶m̶M̶i̶n̶u̶t̶o̶s̶;̶
-
-    private Boolean aprovado;
-
-    private Long tipoDeCozinhaId;
-
-  }
+  ```sh
+  mysql -u root -p eats
   ```
 
-  O conteúdo da classe `Restaurante` ficará da seguinte maneira:
+  Peça a senha de root do MySQL para o instrutor. Se não houver senha, omita a opção `-p`.
 
-  ```java
-  // anotações ...
-  public class Restaurante {
+  Na CLI do MySQL, faça uma consulta que obtém os dados relevantes do MySQL para o serviço de distância: o id do restaurante, o cep e o id do tipo de cozinha. O cálculo de distância é feito somente para restaurantes aprovados. Por isso, podemos por um filtro na consulta, mantendo apenas os restaurantes aprovados.
 
-    @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
-    private Long id;
+  O resultado pode ser exportado para um arquivo CSV, um formato que pode ser facilmente importado em um MongoDB.
 
-    private String cep;
-
-    private Boolean aprovado;
-
-    private Long tipoDeCozinhaId;
-
-  }
+  ```sh
+  mysql> select r.id, r.cep, r.tipo_de_cozinha_id from restaurante r where r.aprovado = true into outfile '/tmp/restaurantes.csv' fields terminated by ',' enclosed by '"' lines terminated by '\n';
   ```
 
-  Alguns dos imports podem ser removidos:
+  A query do código anterior pode ser obtida em: https://gitlab.com/snippets/1894030
 
-  ```java
-  i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶.̶m̶a̶t̶h̶.̶B̶i̶g̶D̶e̶c̶i̶m̶a̶l̶;̶
-
-  i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶p̶e̶r̶s̶i̶s̶t̶e̶n̶c̶e̶.̶T̶a̶b̶l̶e̶;̶
-  i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶v̶a̶l̶i̶d̶a̶t̶i̶o̶n̶.̶c̶o̶n̶s̶t̶r̶a̶i̶n̶t̶s̶.̶M̶a̶x̶;̶
-  i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶v̶a̶l̶i̶d̶a̶t̶i̶o̶n̶.̶c̶o̶n̶s̶t̶r̶a̶i̶n̶t̶s̶.̶M̶i̶n̶;̶
-  i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶v̶a̶l̶i̶d̶a̶t̶i̶o̶n̶.̶c̶o̶n̶s̶t̶r̶a̶i̶n̶t̶s̶.̶N̶o̶t̶B̶l̶a̶n̶k̶;̶
-  i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶v̶a̶l̶i̶d̶a̶t̶i̶o̶n̶.̶c̶o̶n̶s̶t̶r̶a̶i̶n̶t̶s̶.̶P̶o̶s̶i̶t̶i̶v̶e̶;̶
-  i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶v̶a̶l̶i̶d̶a̶t̶i̶o̶n̶.̶c̶o̶n̶s̶t̶r̶a̶i̶n̶t̶s̶.̶S̶i̶z̶e̶;̶
-  ```
-
-## Exercício: configurando MongoDB no serviço de distância
+  > Caso a instância do MySQL monolítico esteja dockerizada, execute o comando `mysql` pelo Docker:
+  > 
+  > ```sh
+  > docker exec -it <NOME-DO-CONTAINER> mysql -u root -p eats
+  > ```
+  > 
+  > Digite a senha de root do MySQL do monólito. Execute a query, salvando o arquivo `restaurantes.csv` no diretório `/var/lib/mysql-files/`.
+  > 
+  > Então, obtenha o texto do `restaurantes.csv` e o copie para o diretório `/tmp`.
+  > 
+  > ```sh
+  > docker exec -it <NOME-DO-CONTAINER> cat /var/lib/mysql-files/restaurantes.csv > /tmp/restaurantes.csv
+  >
+  > Lembrando que o `<NOME-DO-CONTAINER>` pode ser descoberto com um `docker ps`.
 
 2. Certifique-se que o container MongoDB do serviço de distância definido no Docker Compose esteja no ar. Para isso, execute em um Terminal:
 
@@ -278,384 +316,256 @@
   docker-compose up -d mongo.distancia
   ```
 
-1. Adicione o _starter_ do Spring Data MongoDB no `pom.xml` do `eats-distancia-service`:
+  Copie o CSV exportado a partir do MySQL para o seu Desktop:
 
-  ####### eats-distancia-service/pom.xml
-
-  ```xml
-  <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-data-mongodb</artifactId>
-  </dependency>
+  ```sh
+  cp /tmp/restaurantes.csv ~/Desktop
   ```
 
-2. Crie a classe `RestauranteMongo` no pacote `br.com.caelum.eats.distancia.mongo` com o seguinte código:
+  Descubra o nome do container do MongoDB de distância, com o comando `docker ps`. O container do MongoDB terá como sufixo `mongo.distancia_1`.
 
-  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/mongo/RestauranteMongo.java
+  Copie o arquivo CSV com os dados exportados para o container do MongoDB:
 
-  ```java
-  @Document(collection = "restaurantes")
-  @Data
-  @AllArgsConstructor
-  @NoArgsConstructor
-  public class RestauranteMongo {
-
-    @Id
-    private Long id;
-
-    private String cep;
-
-    private Long tipoDeCozinhaId;
-
-  }
+  ```sh
+  docker cp ~/Desktop/restaurantes.csv <NOME-DO-CONTAINER>:/restaurantes.csv
   ```
 
-  Os imports corretos são os seguintes:
+  Troque `<NOME-DO-CONTAINER>` pelo nome descoberto no passo anterior.
 
-  ```java
-  import org.springframework.data.annotation.Id;
-  import org.springframework.data.mongodb.core.mapping.Document;
+  Execute um bash no container com o comando:
 
-  import lombok.AllArgsConstructor;
-  import lombok.Data;
-  import lombok.NoArgsConstructor;
+  ```sh
+  docker exec -it `<NOME-DO-CONTAINER>` bash
   ```
 
-  Note que o `@Id` foi importado de `org.springframework.data.annotation` e **não** de `javax.persistence` (do JPA).
+  Importe os dados do CSV para a collection `restaurantes` do MongoDB de distância:
 
-3. No mesmo pacote `br.com.caelum.eats.distancia.mongo`, crie uma interface `RestauranteMongoRepository` que estende `MongoRepository`:
-
-  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/mongo/RestauranteMongoRepository.java
-
-  ```java
-  public interface RestauranteMongoRepository extends MongoRepository<RestauranteMongo, Long> {
-  }
+  ```sh
+  mongoimport --db eats_distancia --collection restaurantes --type csv  --fields=_id,cep,tipoDeCozinhaId --file restaurantes.csv
   ```
 
-4. No arquivo `application.properties` do `eats-distancia-service`, ajuste as configurações do MongoDB:
+  O comando acima pode ser encontrado em: https://gitlab.com/snippets/1894035
 
-  ####### eats-distancia-service/src/main/resources/application.properties
+  Ainda no bash do MongoDB, acesse o database de distância com o Mongo Shell:
 
-  ```properties
-  spring.data.mongodb.database=eats_distancia
-  spring.data.mongodb.port=27018
+  ```sh
+  mongo eats_distancia
   ```
 
-  O database padrão do MongoDB é `test`. A porta padrão é `27017`.
+  Dentro do Mongo Shell, verifique a collection de restaurantes foi criada:
 
-  Para saber sobre outras propriedades, consulte: https://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
-
-## Exercício: migrando dados de distância do BD do monólito para o MongoDB
-
-1. O serviço de distância apenas considera restaurantes já aprovados. Então, primeiramente, vamos definir em `RestauranteRepository`, do pacote `br.com.caelum.eats.distancia`, um método que obtém todos os restaurantes aprovados, sem paginação:
-
-  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RestauranteRepository.java
-
-  ```java
-  interface RestauranteRepository extends JpaRepository<Restaurante, Long> {
-
-    // outros métodos ...
-
-    List<Restaurante> findAllByAprovado(boolean aprovado); // adicionado ...
-
-  }
+  ```sh
+  show collections;
   ```
 
-  Adicione aos imports:
-
-  ```java
-  import java.util.List;
-  ```
-
-2. Poderíamos fazer algum script ou usar uma ferramenta para fazer o dump dos dados do MySQL do monólito para o MongoDB do serviço de distância. Mas uma alternativa é fazer essa migração com código Java, disparado assim que o serviço subir. A interface `CommandLineRunner` do Spring Boot ajuda nessa tarefa.
-
-  Observação: antes de continuar, certifique-se que o serviço de distância esteja **parado**.
-
-  Crie uma classe `MigracaoParaMongo` no pacote `br.com.caelum.eats.distancia` e a faça implementar `CommandLineRunner`, definindo o método `run`. Anote essa classe com `@Configuration`.
-
-  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/MigracaoParaMongo.java
-
-  ```java
-  @Configuration
-  public class MigracaoParaMongo implements CommandLineRunner {
-
-    @Override
-    public void run(String... args) throws Exception {
-
-    }
-
-  }
-  ```
-
-  Os imports corretos são:
-
-  ```java
-  import org.springframework.boot.CommandLineRunner;
-  import org.springframework.context.annotation.Configuration;
-  ```
-
-3. Defina atributos para os repositórios do JPA e do MongoDB na classe `MigracaoParaMongo`. Usando a anotação `@AllArgsConstructor` do Lombok, gere um construtor com todos os atributos, que será usado pelo Spring para injetar instâncias dos repositórios.
-
-  Adicione também a anotação `@Slf4j` do Lombok, que configura um atributo para log.
-
-  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/MigracaoParaMongo.java
-
-  ```java
-  @Configuration
-  @AllArgsConstructor // adicionado
-  @Slf4j
-  public class MigracaoParaMongo implements CommandLineRunner {
-
-    private RestauranteRepository jpaRepo; // adicionado
-    private RestauranteMongoRepository mongoRepo; // adicionado
-
-    @Override
-    public void run(String... args) throws Exception {
-
-    }
-
-  }
-  ```
-
-  Os novos imports devem ser os seguintes:
-
-  ```java
-  import br.com.caelum.eats.distancia.mongo.RestauranteMongoRepository;
-  import lombok.AllArgsConstructor;
-  import lombok.extern.slf4j.Slf4j;
-  ```
-
-4. Implemente um algoritmo com os seguintes passos:
-
-  - obtenha todos os restaurantes aprovados pelo repositório JPA, que aponta para o BD do monólito.
-  - percorra os restaurantes aprovado e, pra cada um deles, pegue `id`, `cep` e `tipoDeCozinhaId`.
-  - verifique se `id` não existe no MongoDB, protegendo de uma segunda execução dessa classe.
-  - se o `id` não existir, instancie um `RestauranteMongo` e use o repositório MongoDB para inseri-lo.
-
-  O código do método `run` ficará semelhante a:
-
-  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/MigracaoParaMongo.java
-
-  ```java
-  log.info("Iniciando a migração de restaurantes aprovados para Mongo");
-
-  // obtendo todos os restaurantes aprovados
-  for (Restaurante restauranteJpa : jpaRepo.findAllByAprovado(true)) {
-
-    // recuperando id, cep e tipo de cozinha
-    Long id = restauranteJpa.getId();
-    String cep = restauranteJpa.getCep();
-    Long tipoDeCozinhaId = restauranteJpa.getTipoDeCozinhaId();
-
-    // verificando se o id existe no mongo
-    if (!mongoRepo.existsById(id)) {
-
-      // se não existe, inserindo restaurante no mongo
-      RestauranteMongo restauranteMongo = new RestauranteMongo(id, cep, tipoDeCozinhaId);
-      mongoRepo.insert(restauranteMongo);
-
-      log.info("Migrado para Mongo: " + restauranteMongo);
-    }
-  }
-
-  log.info("Fim da migração de restaurantes aprovados para Mongo");
-  ```
-
-5. Coloque o serviço de distância no ar, executando a classe `EatsDistanciaServiceApplication`.
-
-  No console do Eclipse, devem aparecer logs parecido com os a seguir:
+  Deve ser retornado algo como:
 
   ```txt
-  2019-05-24 11:20:46.278  INFO 10264 --- [  restartedMain] b.c.c.eats.distancia.MigracaoParaMongo   : Iniciando a migração de restaurantes aprovados para Mongo
-  2019-05-24 11:20:46.309  INFO 10264 --- [  restartedMain] o.h.h.i.QueryTranslatorFactoryInitiator  : HHH000397: Using ASTQueryTranslatorFactory
-  Hibernate: select restaurant0_.id as id1_0_, restaurant0_.aprovado as aprovado2_0_, restaurant0_.cep as cep3_0_, restaurant0_.tipo_de_cozinha_id as tipo_de_4_0_ from restaurante restaurant0_ where restaurant0_.aprovado=?
-  2019-05-24 11:20:46.563  INFO 10264 --- [  restartedMain] org.mongodb.driver.connection            : Opened connection [connectionId{localValue:2, serverValue:6}] to localhost:27018
-  2019-05-24 11:20:46.741  INFO 10264 --- [  restartedMain] b.c.c.eats.distancia.MigracaoParaMongo   : Migrado para Mongo: RestauranteMongo(id=1, cep=70238500, tipoDeCozinhaId=1)
-  2019-05-24 11:20:46.762  INFO 10264 --- [  restartedMain] b.c.c.eats.distancia.MigracaoParaMongo   : Migrado para Mongo: RestauranteMongo(id=2, cep=79878-978, tipoDeCozinhaId=9)
-  2019-05-24 11:20:46.770  INFO 10264 --- [  restartedMain] b.c.c.eats.distancia.MigracaoParaMongo   : Migrado para Mongo: RestauranteMongo(id=3, cep=32131-232, tipoDeCozinhaId=7)
-  2019-05-24 11:20:46.770  INFO 10264 --- [  restartedMain] b.c.c.eats.distancia.MigracaoParaMongo   : Fim da migração de restaurantes aprovados para Mongo
+  restaurantes
   ```
 
-  Note que, segundo os logs, os restaurantes foram migrados.
+  Veja os documentos da collection `restaurantes` com o comando: 
 
-6. Acesse a interface de linha de comando (CLI) do MongoDB, executando o seguinte comando do Docker Compose:
-
-  ```sh
-  docker-compose exec mongo.distancia mongo
-  ```
-
-  _Observação: você precisa estar no diretório onde está o arquivo `docker-compose.yml`._
-
-  Na CLI do MongoDB, mostre todos os databases com o comando:
-
-  ```sh
-  show dbs
-  ```
-
-  Note que o database `eats_distancia`, configurado no serviço, está nos resultados:
-
-  ```txt
-  admin           0.000GB
-  config          0.000GB
-  eats_distancia  0.000GB
-  local           0.000GB
-  ```
-
-  Acesse o database de distancia com o comando:
-
-  ```sh
-  use eats_distancia
-  ```
-
-  Deve ser impresso:
-
-  ```txt
-  switched to db eats_distancia
-  ```
-
-  Execute o comando a seguir para exibir todas as _collections_ do database:
-
-  ```sh
-  show collections
-  ```
-
-  A collections `restaurantes` deve ser exibida no resultado.
-
-  Liste os restaurantes da collection com o comando:
-
-  ```sh
+  ```js
   db.restaurantes.find();
   ```
 
-  Devem ser exibidos os dados dos restaurantes migrados. Algo como:
+  O resultado será semelhante a:
 
-  ```txt
-  { "_id" : NumberLong(1), "cep" : "70238500", "tipoDeCozinhaId" : NumberLong(1), "_class" : "br.com.caelum.eats.distancia.mongo.RestauranteMongo" }
-  { "_id" : NumberLong(2), "cep" : "79878-978", "tipoDeCozinhaId" : NumberLong(9), "_class" : "br.com.caelum.eats.distancia.mongo.RestauranteMongo" }
-  { "_id" : NumberLong(3), "cep" : "32131-232", "tipoDeCozinhaId" : NumberLong(7), "_class" : "br.com.caelum.eats.distancia.mongo.RestauranteMongo" }
+  ```json
+  { "_id" : 1, "cep" : 70238500, "tipoDeCozinhaId" : 1 }
+  { "_id" : 2, "cep" : "71503-511", "tipoDeCozinhaId" : 7 }
+  { "_id" : 3, "cep" : "70238-500", "tipoDeCozinhaId" : 9 }
   ```
 
-  Para sair da CLI do MongoDB, digite `quit()`, com os parênteses.
+  Pronto, os dados foram migrados para o MongoDB!
 
-  > Novos restaurantes aprovados só serão migrados para o MongoDB quando reiniciarmos o serviço de distância. Além disso, como listamos _todos_ os restaurantes aprovados a performance de inicialização pode ser bastante afetada. Mais adiante, corrigiremos a migração de novos restaurantes e alguns outros detalhes. De qualquer forma, talvez a solução ideal envolva ETL ou alguma outra técnica de BD.
+  > Apenas os restaurantes já aprovados terão seus dados migrados. Restaurantes ainda não aprovados ou novos restaurantes não aparecerão para o serviço de distância.
 
-## Exercício: usando MongoDB no cálculo de distâncias
+## Configurando MongoDB no serviço de distância
 
-1. Adicione na interface `RestauranteMongoRepository`, métodos que recuperam todos os restaurantes e todos de um determinado tipo de cozinha de maneira paginada:
+O _starter_ do Spring Data MongoDB deve ser adicionado ao `pom.xml` do `eats-distancia-service`.
 
-  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/mongo/RestauranteMongoRepository.java
+Já as dependências ao Spring Data JPA e ao driver do MySQL devem ser removidas.
 
-  ```java
-  public interface RestauranteMongoRepository extends MongoRepository<RestauranteMongo, Long> {
+####### eats-distancia-service/pom.xml
 
-    Page<RestauranteMongo> findAll(Pageable limit);
+```xml
+<dependency>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-data-mongodb</artifactId>
+</dependency>
 
-    Page<RestauranteMongo> findAllByTipoDeCozinhaId(Long tipoDeCozinhaId, Pageable limit);
+<̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
+  <̶g̶r̶o̶u̶p̶I̶d̶>̶m̶y̶s̶q̶l̶<̶/̶g̶r̶o̶u̶p̶I̶d̶>̶
+  <̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶m̶y̶s̶q̶l̶-̶c̶o̶n̶n̶e̶c̶t̶o̶r̶-̶j̶a̶v̶a̶<̶/̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶
+  <̶s̶c̶o̶p̶e̶>̶r̶u̶n̶t̶i̶m̶e̶<̶/̶s̶c̶o̶p̶e̶>̶
+<̶/̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
 
+<̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
+  <̶g̶r̶o̶u̶p̶I̶d̶>̶o̶r̶g̶.̶s̶p̶r̶i̶n̶g̶f̶r̶a̶m̶e̶w̶o̶r̶k̶.̶b̶o̶o̶t̶<̶/̶g̶r̶o̶u̶p̶I̶d̶>̶
+  <̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶s̶p̶r̶i̶n̶g̶-̶b̶o̶o̶t̶-̶s̶t̶a̶r̶t̶e̶r̶-̶d̶a̶t̶a̶-̶j̶p̶a̶<̶/̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶
+<̶/̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
+```
+
+Devem ocorrer vários erros de compilação.
+
+A classe `Restaurante` do serviço de distância deve ser modificada, removendo as anotações do JPA.
+
+A anotação `@Document`, do Spring Data MongoDB, deve ser adicionada.
+
+A anotação `@Id` deve ser mantida, porém o import será trocado.
+
+O atributo `aprovado` pode ser removido, já que a migração dos dados foi feita de maneira que o database de distância do MongoDB só contém restaurantes já aprovados.
+
+####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/Restaurante.java
+
+```java
+@Document(collection = "restaurantes") // adicionado
+@̶E̶n̶t̶i̶t̶y̶
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Restaurante {
+
+  @Id
+  @̶G̶e̶n̶e̶r̶a̶t̶e̶d̶V̶a̶l̶u̶e̶(̶s̶t̶r̶a̶t̶e̶g̶y̶ ̶=̶ ̶G̶e̶n̶e̶r̶a̶t̶i̶o̶n̶T̶y̶p̶e̶.̶I̶D̶E̶N̶T̶I̶T̶Y̶)̶
+  private Long id;
+
+  private String cep;
+
+  p̶r̶i̶v̶a̶t̶e̶ ̶B̶o̶o̶l̶e̶a̶n̶ ̶a̶p̶r̶o̶v̶a̶d̶o̶;̶
+
+  @̶C̶o̶l̶u̶m̶n̶(̶n̶u̶l̶l̶a̶b̶l̶e̶ ̶=̶ ̶f̶a̶l̶s̶e̶)̶
+  private Long tipoDeCozinhaId;
+
+}
+```
+
+Os seguinte imports devem ser removidos:
+
+```java
+i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶p̶e̶r̶s̶i̶s̶t̶e̶n̶c̶e̶.̶C̶o̶l̶u̶m̶n̶;̶
+i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶p̶e̶r̶s̶i̶s̶t̶e̶n̶c̶e̶.̶E̶n̶t̶i̶t̶y̶;̶
+i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶p̶e̶r̶s̶i̶s̶t̶e̶n̶c̶e̶.̶G̶e̶n̶e̶r̶a̶t̶e̶d̶V̶a̶l̶u̶e̶;̶
+i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶p̶e̶r̶s̶i̶s̶t̶e̶n̶c̶e̶.̶G̶e̶n̶e̶r̶a̶t̶i̶o̶n̶T̶y̶p̶e̶;̶
+i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶p̶e̶r̶s̶i̶s̶t̶e̶n̶c̶e̶.̶I̶d̶;̶
+```
+
+E os imports a seguir devem ser adicionados:
+
+Os imports corretos são os seguintes:
+
+```java
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+```
+
+Note que o `@Id` foi importado de `org.springframework.data.annotation` e **não** de `javax.persistence` (do JPA).
+
+A interface `RestauranteRepository` deve ser modificada, para que passe a herdar de um `MongoRepository`.
+
+Como removemos o atributo `aprovado`, as definições de métodos devem ser ajustadas.
+
+####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RestauranteRepository.java
+
+```java
+i̶n̶t̶e̶r̶f̶a̶c̶e̶ ̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶R̶e̶p̶o̶s̶i̶t̶o̶r̶y̶ ̶e̶x̶t̶e̶n̶d̶s̶ ̶J̶p̶a̶R̶e̶p̶o̶s̶i̶t̶o̶r̶y̶<̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶,̶ ̶L̶o̶n̶g̶>̶ ̶{̶
+interface RestauranteRepository extends MongoRepository<Restaurante, Long> {
+
+  P̶a̶g̶e̶<̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶>̶ ̶f̶i̶n̶d̶A̶l̶l̶B̶y̶A̶p̶r̶o̶v̶a̶d̶o̶A̶n̶d̶T̶i̶p̶o̶D̶e̶C̶o̶z̶i̶n̶h̶a̶I̶d̶(̶b̶o̶o̶l̶e̶a̶n̶ ̶a̶p̶r̶o̶v̶a̶d̶o̶,̶ ̶L̶o̶n̶g̶ ̶t̶i̶p̶o̶D̶e̶C̶o̶z̶i̶n̶h̶a̶I̶d̶,̶ ̶P̶a̶g̶e̶a̶b̶l̶e̶ ̶l̶i̶m̶i̶t̶)̶;̶
+  Page<Restaurante> findAllByTipoDeCozinhaId(Long tipoDeCozinhaId, Pageable limit);
+
+  P̶a̶g̶e̶<̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶>̶ ̶f̶i̶n̶d̶A̶l̶l̶B̶y̶A̶p̶r̶o̶v̶a̶d̶o̶(̶b̶o̶o̶l̶e̶a̶n̶ ̶a̶p̶r̶o̶v̶a̶d̶o̶,̶ ̶P̶a̶g̶e̶a̶b̶l̶e̶ ̶l̶i̶m̶i̶t̶)̶;̶
+  Page<Restaurante> findAll(Pageable limit);
+
+}
+```
+
+Os imports devem ser corrigidos:
+
+```java
+i̶m̶p̶o̶r̶t̶ ̶o̶r̶g̶.̶s̶p̶r̶i̶n̶g̶f̶r̶a̶m̶e̶w̶o̶r̶k̶.̶d̶a̶t̶a̶.̶j̶p̶a̶.̶r̶e̶p̶o̶s̶i̶t̶o̶r̶y̶.̶J̶p̶a̶R̶e̶p̶o̶s̶i̶t̶o̶r̶y̶;̶
+import org.springframework.data.mongodb.repository.MongoRepository;
+```
+
+Como removemos o atributo `aprovado`, é necessário alterar a chamada ao `RestauranteRepository` em alguns métodos do `DistanciaService`:
+
+####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/DistanciaService.java
+
+```java
+// anotações....
+class DistanciaService {
+
+  // atributos...
+
+  public List<RestauranteComDistanciaDto> restaurantesMaisProximosAoCep(String cep) {
+    L̶i̶s̶t̶<̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶>̶ ̶a̶p̶r̶o̶v̶a̶d̶o̶s̶ ̶=̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶.̶f̶i̶n̶d̶A̶l̶l̶B̶y̶A̶p̶r̶o̶v̶a̶d̶o̶(̶t̶r̶u̶e̶,̶ ̶L̶I̶M̶I̶T̶)̶.̶g̶e̶t̶C̶o̶n̶t̶e̶n̶t̶(̶)̶;̶
+    List<Restaurante> aprovados = restaurantes.findAll(LIMIT).getContent(); // modificado
+    return calculaDistanciaParaOsRestaurantes(aprovados, cep);
   }
-  ```
 
-  Não deixe de fazer os imports corretos:
-
-  ```java
-  import org.springframework.data.domain.Page;
-  import org.springframework.data.domain.Pageable;
-  ```
-
-2. Modifique a classe `DistanciaService` para que use `RestauranteMongoRepository` e `RestauranteMongo`:
-
-  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/DistanciaService.java
-
-  ```java
-  // anotações ....
-  class DistanciaService {
-
-    private static final Pageable LIMIT = PageRequest.of(0,5);
-
-    p̶r̶i̶v̶a̶t̶e̶ ̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶R̶e̶p̶o̶s̶i̶t̶o̶r̶y̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶;̶
-    private RestauranteMongoRepository restaurantes; // modificado
-
-    public List<RestauranteComDistanciaDto> restaurantesMaisProximosAoCep(String cep) {
-      L̶i̶s̶t̶<̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶>̶ ̶a̶p̶r̶o̶v̶a̶d̶o̶s̶ ̶=̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶.̶f̶i̶n̶d̶A̶l̶l̶B̶y̶A̶p̶r̶o̶v̶a̶d̶o̶(̶t̶r̶u̶e̶,̶ ̶L̶I̶M̶I̶T̶)̶.̶g̶e̶t̶C̶o̶n̶t̶e̶n̶t̶(̶)̶;̶
-      List<RestauranteMongo> aprovados = restaurantes.findAll(LIMIT).getContent(); // modificado
-      return calculaDistanciaParaOsRestaurantes(aprovados, cep);
-    }
-
-    public List<RestauranteComDistanciaDto> restaurantesDoTipoDeCozinhaMaisProximosAoCep(Long tipoDeCozinhaId, String cep) {
-      L̶i̶s̶t̶<̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶>̶ ̶a̶p̶r̶o̶v̶a̶d̶o̶s̶D̶o̶T̶i̶p̶o̶D̶e̶C̶o̶z̶i̶n̶h̶a̶ ̶=̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶.̶f̶i̶n̶d̶A̶l̶l̶B̶y̶A̶p̶r̶o̶v̶a̶d̶o̶A̶n̶d̶T̶i̶p̶o̶D̶e̶C̶o̶z̶i̶n̶h̶a̶I̶d̶(̶t̶r̶u̶e̶,̶ ̶t̶i̶p̶o̶D̶e̶C̶o̶z̶i̶n̶h̶a̶I̶d̶,̶ ̶L̶I̶M̶I̶T̶)̶.̶g̶e̶t̶C̶o̶n̶t̶e̶n̶t̶(̶)̶;̶
-      List<RestauranteMongo> aprovadosDoTipoDeCozinha = restaurantes.findAllByTipoDeCozinhaId(tipoDeCozinhaId, LIMIT).getContent();
-      return calculaDistanciaParaOsRestaurantes(aprovadosDoTipoDeCozinha, cep);
-    }
-
-    public RestauranteComDistanciaDto restauranteComDistanciaDoCep(Long restauranteId, String cep) {
-      R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶ ̶=̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶.̶f̶i̶n̶d̶B̶y̶I̶d̶(̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶I̶d̶)̶.̶o̶r̶E̶l̶s̶e̶T̶h̶r̶o̶w̶(̶(̶)̶ ̶-̶>̶ ̶n̶e̶w̶ ̶R̶e̶s̶o̶u̶r̶c̶e̶N̶o̶t̶F̶o̶u̶n̶d̶E̶x̶c̶e̶p̶t̶i̶o̶n̶(̶)̶)̶;̶
-      RestauranteMongo restaurante = restaurantes.findById(restauranteId).orElseThrow(() -> new ResourceNotFoundException()); // modificado
-      String cepDoRestaurante = restaurante.getCep();
-      BigDecimal distancia = distanciaDoCep(cepDoRestaurante, cep);
-      return new RestauranteComDistanciaDto(restauranteId, distancia);
-    }
-
-    p̶r̶i̶v̶a̶t̶e̶ ̶L̶i̶s̶t̶<̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶C̶o̶m̶D̶i̶s̶t̶a̶n̶c̶i̶a̶D̶t̶o̶>̶ ̶c̶a̶l̶c̶u̶l̶a̶D̶i̶s̶t̶a̶n̶c̶i̶a̶P̶a̶r̶a̶O̶s̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶(̶L̶i̶s̶t̶<̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶>̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶,̶ ̶S̶t̶r̶i̶n̶g̶ ̶c̶e̶p̶)̶ ̶{̶
-    private List<RestauranteComDistanciaDto> calculaDistanciaParaOsRestaurantes(List<RestauranteMongo> restaurantes, String cep) {
-      // código omitido ...
-    }
-
-    // restante do código ...
-
+  public List<RestauranteComDistanciaDto> restaurantesDoTipoDeCozinhaMaisProximosAoCep(Long tipoDeCozinhaId, String cep) {
+    L̶i̶s̶t̶<̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶>̶ ̶a̶p̶r̶o̶v̶a̶d̶o̶s̶D̶o̶T̶i̶p̶o̶D̶e̶C̶o̶z̶i̶n̶h̶a̶ ̶=̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶.̶f̶i̶n̶d̶A̶l̶l̶B̶y̶A̶p̶r̶o̶v̶a̶d̶o̶A̶n̶d̶T̶i̶p̶o̶D̶e̶C̶o̶z̶i̶n̶h̶a̶I̶d̶(̶t̶r̶u̶e̶,̶ ̶t̶i̶p̶o̶D̶e̶C̶o̶z̶i̶n̶h̶a̶I̶d̶,̶ ̶L̶I̶M̶I̶T̶)̶.̶g̶e̶t̶C̶o̶n̶t̶e̶n̶t̶(̶)̶;̶
+    List<Restaurante> aprovadosDoTipoDeCozinha = restaurantes.findAllByTipoDeCozinhaId(tipoDeCozinhaId, LIMIT).getContent();
+    return calculaDistanciaParaOsRestaurantes(aprovadosDoTipoDeCozinha, cep);
   }
+
+  // restante do código...
+
+}
+```
+
+No arquivo `application.properties` do `eats-distancia-service`, devem ser adicionadas as configurações do MongoDB. As configurações de datasource do MySQL e do JPA devem ser removidas.
+
+####### eats-distancia-service/src/main/resources/application.properties
+
+```properties
+spring.data.mongodb.database=eats_distancia
+spring.data.mongodb.port=27018
+
+#̶D̶A̶T̶A̶S̶O̶U̶R̶C̶E̶ ̶C̶O̶N̶F̶I̶G̶S̶
+s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶u̶r̶l̶=̶j̶d̶b̶c̶:̶m̶y̶s̶q̶l̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶/̶e̶a̶t̶s̶?̶c̶r̶e̶a̶t̶e̶D̶a̶t̶a̶b̶a̶s̶e̶I̶f̶N̶o̶t̶E̶x̶i̶s̶t̶=̶t̶r̶u̶e̶
+s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶u̶s̶e̶r̶n̶a̶m̶e̶=̶<̶S̶E̶U̶ ̶U̶S̶U̶Á̶R̶I̶O̶>̶
+s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶p̶a̶s̶s̶w̶o̶r̶d̶=̶<̶S̶U̶A̶ ̶S̶E̶N̶H̶A̶>̶
+
+#̶J̶P̶A̶ ̶C̶O̶N̶F̶I̶G̶S̶
+s̶p̶r̶i̶n̶g̶.̶j̶p̶a̶.̶h̶i̶b̶e̶r̶n̶a̶t̶e̶.̶d̶d̶l̶-̶a̶u̶t̶o̶=̶v̶a̶l̶i̶d̶a̶t̶e̶
+s̶p̶r̶i̶n̶g̶.̶j̶p̶a̶.̶s̶h̶o̶w̶-̶s̶q̶l̶=̶t̶r̶u̶e̶
+```
+
+O database padrão do MongoDB é `test`. A porta padrão é `27017`.
+
+Para saber sobre outras propriedades, consulte: https://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
+
+## Exercício: Testando a migração dos dados de distância para o MongoDB
+
+1. Interrompa o serviço de distância.
+
+  Obtenha o código da branch `cap5_migrando_distancia_para_mongodb` do `fj33-eats-distancia-service`:
+
+  ```sh
+  cd ~/Desktop/fj33-eats-distancia-service
+  git checkout -f cap5_migrando_distancia_para_mongodb
   ```
 
-  Adicione os imports necessários:
+  Certifique-se que o MongoDB do serviço de distância esteja no ar com o comando:
 
-  ```java
-  import br.com.caelum.eats.distancia.mongo.RestauranteMongo;
-  import br.com.caelum.eats.distancia.mongo.RestauranteMongoRepository;
+  ```sh
+  cd ~/Desktop
+  docker-compose up -d mongo.distancia
   ```
 
-3. Com a classe `EatsDistanciaServiceApplication` sendo executada, teste o serviço de distância.
+  Execute novamente a classe `EatsDistanciaServiceApplication`.
 
-  Acesse pelo navegador ou pelo cURL uma URL como: http://localhost:8082/restaurantes/mais-proximos/71503510
+  Use o cURL para testar algumas URLs do serviço de distância, como as seguir:
 
-  Suba o front-end e, dado um CEP, pesquise os restaurantes mais próximos. Deve funcionar!
+  ```sh
+  curl -i http://localhost:8082/restaurantes/mais-proximos/71503510
 
-## Exercício: removendo JPA do serviço de distância
+  curl -i http://localhost:8082/restaurantes/mais-proximos/71503510/tipos-de-cozinha/1
 
-1. Remova as classes `Restaurante` e `RestauranteRepository` do pacote `br.com.caelum.eats.distancia` do serviço de distância:
-
-  - R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶
-  - R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶R̶e̶p̶o̶s̶i̶t̶o̶r̶y̶
-
-2. Delete também a classe de migração de dados:
-
-  - M̶i̶g̶r̶a̶c̶a̶o̶P̶a̶r̶a̶M̶o̶n̶g̶o̶
-
-3. Remova as propriedades relacionadas ao datasource do MySQL e a configurações do JPA do `application.properties`:
-
-  ####### eats-distancia-service/src/main/resources/application.properties
-
-  ```properties
-  #̶D̶A̶T̶A̶S̶O̶U̶R̶C̶E̶ ̶C̶O̶N̶F̶I̶G̶S̶
-  s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶u̶r̶l̶=̶j̶d̶b̶c̶:̶m̶y̶s̶q̶l̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶/̶e̶a̶t̶s̶?̶c̶r̶e̶a̶t̶e̶D̶a̶t̶a̶b̶a̶s̶e̶I̶f̶N̶o̶t̶E̶x̶i̶s̶t̶=̶t̶r̶u̶e̶
-  s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶u̶s̶e̶r̶n̶a̶m̶e̶=̶<̶S̶E̶U̶ ̶U̶S̶U̶Á̶R̶I̶O̶>̶
-  s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶p̶a̶s̶s̶w̶o̶r̶d̶=̶<̶S̶U̶A̶ ̶S̶E̶N̶H̶A̶>̶
-
-  #̶J̶P̶A̶ ̶C̶O̶N̶F̶I̶G̶S̶
-  s̶p̶r̶i̶n̶g̶.̶j̶p̶a̶.̶h̶i̶b̶e̶r̶n̶a̶t̶e̶.̶d̶d̶l̶-̶a̶u̶t̶o̶=̶v̶a̶l̶i̶d̶a̶t̶e̶
-  s̶p̶r̶i̶n̶g̶.̶j̶p̶a̶.̶s̶h̶o̶w̶-̶s̶q̶l̶=̶t̶r̶u̶e̶
+  curl -i http://localhost:8082/restaurantes/71503510/restaurante/1
   ```
 
-4. Exclua as dependências relacionados ao MySQL e Spring Data JPA do `pom.xml` do `eats-distancia-service`:
-
-  ####### eats-distancia-service/pom.xml
-
-  ```xml
-  <̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
-    <̶g̶r̶o̶u̶p̶I̶d̶>̶m̶y̶s̶q̶l̶<̶/̶g̶r̶o̶u̶p̶I̶d̶>̶
-    <̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶m̶y̶s̶q̶l̶-̶c̶o̶n̶n̶e̶c̶t̶o̶r̶-̶j̶a̶v̶a̶<̶/̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶
-    <̶s̶c̶o̶p̶e̶>̶r̶u̶n̶t̶i̶m̶e̶<̶/̶s̶c̶o̶p̶e̶>̶
-  <̶/̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
-  <̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
-    <̶g̶r̶o̶u̶p̶I̶d̶>̶o̶r̶g̶.̶s̶p̶r̶i̶n̶g̶f̶r̶a̶m̶e̶w̶o̶r̶k̶.̶b̶o̶o̶t̶<̶/̶g̶r̶o̶u̶p̶I̶d̶>̶
-    <̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶s̶p̶r̶i̶n̶g̶-̶b̶o̶o̶t̶-̶s̶t̶a̶r̶t̶e̶r̶-̶d̶a̶t̶a̶-̶j̶p̶a̶<̶/̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶
-  <̶/̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
-  ```
+  Observação: como é disparado um GET, é possível testar as URLs anteriores diretamente pelo navegador.

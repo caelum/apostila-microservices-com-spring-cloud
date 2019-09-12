@@ -423,55 +423,9 @@
 
 -->
 
-## Exercício Opcional: Movendo configurações de WebSocket para o API Gateway
+## Exercício Opcional: Configurações de WebSocket para o API Gateway
 
-1. Na classe `PedidoController`, do módulo de pedido do monólito, remova os usos da API de WebSocket:
-
-  ####### fj33-eats-monolito-modular/eats/eats-pedido/src/main/java/br/com/caelum/eats/pedido/PedidoController.java
-
-  ```java
-  // anotações ...
-  class PedidoController {
-
-    private PedidoRepository repo;
-    p̶r̶i̶v̶a̶t̶e̶ ̶S̶i̶m̶p̶M̶e̶s̶s̶a̶g̶i̶n̶g̶T̶e̶m̶p̶l̶a̶t̶e̶ ̶w̶e̶b̶s̶o̶c̶k̶e̶t̶;̶
-
-    // código omitido ...
-
-    @PutMapping("/pedidos/{id}/status")
-    public PedidoDto atualizaStatus(@RequestBody Pedido pedido) {
-      repo.atualizaStatus(pedido.getStatus(), pedido);
-      w̶e̶b̶s̶o̶c̶k̶e̶t̶.̶c̶o̶n̶v̶e̶r̶t̶A̶n̶d̶S̶e̶n̶d̶(̶"̶/̶p̶e̶d̶i̶d̶o̶s̶/̶"̶ ̶+̶ ̶p̶e̶d̶i̶d̶o̶.̶g̶e̶t̶I̶d̶(̶)̶ ̶+̶ ̶"̶/̶s̶t̶a̶t̶u̶s̶"̶,̶ ̶p̶e̶d̶i̶d̶o̶)̶;̶
-      return new PedidoDto(pedido);
-    }
-
-    // código omitido ...
-
-  }
-  ```
-
-  Não deixe de remover o seguinte import:
-
-  ```java
-  i̶m̶p̶o̶r̶t̶ ̶o̶r̶g̶.̶s̶p̶r̶i̶n̶g̶f̶r̶a̶m̶e̶w̶o̶r̶k̶.̶m̶e̶s̶s̶a̶g̶i̶n̶g̶.̶s̶i̶m̶p̶.̶S̶i̶m̶p̶M̶e̶s̶s̶a̶g̶i̶n̶g̶T̶e̶m̶p̶l̶a̶t̶e̶;̶
-  ```
-
-2. Remova a classe `WebSocketConfig`, que está no pacote `br.com.caelum.eats` do módulo `eats-common` do monólito:
-
-  ```txt
-  f̶j̶3̶3̶-̶e̶a̶t̶s̶-̶m̶o̶n̶o̶l̶i̶t̶o̶-̶m̶o̶d̶u̶l̶a̶r̶/̶e̶a̶t̶s̶/̶e̶a̶t̶s̶-̶c̶o̶m̶m̶o̶n̶/̶s̶r̶c̶/̶m̶a̶i̶n̶/̶j̶a̶v̶a̶/̶b̶r̶/̶c̶o̶m̶/̶c̶a̶e̶l̶u̶m̶/̶e̶a̶t̶s̶/̶W̶e̶b̶S̶o̶c̶k̶e̶t̶C̶o̶n̶f̶i̶g̶.̶j̶a̶v̶a̶
-  ```
-
-3. No `pom.xml` do módulo `eats-common` do monólito, apague a dependência ao starter de WebSocket do Spring Boot:
-
-  ```xml
-  <̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
-    <̶g̶r̶o̶u̶p̶I̶d̶>̶o̶r̶g̶.̶s̶p̶r̶i̶n̶g̶f̶r̶a̶m̶e̶w̶o̶r̶k̶.̶b̶o̶o̶t̶<̶/̶g̶r̶o̶u̶p̶I̶d̶>̶
-    <̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶s̶p̶r̶i̶n̶g̶-̶b̶o̶o̶t̶-̶s̶t̶a̶r̶t̶e̶r̶-̶w̶e̶b̶s̶o̶c̶k̶e̶t̶<̶/̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶
-  <̶/̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
-  ```
-
-4. Adicione a dependência ao starter de WebSocket do Spring Boot no `pom.xml` do API Gateway:
+1. Adicione a dependência ao starter de WebSocket do Spring Boot no `pom.xml` do API Gateway:
 
   ####### api-gateway/pom.xml
 
@@ -482,7 +436,7 @@
   </dependency>
   ```
 
-5. Defina a classe `WebSocketConfig` no pacote `br.com.caelum.apigateway` do API Gateway, baseando-se no código removido do monólito. O código será algo como:
+5. Defina a classe `WebSocketConfig` no pacote `br.com.caelum.apigateway` do API Gateway. O código será algo como:
 
   ####### api-gateway/src/main/java/br/com/caelum/apigateway/WebSocketConfig.java
 
@@ -529,9 +483,9 @@
 
 ## Exercício Opcional: Publicando evento de atualização de pedido no monólito
 
-1. Adicione ao `pom.xml` do módulo `eats-common` do monólito, a dependência ao starter do Spring Cloud Stream Rabbit:
+1. Adicione ao `pom.xml` do módulo `eats-application` do monólito, a dependência ao starter do Spring Cloud Stream Rabbit:
 
-  ####### fj33-eats-monolito-modular/eats/eats-common/pom.xml
+  ####### fj33-eats-monolito-modular/eats/eats-application/pom.xml
 
   ```xml
   <dependency>
