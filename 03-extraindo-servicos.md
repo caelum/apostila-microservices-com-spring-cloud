@@ -31,8 +31,6 @@ Clique em _Generate Project_.
 
 Extraia o `eats-pagamento-service.zip`.
 
-No Eclipse, importe o projeto `eats-pagamento-service`, usando o menu _File > Import > Existing Maven Projects_.
-
 No arquivo `src/main/resources/application.properties`, modifique a porta para `8081` e, por enquanto, aponte para o mesmo BD do monólito. Defina também algumas outras configurações do JPA e de serialização de JSON.
 
 ####### eats-pagamento-service/src/main/resources/application.properties
@@ -462,8 +460,6 @@ Em _Dependencies_, adicione:
 Clique em _Generate Project_.
 
 Descompacte o `eats-distancia-service.zip` para seu Desktop.
-
-Importe o projeto `eats-distancia-service`, por meio do menu _File > Import > Existing Maven Projects_ do Eclipse.
 
 Edite o arquivo `src/main/resources/application.properties`, modificando a porta para 8082, apontando para o BD do monólito, além de definir configurações do JPA e de serialização de JSON:
 

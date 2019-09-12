@@ -26,8 +26,6 @@ Clique em _Generate Project_.
 
 Extraia o `api-gateway.zip` e copie a pasta para seu Desktop.
 
-No Eclipse, no workspace de microservices, importe o projeto `api-gateway`, usando o menu _File > Import > Existing Maven Projects_.
-
 Adicione a anotação `@EnableZuulProxy` à classe `ApiGatewayApplication`:
 
 ####### api-gateway/src/main/java/br/com/caelum/apigateway/ApiGatewayApplication.java
@@ -135,7 +133,7 @@ export class RestauranteService {
   git clone https://gitlab.com/aovs/projetos-cursos/fj33-api-gateway.git
   ```
 
-  No workspace de microservices do Eclipse, importe o projeto `api-gateway`, usando o menu _File > Import > Existing Maven Projects_ e apontato para o diretório `fj33-api-gateway` do Desktop.
+  No workspace de microservices do Eclipse, importe o projeto `fj33-api-gateway`, usando o menu _File > Import > Existing Maven Projects_ e apontando para o diretório `fj33-api-gateway` do Desktop.
 
 2. Execute a classe `ApiGatewayApplication`, certificando-se que os serviços de pagamento e distância estão no ar, assim como o monólito.
 

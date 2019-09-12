@@ -1,64 +1,76 @@
 # Service Registry, Self Registration e Client Side Discovery
 
-## Exercício: implementando um Service Registry com o Eureka
+## Implementando um Service Registry com o Eureka
 
-1. Pelo navegador, abra `https://start.spring.io/`.
-  Em _Project_, mantenha _Maven Project_.
-  Em _Language_, mantenha _Java_.
-  Em _Spring Boot_, mantenha a versão padrão.
-  No trecho de _Project Metadata_, defina:
+Pelo navegador, abra `https://start.spring.io/`.
+Em _Project_, mantenha _Maven Project_.
+Em _Language_, mantenha _Java_.
+Em _Spring Boot_, mantenha a versão padrão.
+No trecho de _Project Metadata_, defina:
 
-  - `br.com.caelum` em _Group_
-  - `service-registry` em _Artifact_
+- `br.com.caelum` em _Group_
+- `service-registry` em _Artifact_
 
-  Mantenha os valores em _More options_.
- 
-  Mantenha o _Packaging_ como `Jar`.
-  Mantenha a _Java Version_ em `8`.
+Mantenha os valores em _More options_.
 
-  Em _Dependencies_, adicione:
+Mantenha o _Packaging_ como `Jar`.
+Mantenha a _Java Version_ em `8`.
 
-  - Eureka Server
+Em _Dependencies_, adicione:
 
-  Clique em _Generate Project_.
-2. Extraia o `service-registry.zip` e copie a pasta para seu Desktop.
-3. No Eclipse, no workspace de microservices, importe o projeto `service-registry`, usando o menu _File > Import > Existing Maven Projects_.
-4. Adicione a anotação `@EnableEurekaServer` à classe `ServiceRegistryApplication`:
+- Eureka Server
 
-  ####### service-registry/src/main/java/br/com/caelum/serviceregistry/ServiceRegistryApplication.java
+Clique em _Generate Project_.
 
-  ```java
-  @EnableEurekaServer
-  @SpringBootApplication
-  public class ServiceRegistryApplication {
+Extraia o `service-registry.zip` e copie a pasta para seu Desktop.
 
-    public static void main(String[] args) {
-      SpringApplication.run(ServiceRegistryApplication.class, args);
-    }
+Adicione a anotação `@EnableEurekaServer` à classe `ServiceRegistryApplication`:
 
+####### service-registry/src/main/java/br/com/caelum/serviceregistry/ServiceRegistryApplication.java
+
+```java
+@EnableEurekaServer
+@SpringBootApplication
+public class ServiceRegistryApplication {
+
+  public static void main(String[] args) {
+    SpringApplication.run(ServiceRegistryApplication.class, args);
   }
+
+}
+```
+
+Adicione o import:
+
+```java
+import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
+```
+
+No arquivo `application.properties`, modifique a porta para `8761`, a porta padrão do Eureka Server, e adicione algumas configurações para que o próprio _service registry_ não se registre nele mesmo.
+
+####### service-registry/src/main/resources/application.properties
+
+```properties
+server.port=8761
+
+eureka.client.register-with-eureka=false
+eureka.client.fetch-registry=false
+logging.level.com.netflix.eureka=OFF
+logging.level.com.netflix.discovery=OFF
+```
+
+## Exercício: executando o Service Registry
+
+1. Em um Terminal, clone o repositório `fj33-service-registry` para seu Desktop:
+
+  ```sh
+  cd ~/Desktop
+  git clone https://gitlab.com/aovs/projetos-cursos/fj33-service-registry.git
   ```
 
-  Adicione o import:
+2. No Eclipse, no workspace de microservices, importe o projeto `fj33-service-registry`, usando o menu _File > Import > Existing Maven Projects_.
 
-  ```java
-  import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
-  ```
-
-5. No arquivo `application.properties`, modifique a porta para `8761`, a porta padrão do Eureka Server, e adicione algumas configurações para que o próprio _service registry_ não se registre nele mesmo.
-
-  ####### service-registry/src/main/resources/application.properties
-
-  ```properties
-  server.port=8761
-
-  eureka.client.register-with-eureka=false
-  eureka.client.fetch-registry=false
-  logging.level.com.netflix.eureka=OFF
-  logging.level.com.netflix.discovery=OFF
-  ```
-
-6. Execute a classe `ServiceRegistryApplication`.
+  Execute a classe `ServiceRegistryApplication`.
 
   Acesse, por um navegador, a URL `http://localhost:8761`. Esse é o Eureka!
 
@@ -66,7 +78,7 @@
 
 ## Exercício: self registration do serviço de distância no Eureka Server
 
-1. No `pom.xml` do `eats-distancia-service`, adicione uma dependência ao _Spring Cloud_ na versão `Greenwich.RELEASE`, em `dependencyManagement`:
+1. No `pom.xml` do `eats-distancia-service`, adicione uma dependência ao _Spring Cloud_ na versão `Greenwich.SR2`, em `dependencyManagement`:
 
   ####### eats-distancia-service/pom.xml
 
@@ -76,7 +88,7 @@
       <dependency>
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-dependencies</artifactId>
-        <version>Greenwich.RELEASE</version>
+        <version>Greenwich.SR2</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
