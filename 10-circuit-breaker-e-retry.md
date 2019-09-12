@@ -475,7 +475,7 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
 
 3. Agora que testamos o retry e o backoff, vamos remover a exceção que forçamos anteriormente na classe `RestaurantesController` do serviço de distância:
 
-  ####### fj33-eats-microservices/eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RestaurantesController.java
+  ####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RestaurantesController.java
 
   ```java
   // anotações ...
