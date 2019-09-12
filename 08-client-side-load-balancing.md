@@ -6,7 +6,7 @@ Para que todas as requisições do serviço de distância sejam logadas (e com m
 
 Para isso, crie a classe `RequestLogConfig` no pacote `br.com.caelum.eats.distancia`:
 
-####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RequestLogConfig.java
+####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RequestLogConfig.java
 
 ```java
 @Configuration
@@ -35,7 +35,7 @@ import org.springframework.web.filter.CommonsRequestLoggingFilter;
 
 O nível de log do `CommonsRequestLoggingFilter` deve ser modificado para `DEBUG` no `application.properties`:
 
-####### eats-distancia-service/src/main/resources/application.properties
+####### fj33-eats-distancia-service/src/main/resources/application.properties
 
 ```properties
 logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=DEBUG
@@ -154,7 +154,7 @@ Troque a configuração do Zuul do serviço de distância para fazer um _matchin
 
 Adicione a propriedade `configuracao.distancia.service.url`, usando a URL `http://distancia` do Ribbon. Essa propriedade será usada no `DistanciaRestClient`.
 
-####### api-gateway/src/main/resources/application.properties
+####### fj33-api-gateway/src/main/resources/application.properties
 
 ```properties
 z̶u̶u̶l̶.̶r̶o̶u̶t̶e̶s̶.̶d̶i̶s̶t̶a̶n̶c̶i̶a̶.̶u̶r̶l̶=̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶2̶
@@ -167,7 +167,7 @@ configuracao.distancia.service.url=http://distancia
 
 Modifique a anotação `@Value` do construtor de `DistanciaRestClient` para que use a propriedade `configuracao.distancia.service.url`:
 
-####### api-gateway/src/main/java/br/com/caelum/apigateway/DistanciaRestClient.java
+####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/DistanciaRestClient.java
 
 ```java
 class DistanciaRestClient {
@@ -190,7 +190,7 @@ class DistanciaRestClient {
 
 Na classe `RestClientConfig` do `api-gateway`, faça com que o `RestTemplate` seja `@LoadBalanced`:
 
-####### api-gateway/src/main/java/br/com/caelum/apigateway/RestClientConfig.java
+####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/RestClientConfig.java
 
 ```java
 @Configuration
@@ -261,7 +261,7 @@ import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 
 Adicione como dependência o _starter_ do Ribbon no `pom.xml` do `eats-pagamento-service`:
 
-####### eats-pagamento-service/pom.xml
+####### fj33-eats-pagamento-service/pom.xml
 
 ```xml
 <dependency>
@@ -272,7 +272,7 @@ Adicione como dependência o _starter_ do Ribbon no `pom.xml` do `eats-pagamento
 
 Configure a URL do monólito para use uma lista de servidores do Ribbon e, por enquanto, desabilite o Eureka:
 
-####### eats-pagamento-service/src/main/resources/application.properties
+####### fj33-eats-pagamento-service/src/main/resources/application.properties
 
 ```properties
 c̶o̶n̶f̶i̶g̶u̶r̶a̶c̶a̶o̶.̶p̶e̶d̶i̶d̶o̶.̶s̶e̶r̶v̶i̶c̶e̶.̶u̶r̶l̶=̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶0̶
@@ -283,7 +283,7 @@ ribbon.eureka.enabled=false
 
 Troque a anotação do Feign em `PedidoRestClient` para que aponte para a configuração `monolito` do Ribbon:
 
-####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PedidoRestClient.java
+####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PedidoRestClient.java
 
 ```java
 @̶F̶e̶i̶g̶n̶C̶l̶i̶e̶n̶t̶(̶u̶r̶l̶=̶"̶$̶{̶c̶o̶n̶f̶i̶g̶u̶r̶a̶c̶a̶o̶.̶p̶e̶d̶i̶d̶o̶.̶s̶e̶r̶v̶i̶c̶e̶.̶u̶r̶l̶}̶"̶,̶ ̶n̶a̶m̶e̶=̶"̶p̶e̶d̶i̶d̶o̶"̶)̶
@@ -299,7 +299,7 @@ public interface PedidoRestClient {
 
 No `application.properties` do `api-gateway`, adicione da URL da segunda instância do monólito:
 
-####### api-gateway/src/main/resources/application.properties
+####### fj33-api-gateway/src/main/resources/application.properties
 
 ```properties
 m̶o̶n̶o̶l̶i̶t̶o̶.̶r̶i̶b̶b̶o̶n̶.̶l̶i̶s̶t̶O̶f̶S̶e̶r̶v̶e̶r̶s̶=̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶0̶

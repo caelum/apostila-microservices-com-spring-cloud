@@ -4,7 +4,7 @@
 
 No `eats-distancia-service`, crie um Controller chamado `RestaurantesController` no pacote `br.com.caelum.eats.distancia` com um método que insere um novo restaurante e outro que atualiza um restaurante existente. Defina mensagens de log em cada método.
 
-####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RestaurantesController.java
+####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RestaurantesController.java
 
 ```java
 @RestController
@@ -285,7 +285,7 @@ void pago(@PathVariable("id") Long id) {
 
 No arquivo `application.properties` de `eats-pagamento-service`, adicione uma propriedade `configuracao.pedido.service.url` que contém a URL do monólito:
 
-####### eats-pagamento-service/src/main/resources/application.properties
+####### fj33-eats-pagamento-service/src/main/resources/application.properties
 
 ```properties
 configuracao.pedido.service.url=http://localhost:8080
@@ -293,7 +293,7 @@ configuracao.pedido.service.url=http://localhost:8080
 
 No `pom.xml` de `eats-pagamento-service`, adicione uma dependência ao _Spring Cloud_ na versão `Greenwich.SR2`, em `dependencyManagement`:
 
-####### eats-pagamento-service/pom.xml
+####### fj33-eats-pagamento-service/pom.xml
 
 ```xml
 <dependencyManagement>
@@ -320,7 +320,7 @@ Feito isso, adicione o _starter_ do OpenFeign como dependência:
 
 Anote a classe `EatsPagamentoServiceApplication` com `@EnableFeignClients` para habilitar o Feign:
 
-####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/EatsPagamentoServiceApplication.java
+####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/EatsPagamentoServiceApplication.java
 
 ```java
 @EnableFeignClients // adicionado
@@ -340,7 +340,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 
 Defina, no pacote `br.com.caelum.eats.pagamento` de `eats-pagamento-service`, uma interface `PedidoRestClient` com um método `avisaQueFoiPago`, anotados da seguinte maneira:
 
-####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PedidoRestClient.java
+####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PedidoRestClient.java
 
 ```java
 @FeignClient(url="${configuracao.pedido.service.url}", name="pedido")
@@ -362,7 +362,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 
 Em `PagamentoController`, do serviço de pagamento, defina um `PedidoRestClient` como atributo e use o método `avisaQueFoiPago` passando o id do pedido:
 
-####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoController.java
+####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoController.java
 
 ```java
 // anotações ...
@@ -417,7 +417,7 @@ public class PagamentoController {
 
 1. Adicione o Spring HATEOAS como dependência no `pom.xml` de `eats-pagamento-service`:
 
-  ####### eats-pagamento-service/pom.xml
+  ####### fj33-eats-pagamento-service/pom.xml
 
   ```xml
   <dependency>
@@ -435,7 +435,7 @@ public class PagamentoController {
 
   O código de `PagamentoController` ficará semelhante a:
 
-  ####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoController.java
+  ####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoController.java
 
   ```java
   @RestController
@@ -610,7 +610,7 @@ public class PagamentoController {
 
 1. Crie uma classe `LinkWithMethod` que estende o `Link` do Spring HATEOAS e define um atributo adicional chamado `method`, que armazenará o método HTTP dos links. Defina um construtor que recebe um `Link` e uma `String` com o método HTTP:
 
-  ####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/LinkWithMethod.java
+  ####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/LinkWithMethod.java
 
   ```java
   @Getter
@@ -638,7 +638,7 @@ public class PagamentoController {
 
   Use o trecho abaixo nos métodos `detalha` e `cria` de `PagamentoController`:
 
-  ####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoController.java
+  ####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoController.java
 
   ```java
   Link confirma = linkTo(methodOn(PagamentoController.class).confirma(id)).withRel("confirma");

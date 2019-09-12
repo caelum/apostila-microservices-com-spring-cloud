@@ -4,7 +4,7 @@
 
 1. Adicione ao `pom.xml` do serviço de distância, uma dependência ao starter do Spring Cloud Contract Verifier:
 
-  ####### eats-distancia-service/pom.xml
+  ####### fj33-eats-distancia-service/pom.xml
 
   ```xml
   <dependency>
@@ -16,7 +16,7 @@
 
   Adicione também o plugin Maven do Spring Cloud Contract:
 
-  ####### eats-distancia-service/pom.xml
+  ####### fj33-eats-distancia-service/pom.xml
 
   ```xml
   <plugin>
@@ -38,7 +38,7 @@
 
   Dentro desse diretório, crie o arquivo `deveAdicionarNovoRestaurante.groovy`. Esse arquivo conterá o contrato que estamos definindo, utilizando uma DSL Groovy:
 
-  ####### eats-distancia-service/src/test/resources/contracts/restaurantes/deveAdicionarNovoRestaurante.groovy
+  ####### fj33-eats-distancia-service/src/test/resources/contracts/restaurantes/deveAdicionarNovoRestaurante.groovy
 
   ```groovy
   import org.springframework.cloud.contract.spec.Contract
@@ -78,7 +78,7 @@
 
   _Observação: o nome da classe `RestaurantesBase` usa como prefixo o diretório de nosso contrato (`restaurantes`) com o sufixo `Base`._
 
-  ####### eats-distancia-service/src/test/java/br/com/caelum/eats/distancia/base/RestaurantesBase.java
+  ####### fj33-eats-distancia-service/src/test/java/br/com/caelum/eats/distancia/base/RestaurantesBase.java
 
   ```java
   @SpringBootTest
@@ -316,7 +316,7 @@
 
 1. Adicione, ao `pom.xml` do serviço de pagamentos, as dependências ao starter do Spring Cloud Contract Verifier e à biblioteca de suporte a testes do Spring Cloud Stream:
 
-  ####### eats-pagamento-service/pom.xml
+  ####### fj33-eats-pagamento-service/pom.xml
 
   ```xml
   <dependency>
@@ -333,7 +333,7 @@
 
   Adicione também o plugin Maven do Spring Cloud Contract, configurando `br.com.caelum.eats.pagamento.base` como pacote das classes base a serem usadas nos testes gerados a partir dos contratos.
 
-  ####### eats-pagamento-service/pom.xml
+  ####### fj33-eats-pagamento-service/pom.xml
 
   ```xml
   <plugin>
@@ -351,7 +351,7 @@
 
   Crie o arquivo `deveAdicionarNovoRestaurante.groovy` nesse diretório, definindo o contrato por meio da DSL Groovy:
 
-  ####### eats-pagamento-service/src/test/resources/contracts/pagamentos/confirmados/deveNotificarPagamentosConfirmados.groovy
+  ####### fj33-eats-pagamento-service/src/test/resources/contracts/pagamentos/confirmados/deveNotificarPagamentosConfirmados.groovy
 
   ```groovy
   import org.springframework.cloud.contract.spec.Contract
@@ -384,7 +384,7 @@
 
   _Observação: o nome da classe `PagamentosConfirmadosBase` usa como prefixo o diretório de nosso contrato (`pagamentos/confirmados`) com o sufixo `Base`._
 
-  ####### eats-pagamento-service/src/test/java/br/com/caelum/eats/pagamento/base/PagamentosConfirmadosBase.java
+  ####### fj33-eats-pagamento-service/src/test/java/br/com/caelum/eats/pagamento/base/PagamentosConfirmadosBase.java
 
   ```java
   @RunWith(SpringRunner.class)
@@ -421,7 +421,7 @@
 
   Corrija esse erro, fazendo com que a classe `Pagamento` seja pública:
 
-  ####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/Pagamento.java
+  ####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/Pagamento.java
 
   ```java
   public class Pagamento { // modificado
@@ -465,7 +465,7 @@
 
 1. Adicione, no `pom.xml` do serviço de nota fiscal, as dependências ao starter do Spring Cloud Contract Stub Runner e à biblioteca de suporte a testes do Spring Cloud Stream:
 
-  ####### eats-nota-fiscal-service/pom.xml
+  ####### fj33-eats-nota-fiscal-service/pom.xml
 
   ```xml
   <dependency>
@@ -498,7 +498,7 @@
 
   Verifique a chamada ao `ProcessadorDePagamentos`, usando um `ArgumentCaptor` do Mockito. Os valores dos parâmetros devem corresponder aos definidos no contrato.
 
-  ####### eats-nota-fiscal-service/src/test/java/br/com/caelum/notafiscal/ProcessadorDePagamentosTest.java
+  ####### fj33-eats-nota-fiscal-service/src/test/java/br/com/caelum/notafiscal/ProcessadorDePagamentosTest.java
 
   ```java
   @RunWith(SpringRunner.class)

@@ -4,7 +4,7 @@
 
 O Flyway será usado como ferramenta de migração de dados do `eats-pagamento-service`. Deve ser adicionada uma dependência no `pom.xml`:
 
-####### eats-pagamento-service/pom.xml
+####### fj33-eats-pagamento-service/pom.xml
 
 ```xml
 <dependency>
@@ -15,7 +15,7 @@ O Flyway será usado como ferramenta de migração de dados do `eats-pagamento-s
 
 O database do serviço de pagamentos precisa ser modificado para um novo. Podemos chamá-lo de `eats_pagamento`.
 
-####### eats-pagamento-service/src/main/resources/application.properties
+####### fj33-eats-pagamento-service/src/main/resources/application.properties
 
 ```properties
 s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶u̶r̶l̶=̶j̶d̶b̶c̶:̶m̶y̶s̶q̶l̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶/̶e̶a̶t̶s̶?̶c̶r̶e̶a̶t̶e̶D̶a̶t̶a̶b̶a̶s̶e̶I̶f̶N̶o̶t̶E̶x̶i̶s̶t̶=̶t̶r̶u̶e̶
@@ -26,7 +26,7 @@ O mesmo usuário `root` deve ter acesso a ambos os databases: `eats`, do monóli
 
 Numa nova pasta `db/migration` em  `src/main/resources` deve ser criada uma primeira migration, que cria a tabela de `pagamento`. O arquivo pode ter o nome `V0001__cria-tabela-pagamento.sql` e o seguinte conteúdo:
 
-####### eats-pagamento-service/src/main/resources/db/migration/V0001__cria-tabela-pagamento.sql
+####### fj33-eats-pagamento-service/src/main/resources/db/migration/V0001__cria-tabela-pagamento.sql
 
 ```sql
 CREATE TABLE pagamento (
@@ -47,7 +47,7 @@ O conteúdo acima pode ser encontrado na seguinte URL: https://gitlab.com/snippe
 
 Uma segunda migration, de nome `V0002__migra-dados-de-pagamento.sql`, obtem os dados do database `eats`, do monólito, e os insere no database `eats_pagamento`. Crie o arquivo  em `db/migration`, conforme a seguir:
 
-####### eats-pagamento-service/src/main/resources/db/migration/V0002__migra-dados-de-pagamento.sql
+####### fj33-eats-pagamento-service/src/main/resources/db/migration/V0002__migra-dados-de-pagamento.sql
 
 ```sql
 insert into eats_pagamento.pagamento
@@ -231,7 +231,7 @@ O serviço de pagamentos deve deixar de usar o MySQL do monólito e passar a usa
 
 Para isso, basta alterarmos a URL, usuário e senha de BD do serviço de pagamentos, para que apontem para o container Docker do `mysql.pagamento`:
 
-####### eats-pagamento-service/src/main/resources/application.properties
+####### fj33-eats-pagamento-service/src/main/resources/application.properties
 
 ```properties
 s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶u̶r̶l̶=̶j̶d̶b̶c̶:̶m̶y̶s̶q̶l̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶/̶e̶a̶t̶s̶_̶p̶a̶g̶a̶m̶e̶n̶t̶o̶?̶c̶r̶e̶a̶t̶e̶D̶a̶t̶a̶b̶a̶s̶e̶I̶f̶N̶o̶t̶E̶x̶i̶s̶t̶=̶t̶r̶u̶e̶
@@ -388,7 +388,7 @@ O _starter_ do Spring Data MongoDB deve ser adicionado ao `pom.xml` do `eats-dis
 
 Já as dependências ao Spring Data JPA e ao driver do MySQL devem ser removidas.
 
-####### eats-distancia-service/pom.xml
+####### fj33-eats-distancia-service/pom.xml
 
 ```xml
 <dependency>
@@ -418,7 +418,7 @@ A anotação `@Id` deve ser mantida, porém o import será trocado.
 
 O atributo `aprovado` pode ser removido, já que a migração dos dados foi feita de maneira que o database de distância do MongoDB só contém restaurantes já aprovados.
 
-####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/Restaurante.java
+####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/Restaurante.java
 
 ```java
 @Document(collection = "restaurantes") // adicionado
@@ -467,7 +467,7 @@ A interface `RestauranteRepository` deve ser modificada, para que passe a herdar
 
 Como removemos o atributo `aprovado`, as definições de métodos devem ser ajustadas.
 
-####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RestauranteRepository.java
+####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RestauranteRepository.java
 
 ```java
 i̶n̶t̶e̶r̶f̶a̶c̶e̶ ̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶R̶e̶p̶o̶s̶i̶t̶o̶r̶y̶ ̶e̶x̶t̶e̶n̶d̶s̶ ̶J̶p̶a̶R̶e̶p̶o̶s̶i̶t̶o̶r̶y̶<̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶,̶ ̶L̶o̶n̶g̶>̶ ̶{̶
@@ -491,7 +491,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 Como removemos o atributo `aprovado`, é necessário alterar a chamada ao `RestauranteRepository` em alguns métodos do `DistanciaService`:
 
-####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/DistanciaService.java
+####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/DistanciaService.java
 
 ```java
 // anotações....
@@ -518,7 +518,7 @@ class DistanciaService {
 
 No arquivo `application.properties` do `eats-distancia-service`, devem ser adicionadas as configurações do MongoDB. As configurações de datasource do MySQL e do JPA devem ser removidas.
 
-####### eats-distancia-service/src/main/resources/application.properties
+####### fj33-eats-distancia-service/src/main/resources/application.properties
 
 ```properties
 spring.data.mongodb.database=eats_distancia

@@ -28,7 +28,7 @@ Extraia o `api-gateway.zip` e copie a pasta para seu Desktop.
 
 Adicione a anotação `@EnableZuulProxy` à classe `ApiGatewayApplication`:
 
-####### api-gateway/src/main/java/br/com/caelum/apigateway/ApiGatewayApplication.java
+####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/ApiGatewayApplication.java
 
 ```java
 @EnableZuulProxy
@@ -58,7 +58,7 @@ No arquivo `src/main/resources/application.properties`:
 
 O arquivo ficará semelhante a:
 
-####### api-gateway/src/main/resources/application.properties
+####### fj33-api-gateway/src/main/resources/application.properties
 
 ```properties
 server.port = 9999
@@ -176,7 +176,7 @@ export class RestauranteService {
 
 Por padrão, o Zuul remove os cabeçalhos HTTP `Cookie`, `Set-Cookie`, `Authorization`. Vamos desabilitar essa remoção no `application.properties`:
 
-####### api-gateway/src/main/resources/application.properties
+####### fj33-api-gateway/src/main/resources/application.properties
 
 ```properties
 zuul.sensitiveHeaders=
@@ -201,7 +201,7 @@ zuul.sensitiveHeaders=
 
 Adicione o Lombok como dependência no `pom.xml` do projeto `api-gateway`:
 
-####### api-gateway/pom.xml
+####### fj33-api-gateway/pom.xml
 
 ```xml
 <dependency>
@@ -213,7 +213,7 @@ Adicione o Lombok como dependência no `pom.xml` do projeto `api-gateway`:
 
 Crie uma classe `RestClientConfig` no pacote `br.com.caelum.apigateway`, que fornece um `RestTemplate` do Spring:
 
-####### api-gateway/src/main/java/br/com/caelum/apigateway/RestClientConfig.java
+####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/RestClientConfig.java
 
 ```java
 @Configuration
@@ -243,7 +243,7 @@ No método `comDistanciaPorCepEId`, dispare um `GET` à URL do serviço de dist�
 
 Como queremos apenas mesclar as respostas na API Composition, não precisamos de um _domain model_. Por isso, podemos usar um `Map` como tipo de retorno.
 
-####### api-gateway/src/main/java/br/com/caelum/apigateway/DistanciaRestClient.java
+####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/DistanciaRestClient.java
 
 ```java
 @Service
@@ -282,7 +282,7 @@ Observação: é possível resolver o warning de _unchecked conversion_ usando u
 
 Adicione o Feign como dependência no `pom.xml` do projeto `api-gateway`:
 
-####### api-gateway/pom.xml
+####### fj33-api-gateway/pom.xml
 
 ```xml
 <dependency>
@@ -293,7 +293,7 @@ Adicione o Feign como dependência no `pom.xml` do projeto `api-gateway`:
 
 Na classe `ApiGatewayApplication`, adicione a anotação `@EnableFeignClients`:
 
-####### api-gateway/src/main/java/br/com/caelum/apigateway/ApiGatewayApplication.java
+####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/ApiGatewayApplication.java
 
 ```java
 @EnableFeignClients // adicionado
@@ -340,7 +340,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 A configuração do monólito no Zuul precisa ser ligeiramente alterada para que o Feign funcione:
 
-####### api-gateway/src/main/resources/application.properties
+####### fj33-api-gateway/src/main/resources/application.properties
 
 ```properties
 z̶u̶u̶l̶.̶r̶o̶u̶t̶e̶s̶.̶m̶o̶n̶o̶l̶i̶t̶o̶.̶u̶r̶l̶=̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶0̶
@@ -356,7 +356,7 @@ No `api-gateway`, crie um `RestauranteComDistanciaController`, que invoca dado u
 - os detalhes do restaurante usando `RestauranteRestClient`
 - a quilometragem entre o restaurante e o CEP usando `DistanciaRestClient`
 
-####### api-gateway/src/main/java/br/com/caelum/apigateway/RestauranteComDistanciaController.java
+####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/RestauranteComDistanciaController.java
 
 ```java
 @RestController
@@ -395,7 +395,7 @@ Isso ocorre porque, como o prefixo não é `pagamentos` nem `distancia`, a requi
 
 Devemos configurar uma rota no Zuul, usando o `forward` para o endereço local:
 
-####### api-gateway/src/main/resources/application.properties
+####### fj33-api-gateway/src/main/resources/application.properties
 
 ```properties
 zuul.routes.local.path=/restaurantes-com-distancia/**
@@ -468,7 +468,7 @@ _Access to XMLHttpRequest at 'http://localhost:9999/restaurantes-com-distancia/7
 
 Para resolver o erro de CORS, devemos adicionar ao API Gateway uma classe `CorsConfig` semelhante a que temos nos serviços de pagamentos e distância e também no monólito:
 
-####### api-gateway/src/main/java/br/com/caelum/apigateway/CorsConfig.java
+####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/CorsConfig.java
 
 ```java
 @Configuration
@@ -555,7 +555,7 @@ Vamos customizá-lo, para que funcione com respostas bem sucedidas, de status `2
 
 Para isso, crie uma classe `LocationRewriteConfig` no pacote `br.com.caelum.apigateway`, definindo uma subclasse anônima  de `LocationRewriteFilter`, modificando alguns detalhes.
 
-####### api-gateway/src/main/java/br/com/caelum/apigateway/LocationRewriteConfig.java
+####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/LocationRewriteConfig.java
 
 ```java
 @Configuration
@@ -629,7 +629,7 @@ Agora sim! Ao receber um status `201 Created`, depois de criar algum recurso em 
 
 1. Adicione, no `pom.xml` de `api-gateway`, uma dependência a biblioteca Google Guava:
 
-  ####### api-gateway/pom.xml
+  ####### fj33-api-gateway/pom.xml
 
   ```xml
   <dependency>
@@ -643,7 +643,7 @@ Agora sim! Ao receber um status `201 Created`, depois de criar algum recurso em 
 
 2. Crie um `ZuulFilter` que retorna uma falha com status `429 TOO MANY REQUESTS` se a taxa de acesso ultrapassar 1 requisição a cada 30 segundos:
 
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/RateLimitingZuulFilter.java
+  ####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/RateLimitingZuulFilter.java
 
   ```java
   @Component

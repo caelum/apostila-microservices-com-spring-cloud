@@ -33,7 +33,7 @@ Extraia o `eats-pagamento-service.zip`.
 
 No arquivo `src/main/resources/application.properties`, modifique a porta para `8081` e, por enquanto, aponte para o mesmo BD do monólito. Defina também algumas outras configurações do JPA e de serialização de JSON.
 
-####### eats-pagamento-service/src/main/resources/application.properties
+####### fj33-eats-pagamento-service/src/main/resources/application.properties
 
 ```properties
 server.port = 8081
@@ -72,7 +72,7 @@ Será que devemos colocar dependências Maven a esses módulos? Não parece uma 
 
 Vamos, então, trocar as referências a essas classes pelos respectivos ids, de maneira a referenciar as raízes dos agregados `Pedido` e `FormaDePagamento`:
 
-####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/Pagamento.java
+####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/Pagamento.java
 
 ```java
 // anotações ...
@@ -109,7 +109,7 @@ import javax.persistence.Column; // adicionado ...
 
 A mesma mudança deve ser feita para a classe `PagamentoDto`, referenciando apenas os ids das classes `PedidoDto` e `FormaDePagamento`:
 
-####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoDto.java
+####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoDto.java
 
 ```java
 // anotações ...
@@ -147,7 +147,7 @@ Por enquanto, vamos simplificar a confirmação de pagamento, que ficará semelh
 
 Depois voltaremos com a atualização do pedido.
 
-####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoController.java
+####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoController.java
 
 ```java
 // anotações ...
@@ -463,7 +463,7 @@ Descompacte o `eats-distancia-service.zip` para seu Desktop.
 
 Edite o arquivo `src/main/resources/application.properties`, modificando a porta para 8082, apontando para o BD do monólito, além de definir configurações do JPA e de serialização de JSON:
 
-####### eats-distancia-service/src/main/resources/application.properties
+####### fj33-eats-distancia-service/src/main/resources/application.properties
 
 ```properties
 server.port = 8082
@@ -505,7 +505,7 @@ Remova, na classe `Restaurante` copiada, a referência à entidade `TipoDeCozinh
 
 Remova por completo a referência à classe `User`.
 
-####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/Restaurante.java
+####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/Restaurante.java
 
 ```java
 // anotações
@@ -539,7 +539,7 @@ import javax.persistence.Column; // adicionado ...
 
 Na classe `DistanciaService` de `eats-distancia-service`, remova os imports que referenciam as classes `Restaurante` e `TipoDeCozinha`:
 
-####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/DistanciaService.java
+####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/DistanciaService.java
 
 ```java
 i̶m̶p̶o̶r̶t̶ ̶b̶r̶.̶c̶o̶m̶.̶c̶a̶e̶l̶u̶m̶.̶e̶a̶t̶s̶.̶a̶d̶m̶i̶n̶i̶s̶t̶r̶a̶t̶i̶v̶o̶.̶T̶i̶p̶o̶D̶e̶C̶o̶z̶i̶n̶h̶a̶;̶
@@ -550,7 +550,7 @@ Como a classe `Restaurante` foi copiada para o mesmo pacote de `DistanciaService
 
 Mas e para `TipoDeCozinha`? Utilizaremos apenas o id. Por isso, modifique o método `restaurantesDoTipoDeCozinhaMaisProximosAoCep` de `DistanciaService`:
 
-####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/DistanciaService.java
+####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/DistanciaService.java
 
 ```java
 public List<RestauranteComDistanciaDto> restaurantesDoTipoDeCozinhaMaisProximosAoCep(Long tipoDeCozinhaId, String cep) {
@@ -568,7 +568,7 @@ Ainda resta um erro de compilação na classe `DistanciaService`: o uso da class
 
 Por isso, crie uma interface `RestauranteRepository` no pacote `br.com.caelum.eats.distancia` de `eats-distancia-service`, que estende `JpaRepository` do Spring Data Jpa e possui os métodos usados por `DistanciaService`:
 
-####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RestauranteRepository.java
+####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RestauranteRepository.java
 
 ```java
 package br.com.caelum.eats.distancia;
@@ -588,7 +588,7 @@ interface RestauranteRepository extends JpaRepository<Restaurante, Long> {
 
 Em `DistanciaService`, use `RestauranteRepository` ao invés de `RestauranteService`:
 
-####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/DistanciaService.java
+####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/DistanciaService.java
 
 ```java
 // anotações ...
@@ -616,7 +616,7 @@ O `eats-distancia-service` necessita apenas de um subconjunto das informações 
 
 Enxugue a classe `Restaurante` do pacote `br.com.caelum.eats.distancia`, deixando apenas as informações realmente necessárias:
 
-####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/Restaurante.java
+####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/Restaurante.java
 
 ```java
 // anotações ...
@@ -657,7 +657,7 @@ public class Restaurante {
 }
 ```
 
-####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/Restaurante.java
+####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/Restaurante.java
 
 O conteúdo da classe `Restaurante` do serviço de distância ficará da seguinte maneira:
 

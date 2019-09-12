@@ -45,7 +45,7 @@
 
 3. Para fazer com as requisições ao Actuator do API Gateway não acabem enviadas para o monólito, faça a configuração a seguir:
 
-  ####### api-gateway/src/main/resources/application.properties
+  ####### fj33-api-gateway/src/main/resources/application.properties
 
   ```properties
   zuul.routes.actuator.path=/actuator/**
@@ -54,7 +54,7 @@
 
 4. Exponha todos os endpoints do Actuator no `config-server` e no `service-registry`:
 
-  ####### config-server/src/main/resources/application.properties
+  ####### fj33-config-server/src/main/resources/application.properties
 
   ```properties
   management.endpoints.web.exposure.include=*
@@ -62,7 +62,7 @@
 
   e
 
-  ####### service-registry/src/main/resources/application.properties
+  ####### fj33-service-registry/src/main/resources/application.properties
 
   ```properties
   management.endpoints.web.exposure.include=*
@@ -141,7 +141,7 @@
 3. No Eclipse, no workspace de microservices, importe o projeto `hystrix-dashboard`, usando o menu _File > Import > Existing Maven Projects_.
 4. Adicione a anotação `@EnableHystrixDashboard` à classe `HystrixDashboardApplication`:
 
-  ####### hystrix-dashboard/src/main/java/br/com/caelum/hystrixdashboard/HystrixDashboardApplication.java
+  ####### fj33-hystrix-dashboard/src/main/java/br/com/caelum/hystrixdashboard/HystrixDashboardApplication.java
 
   ```java
   @EnableHystrixDashboard
@@ -163,7 +163,7 @@
 
 5. No arquivo `application.properties`, modifique a porta para `7777`:
 
-  ####### hystrix-dashboard/src/main/resources/application.properties
+  ####### fj33-hystrix-dashboard/src/main/resources/application.properties
 
   ```properties
   server.port=7777
@@ -215,7 +215,7 @@
 3. No Eclipse, no workspace de microservices, importe o projeto `turbine`, usando o menu _File > Import > Existing Maven Projects_.
 4. Adicione as anotações `@EnableDiscoveryClient` e `@EnableTurbine` à classe `TurbineApplication`:
 
-  ####### turbine/src/main/java/br/com/caelum/turbine/TurbineApplication.java
+  ####### fj33-turbine/src/main/java/br/com/caelum/turbine/TurbineApplication.java
 
   ```java
   @EnableTurbine
@@ -241,7 +241,7 @@
 
   Adicione configurações que aponta para os nomes das aplicações e para o cluster `default`:
 
-  ####### turbine/src/main/resources/application.properties
+  ####### fj33-turbine/src/main/resources/application.properties
 
   ```properties
   server.port=7776
@@ -294,7 +294,7 @@
 
 1. No `pom.xml` do projeto `turbine`, troque a dependência ao starter do Turbine pela do Turbine Stream. Adicione também o binder do Spring Cloud Stream ao RabbitMQ:
 
-  ####### turbine/pom.xml
+  ####### fj33-turbine/pom.xml
 
   ```xml
   <̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
@@ -315,7 +315,7 @@
 
   Por isso, remova as configurações de aplicações do `application.properties`:
 
-  ####### turbine/src/main/resources/application.properties
+  ####### fj33-turbine/src/main/resources/application.properties
 
   ```properties
   t̶u̶r̶b̶i̶n̶e̶.̶a̶p̶p̶C̶o̶n̶f̶i̶g̶=̶a̶p̶i̶g̶a̶t̶e̶w̶a̶y̶
@@ -324,7 +324,7 @@
 
 3. Troque a anotação `@EnableTurbine` por `@EnableTurbineStream` na classe `TurbineApplication`:
 
-  ####### turbine/src/main/java/br/com/caelum/turbine/TurbineApplication.java
+  ####### fj33-turbine/src/main/java/br/com/caelum/turbine/TurbineApplication.java
 
   ```java
   @̶E̶n̶a̶b̶l̶e̶T̶u̶r̶b̶i̶n̶e̶
@@ -349,7 +349,7 @@
 
 4. Adicione a dependência ao Hystrix Stream no `pom.xml` do API Gateway:
 
-  ####### api-gateway/pom.xml
+  ####### fj33-api-gateway/pom.xml
 
   ```xml
   <dependency>
@@ -360,7 +360,7 @@
 
 5. Ajuste o _destination_ do _channel_ `hystrixStreamOutput`, no `application.properties` do API Gateway, por meio da propriedade:
 
-  ####### api-gateway/src/main/resources/application.properties
+  ####### fj33-api-gateway/src/main/resources/application.properties
 
   ```properties
   spring.cloud.stream.bindings.hystrixStreamOutput.destination=springCloudHystrixStream
@@ -414,7 +414,7 @@
 
 1. Adicione uma dependência ao starter do Spring Cloud Zipkin no `pom.xml` do API Gateway:
 
-  ####### api-gateway/pom.xml
+  ####### fj33-api-gateway/pom.xml
 
   ```xml
   <dependency>
@@ -481,7 +481,7 @@
 3. No Eclipse, no workspace de microservices, importe o projeto `admin-server`, usando o menu _File > Import > Existing Maven Projects_.
 4. Adicione a anotação `@EnableAdminServer` à classe `AdminServerApplication`:
 
-  ####### admin-server/src/main/java/br/com/caelum/adminserver/AdminServerApplication.java
+  ####### fj33-admin-server/src/main/java/br/com/caelum/adminserver/AdminServerApplication.java
 
   ```java
   @EnableAdminServer
@@ -503,7 +503,7 @@
 
 5. No arquivo `application.properties`, modifique a porta para `8084`:
 
-  ####### admin-server/src/main/resources/application.properties
+  ####### fj33-admin-server/src/main/resources/application.properties
 
   ```properties
   server.port=8084

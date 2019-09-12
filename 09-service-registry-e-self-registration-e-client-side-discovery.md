@@ -26,7 +26,7 @@ Extraia o `service-registry.zip` e copie a pasta para seu Desktop.
 
 Adicione a anotação `@EnableEurekaServer` à classe `ServiceRegistryApplication`:
 
-####### service-registry/src/main/java/br/com/caelum/serviceregistry/ServiceRegistryApplication.java
+####### fj33-service-registry/src/main/java/br/com/caelum/serviceregistry/ServiceRegistryApplication.java
 
 ```java
 @EnableEurekaServer
@@ -48,7 +48,7 @@ import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
 
 No arquivo `application.properties`, modifique a porta para `8761`, a porta padrão do Eureka Server, e adicione algumas configurações para que o próprio _service registry_ não se registre nele mesmo.
 
-####### service-registry/src/main/resources/application.properties
+####### fj33-service-registry/src/main/resources/application.properties
 
 ```properties
 server.port=8761
@@ -80,7 +80,7 @@ logging.level.com.netflix.discovery=OFF
 
 No `pom.xml` do `eats-distancia-service`, adicione uma dependência ao _Spring Cloud_ na versão `Greenwich.SR2`, em `dependencyManagement`:
 
-####### eats-distancia-service/pom.xml
+####### fj33-eats-distancia-service/pom.xml
 
 ```xml
 <dependencyManagement>
@@ -98,7 +98,7 @@ No `pom.xml` do `eats-distancia-service`, adicione uma dependência ao _Spring C
 
 Adicione o _starter_ do Eureka Client como dependência:
   
-####### eats-distancia-service/pom.xml
+####### fj33-eats-distancia-service/pom.xml
 
 ```xml
 <dependency>
@@ -127,7 +127,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 É preciso identificar o serviço de distância para o Eureka Server. Para isso, adicione a propriedade `spring.application.name` ao `application.properties`:
 
-####### eats-distancia-service/src/main/resources/application.properties
+####### fj33-eats-distancia-service/src/main/resources/application.properties
 
 ```properties
 spring.application.name=distancia
@@ -139,7 +139,7 @@ Porém, um problema é que não há uma configuração para a URL do Eureka Serv
 
 É preciso definir essa configuração customizável no `application.properties`:
 
-####### eats-distancia-service/src/main/resources/application.properties
+####### fj33-eats-distancia-service/src/main/resources/application.properties
 
 ```properties
 eureka.client.serviceUrl.defaultZone=${EUREKA_URI:http://localhost:8761/eureka/}
@@ -151,7 +151,7 @@ Dessa maneira, caso seja necessário modificar a URL padrão do Eureka Server, b
 
 No `pom.xml` do `eats-pagamento-service`, adicione como dependência o _starter_ do Eureka Client:
 
-####### eats-pagamento-service/pom.xml
+####### fj33-eats-pagamento-service/pom.xml
 
 ```xml
 <dependency>
@@ -162,7 +162,7 @@ No `pom.xml` do `eats-pagamento-service`, adicione como dependência o _starter_
 
 Anote a classe `EatsPagamentoServiceApplication` com `@EnableDiscoveryClient`:
 
-####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/EatsPagamentoServiceApplication.java
+####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/EatsPagamentoServiceApplication.java
 
 ```java
 @EnableDiscoveryClient // adicionado
@@ -181,7 +181,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 Defina, no `application.properties`, um nome para aplicação, que será usado no Eureka Server. Além disso, adicione a configuração customizável para a URL do Eureka Server:
 
-####### eats-pagamento-service/src/main/resources/application.properties
+####### fj33-eats-pagamento-service/src/main/resources/application.properties
 
 ```properties
 spring.application.name=pagamentos
@@ -236,7 +236,7 @@ eureka.client.serviceUrl.defaultZone=${EUREKA_URI:http://localhost:8761/eureka/}
 
 Adicione como dependência o _starter_ do Eureka Client, No `pom.xml` do `api-gateway`:
 
-####### api-gateway/pom.xml
+####### fj33-api-gateway/pom.xml
 
 ```xml
 <dependency>
@@ -247,7 +247,7 @@ Adicione como dependência o _starter_ do Eureka Client, No `pom.xml` do `api-ga
 
 Anote a classe `ApiGatewayApplication` com `@EnableDiscoveryClient`:
 
-####### api-gateway/src/main/java/br/com/caelum/apigateway/ApiGatewayApplication.java
+####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/ApiGatewayApplication.java
 
 ```java
 @EnableDiscoveryClient // adicionado
@@ -269,7 +269,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 No `application.properties`, defina `apigateway` como nome da aplicação. Defina também a URL do Eureka Server:
 
-####### api-gateway/src/main/resources/application.properties
+####### fj33-api-gateway/src/main/resources/application.properties
 
 ```properties
 spring.application.name=apigateway
@@ -333,7 +333,7 @@ eureka.client.serviceUrl.defaultZone=${EUREKA_URI:http://localhost:8761/eureka/}
 
 No `application.properties` de `eats-pagamento-service`, apague a lista de servidores de distância do Ribbon, para que seja obtida do Eureka Server e, também, a configuração que desabilita o Eureka Client no Ribbon, que é habilitado por padrão:
 
-####### eats-pagamento-service/src/main/resources/application.properties
+####### fj33-eats-pagamento-service/src/main/resources/application.properties
 
 ```properties
 m̶o̶n̶o̶l̶i̶t̶o̶.̶r̶i̶b̶b̶o̶n̶.̶l̶i̶s̶t̶O̶f̶S̶e̶r̶v̶e̶r̶s̶=̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶8̶0̶8̶0̶,̶h̶t̶t̶p̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶:̶9̶0̶9̶0̶
@@ -348,7 +348,7 @@ Limpe as configurações, já que boa parte delas serão obtidas pelas próprias
 
 Mantenha as que fazem sentido e modifique ligeiramente algumas delas.
 
-####### api-gateway/src/main/resources/application.properties
+####### fj33-api-gateway/src/main/resources/application.properties
 
 ```properties
 r̶i̶b̶b̶o̶n̶.̶e̶u̶r̶e̶k̶a̶.̶e̶n̶a̶b̶l̶e̶d̶=̶f̶a̶l̶s̶e̶

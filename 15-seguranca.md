@@ -394,7 +394,7 @@ Vamos modificar esse cenário, passando a responsabilidade de geração de token
 
   Adicione, ao API Gateway, dependências ao starter do Spring Data JPA e ao driver do MySQL. Adicione também o JJWT, biblioteca que gera e valida tokens JWT, e ao starter do Spring Security.
 
-  ####### api-gateway/pom.xml
+  ####### fj33-api-gateway/pom.xml
 
   ```xml
   <dependency>
@@ -459,7 +459,7 @@ Vamos modificar esse cenário, passando a responsabilidade de geração de token
 
 4. Defina uma classe `SecurityConfig` no pacote `br.com.caelum.apigateway` para que permita toda e qualquer requisição, desabilitando a autorização, que será feita pelos serviços. A autenticação será _stateless_.
 
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/SecurityConfig.java
+  ####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/SecurityConfig.java
 
   ```java
   @Configuration
@@ -499,7 +499,7 @@ Vamos modificar esse cenário, passando a responsabilidade de geração de token
 
   É importante adicionar o username e os roles do usuário aos _claims_ do JWT.
 
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/JwtTokenManager.java
+  ####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/JwtTokenManager.java
 
   ```java
   @Component
@@ -533,7 +533,7 @@ Vamos modificar esse cenário, passando a responsabilidade de geração de token
 
 6. Ainda no API Gateway, adicione um _forward_ para a URL do `AuthenticationController`, de maneira que o Zuul não tente fazer o proxy dessa chamada:
 
-  ####### api-gateway/src/main/resources/application.properties
+  ####### fj33-api-gateway/src/main/resources/application.properties
 
   ```properties
   zuul.routes.auth.path=/auth/**

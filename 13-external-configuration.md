@@ -25,7 +25,7 @@
 3. No Eclipse, no workspace de microservices, importe o projeto `config-server`, usando o menu _File > Import > Existing Maven Projects_.
 4. Adicione a anotação `@EnableConfigServer` à classe `ConfigServerApplication`:
 
-  ####### config-server/src/main/java/br/com/caelum/configserver/ConfigServerApplication.java
+  ####### fj33-config-server/src/main/java/br/com/caelum/configserver/ConfigServerApplication.java
 
   ```java
   @EnableConfigServer
@@ -49,7 +49,7 @@
 
   Nossos arquivos de configuração ficarão no diretório `src/main/resources/configs`, sendo copiados para a raiz do JAR e, em _runtime_, disponível pelo classpath. Portanto, configure a propriedade `spring.cloud.config.server.native.searchLocations` para apontar para esse diretório.
 
-  ####### config-server/src/main/resources/application.properties
+  ####### fj33-config-server/src/main/resources/application.properties
 
   ```properties
   server.port=8888
@@ -76,7 +76,7 @@
 
   No `pom.xml` de `eats-pagamento-service`, adicione a dependência ao _starter_ do Spring Cloud Config Client:
 
-  ####### eats-pagamento-service/pom.xml
+  ####### fj33-eats-pagamento-service/pom.xml
 
   ```xml
   <dependency>
@@ -87,7 +87,7 @@
 
 2. Retire do `application.properties` do serviço de pagamentos as configurações comuns que foram definidas no Config Server. Remova também o nome da aplicação:
 
-  ####### eats-pagamento-service/src/main/resources/application.properties
+  ####### fj33-eats-pagamento-service/src/main/resources/application.properties
 
   ```properties
   
@@ -99,7 +99,7 @@
 
 3. Crie o arquivo `bootstrap.properties` no diretório `src/main/resources` do serviço de pagamentos. Nesse arquivo, defina o nome da aplicação e a URL do Config Server:
 
-  ####### eats-pagamento-service/src/main/resources/bootstrap.properties
+  ####### fj33-eats-pagamento-service/src/main/resources/bootstrap.properties
 
   ```properties
   spring.application.name=pagamentos
@@ -139,7 +139,7 @@
 
 3. Configure o `application.properties` do `config-server` para apontar para o repositório Git:
 
-  ####### config-server/src/main/resources/application.properties
+  ####### fj33-config-server/src/main/resources/application.properties
 
   ```properties
   s̶p̶r̶i̶n̶g̶.̶p̶r̶o̶f̶i̶l̶e̶s̶.̶a̶c̶t̶i̶v̶e̶=̶n̶a̶t̶i̶v̶e̶
@@ -191,7 +191,7 @@
 
 2. Mova as configurações do BD do serviço de pagamento para o arquivo `pagamentos.properties` do repositório de configurações:
 
-  ####### eats-pagamento-service/src/main/resources/application.properties
+  ####### fj33-eats-pagamento-service/src/main/resources/application.properties
 
   ```properties
   #̶D̶A̶T̶A̶S̶O̶U̶R̶C̶E̶ ̶C̶O̶N̶F̶I̶G̶S̶

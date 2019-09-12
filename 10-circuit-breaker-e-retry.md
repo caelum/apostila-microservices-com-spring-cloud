@@ -4,7 +4,7 @@
 
 1. Altere o método `calculaDistancia` da classe `DistanciaService` do serviço de distância, para que invoque o método que simula uma demora de 10 a 20 segundos:
 
-  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/DistanciaService.java
+  ####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/DistanciaService.java
 
   ```java
   class DistanciaService {
@@ -42,72 +42,55 @@
 
   A requisição mais demorada, no exemplo anterior, foi de 19,6 segundos. Inviável!
 
-## Exercício: Circuit Breaker com Hystrix
+## Circuit Breaker com Hystrix
 
-1. No `pom.xml` do API Gateway, adicione o _starter_ do Spring Cloud Netflix Hystrix:
+No `pom.xml` do API Gateway, adicione o _starter_ do Spring Cloud Netflix Hystrix:
 
-  ####### api-gateway/pom.xml
+####### fj33-api-gateway/pom.xml
 
-  ```xml
-  <dependency>
-    <groupId>org.springframework.cloud</groupId>
-    <artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
-  </dependency>
-  ```
+```xml
+<dependency>
+  <groupId>org.springframework.cloud</groupId>
+  <artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
+</dependency>
+```
 
-2. Adicione a anotação `@EnableCircuitBreaker` à classe `ApiGatewayApplication`:
+Adicione a anotação `@EnableCircuitBreaker` à classe `ApiGatewayApplication`:
 
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/ApiGatewayApplication.java
+####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/ApiGatewayApplication.java
 
-  ```java
-  @EnableCircuitBreaker // adicionado
-  // demais anotações...
-  public class ApiGatewayApplication {
-    // código omitido...
+```java
+@EnableCircuitBreaker // adicionado
+// demais anotações...
+public class ApiGatewayApplication {
+  // código omitido...
+}
+```
+
+Não deixe de adicionar o import correto:
+
+```java
+import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker;
+```
+
+Na classe `DistanciaRestClient` do API Gateway, habilite o _circuit breaker_ no método `porCepEId`, com a anotação `@HystrixCommand`:
+
+####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/DistanciaRestClient.java
+
+```java
+@Service
+class DistanciaRestClient {
+
+  // código omitido...
+
+  @HystrixCommand // adicionado
+  Map<String, Object>  porCepEId(String cep, Long restauranteId) {
+    String url = distanciaServiceUrl + "/restaurantes/" + cep + "/restaurante/" + restauranteId;
+    return restTemplate.getForObject(url, Map.class);
   }
-  ```
 
-  Não deixe de adicionar o import correto:
-
-  ```java
-  import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker;
-  ```
-
-3. Na classe `DistanciaRestClient` do API Gateway, habilite o _circuit breaker_ no método `porCepEId`, com a anotação `@HystrixCommand`:
-
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/DistanciaRestClient.java
-
-  ```java
-  @Service
-  public class DistanciaRestClient {
-
-    // código omitido...
-
-    @HystrixCommand // adicionado
-    public RestauranteComDistanciaDto porCepEId(String cep, Long restauranteId) {
-      String url = distanciaServiceUrl + "/restaurantes/" + cep + "/restaurante/" + restauranteId;
-      return restTemplate.getForObject(url, RestauranteComDistanciaDto.class);
-    }
-
-  }
-  ```
-
-4. Reinicie o API Gateway e execute novamente a simulação com o ApacheBench, com o comando:
-
-  ```sh
-  ab -n 100 -c 10 http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1
-  ```
-
-  Observe nos resultados uma diminuição no tempo máximo de request de 19,6 para 1,5 segundos:
-
-  ```txt
-  Connection Times (ms)
-                min  mean[+/-sd] median   max
-  Connect:        0    0   0.7      0       7
-  Processing:    75  381 360.8    275    1557
-  Waiting:       67  375 359.0    270    1527
-  Total:         75  382 360.9    275    1558
-  ```
+}
+```
 
 <!--@note
 
@@ -144,7 +127,7 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
 
   Defina o método `restauranteSemDistanciaNemDetalhes`, que retorna apenas o restaurante com o id. Se `RestauranteRestClient` não der erro, teríamos todos os detalhes do restaurante menos a distância.
 
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/DistanciaRestClient.java
+  ####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/DistanciaRestClient.java
 
   ```java
   @Service
@@ -154,14 +137,17 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
 
     @̶H̶y̶s̶t̶r̶i̶x̶C̶o̶m̶m̶a̶n̶d̶
     @HystrixCommand(fallbackMethod="restauranteSemDistanciaNemDetalhes") // modificado
-    public RestauranteComDistanciaDto porCepEId(String cep, Long restauranteId) {
+    public Map<String, Object>  porCepEId(String cep, Long restauranteId) {
       String url = distanciaServiceUrl+"/restaurantes/"+cep+"/restaurante/"+restauranteId;
-      return restTemplate.getForObject(url, RestauranteComDistanciaDto.class);
+      return restTemplate.getForObject(url, Map.class);
     }
 
     // método adicionado
-    public RestauranteComDistanciaDto restauranteSemDistanciaNemDetalhes(String cep, Long restauranteId) {
-      return new RestauranteComDistanciaDto(restauranteId, null, null);
+    public Map<String, Object> restauranteSemDistanciaNemDetalhes(String cep, Long restauranteId) {
+      Map<String, Object> resultado = new HashMap<>();
+      resultado.put("restauranteId", restauranteId);
+      resultado.put("cep", cep);
+      return resultado;
     }
 
   }
@@ -177,7 +163,7 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
 
 4. Comente a chamada ao método que simula a demora em `DistanciaService` do `eats-distancia-service`. Veja se, quando não há demora, a distância volta a ser incluída na resposta.
 
-  ####### eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/DistanciaService.java
+  ####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/DistanciaService.java
 
   ```java
   class DistanciaService {
@@ -205,7 +191,7 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
     // código omitido ...
 
     @GetMapping("/restaurantes/{id}")
-    public RestauranteDto detalha(@PathVariable("id") Long id) {
+    RestauranteDto detalha(@PathVariable("id") Long id) {
 
       // trecho de código adicionado...
       try {
@@ -221,7 +207,7 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
 
 2. No `application.properties` do API Gateway, é preciso adicionar a seguinte linha:
 
-  ####### api-gateway/src/main/resources/application.properties
+  ####### fj33-api-gateway/src/main/resources/application.properties
 
   ```properties
   feign.hystrix.enabled=true
@@ -252,17 +238,17 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
 
   Anote essa nova classe com `@Component`, para que seja gerenciada pelo Spring.
 
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/RestauranteRestClientFallback.java
+  ####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/RestauranteRestClientFallback.java
 
   ```java
   @Component
-  public class RestauranteRestClientFallback implements RestauranteRestClient {
+  class RestauranteRestClientFallback implements RestauranteRestClient {
 
     @Override
-    public RestauranteDto porId(Long id) {
-      RestauranteDto dto = new RestauranteDto();
-      dto.setId(id);
-      return dto;
+    public Map<String,Object> porId(Long id) {
+      Map<String,Object> resultado = new HashMap<>();
+      resultado.put("id", id);
+      return resultado;
     }
 
   }
@@ -272,15 +258,15 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
 
 2. Altere a anotação `@FeignClient` de `RestauranteRestClient`, passando na propriedade `fallback` a classe criada no passo anterior.
 
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/RestauranteRestClient.java
+  ####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/RestauranteRestClient.java
 
   ```java
   @̶F̶e̶i̶g̶n̶C̶l̶i̶e̶n̶t̶(̶"̶m̶o̶n̶o̶l̶i̶t̶o̶"̶)̶
   @FeignClient(name = "monolito", fallback=RestauranteRestClientFallback.class) // modificado
-  public interface RestauranteRestClient {
+  interface RestauranteRestClient {
 
     @GetMapping("/restaurantes/{id}")
-    public RestauranteDto porId(@PathVariable("id") Long id);
+    Map<String,Object> porId(@PathVariable("id") Long id);
 
   }
   ```
@@ -325,7 +311,7 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
 
 1. No serviço de distância, force o lançamento de uma exceção no método `atualiza` da classe `RestaurantesController`:
 
-  ####### eats-microservices/eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RestaurantesController.java
+  ####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RestaurantesController.java
 
   ```java
   // anotações ...
@@ -334,7 +320,7 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
     // código omitido ...
 
     @PutMapping("/restaurantes/{id}")
-    public RestauranteMongo atualiza(@PathVariable Long id, @RequestBody RestauranteMongo restaurante) {
+    public Restaurante atualiza(@PathVariable Long id, @RequestBody Restaurante restaurante) {
 
       throw new RuntimeException();
 
@@ -489,7 +475,7 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
 
 3. Agora que testamos o retry e o backoff, vamos remover a exceção que forçamos anteriormente na classe `RestaurantesController` do serviço de distância:
 
-  ####### eats-microservices/eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RestaurantesController.java
+  ####### fj33-eats-microservices/eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RestaurantesController.java
 
   ```java
   // anotações ...
@@ -498,7 +484,7 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
     // código omitido ...
 
     @PutMapping("/restaurantes/{id}")
-    public RestauranteMongo atualiza(@PathVariable Long id, @RequestBody RestauranteMongo restaurante) {
+    public Restaurante atualiza(@PathVariable Long id, @RequestBody Restaurante restaurante) {
 
       t̶h̶r̶o̶w̶ ̶n̶e̶w̶ ̶R̶u̶n̶t̶i̶m̶e̶E̶x̶c̶e̶p̶t̶i̶o̶n̶(̶)̶;̶
 

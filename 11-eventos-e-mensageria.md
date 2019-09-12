@@ -61,7 +61,7 @@
 
 1. Adicione, no `pom.xml` do serviço de pagamento, o starter do projeto Spring Cloud Stream Rabbit:
 
-  ####### eats-pagamento-service/pom.xml
+  ####### fj33-eats-pagamento-service/pom.xml
 
   ```xml
   <dependency>
@@ -72,7 +72,7 @@
 
 2. Adicione o usuário e senha do RabbitMQ no `application.properties` do serviço de pagamento:
 
-  ####### eats-pagamento-service/src/main/resources/application.properties
+  ####### fj33-eats-pagamento-service/src/main/resources/application.properties
 
   ```properties
   spring.rabbitmq.username=eats
@@ -87,7 +87,7 @@
 
   A classe `AmqpPagamentoConfig` também deve ser anotada com `@EnableBinding`, passando como parâmetro a interface `PagamentoSource`:
 
-  ####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/AmqpPagamentoConfig.java
+  ####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/AmqpPagamentoConfig.java
 
   ```java
   @EnableBinding(PagamentoSource.class)
@@ -117,7 +117,7 @@
 
 4. Crie uma classe `PagamentoConfirmado`, que representará o payload da mensagem, no pacote `br.com.caelum.eats.pagamento` do serviço de pagamento. Essa classe deverá conter o id do pagamento e o id do pedido:
 
-  ####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoConfirmado.java
+  ####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoConfirmado.java
 
   ```java
   @Data
@@ -135,7 +135,7 @@
 
   Injete `PagamentoSource` na classe e adicione um método `notificaPagamentoConfirmado`, que recebe um `Pagamento`. Nesse método, crie um `PagamentoConfirmado` e use o `MessageChannel` de `PagamentoSource` para enviá-lo para o MOM:
 
-  ####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/NotificadorPagamentoConfirmado.java
+  ####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/NotificadorPagamentoConfirmado.java
 
   ```java
   @Service
@@ -166,7 +166,7 @@
 
 6. Em `PagamentoController`, adicione um atributo `NotificadorPagamentoConfirmado` e, no método `confirma`, invoque o método `notificaPagamentoConfirmado`, passando o pagamento que acabou de ser confirmado:
 
-  ####### eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoController.java
+  ####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoController.java
 
   ```java
   // anotações ...
@@ -212,7 +212,7 @@
 
 1. Adicione ao `pom.xml` do `eats-nota-fiscal-service` uma dependência ao starter do projeto Spring Cloud Stream Rabbit:
 
-  ####### eats-nota-fiscal-service/pom.xml
+  ####### fj33-eats-nota-fiscal-service/pom.xml
 
   ```xml
   <dependency>
@@ -223,7 +223,7 @@
 
 2. No `application.properties` do serviço de nota fiscal, defina o usuário e senha do RabbitMQ :
 
-  ####### eats-nota-fiscal-service/src/main/resources/application.properties
+  ####### fj33-eats-nota-fiscal-service/src/main/resources/application.properties
 
   ```properties
   spring.rabbitmq.username=eats
@@ -238,7 +238,7 @@
 
   Não deixe de anotar a classe `AmqpNotaFiscalConfig` com `@EnableBinding`, tendo como parâmetro a interface `PagamentoSink`:
 
-  ####### eats-nota-fiscal-service/src/main/java/br/com/caelum/eats/notafiscal/AmqpNotaFiscalConfig.java
+  ####### fj33-eats-nota-fiscal-service/src/main/java/br/com/caelum/eats/notafiscal/AmqpNotaFiscalConfig.java
 
   ```java
   @EnableBinding(PagamentoSink.class)
@@ -268,7 +268,7 @@
 
 4. Use a anotação `@StreamListener` no método `processaPagamento` da classe `ProcessadorDePagamentos`, passando a constante `PAGAMENTOS_CONFIRMADOS` de `PagamentoSink`:
 
-  ####### eats-nota-fiscal-service/src/main/java/br/com/caelum/notafiscal/services/ProcessadorDePagamentos.java
+  ####### fj33-eats-nota-fiscal-service/src/main/java/br/com/caelum/notafiscal/services/ProcessadorDePagamentos.java
 
   ```java
   // anotações ...
@@ -370,7 +370,7 @@
 
 4. Adicione um nome de grupo para as instâncias do serviço de nota fiscal, definindo a propriedade `spring.cloud.stream.bindings.pagamentosConfirmados.group` no `application.properties`:
 
-  ####### eats-nota-fiscal-service/src/main/resources/application.properties
+  ####### fj33-eats-nota-fiscal-service/src/main/resources/application.properties
 
   ```properties
   spring.cloud.stream.bindings.pagamentosConfirmados.group=notafiscal
@@ -427,7 +427,7 @@
 
 1. Adicione a dependência ao starter de WebSocket do Spring Boot no `pom.xml` do API Gateway:
 
-  ####### api-gateway/pom.xml
+  ####### fj33-api-gateway/pom.xml
 
   ```xml
   <dependency>
@@ -438,7 +438,7 @@
 
 5. Defina a classe `WebSocketConfig` no pacote `br.com.caelum.apigateway` do API Gateway. O código será algo como:
 
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/WebSocketConfig.java
+  ####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/WebSocketConfig.java
 
   ```java
   @EnableWebSocketMessageBroker
@@ -470,7 +470,7 @@
 
 6. No `application.properties` do API Gateway, defina uma rota local do Zuul, usando forwarding, para as URLs que contém o prefixo `/socket`:
 
-  ####### api-gateway/src/main/resources/application.properties
+  ####### fj33-api-gateway/src/main/resources/application.properties
 
   ```properties
   zuul.routes.websocket.path=/socket/**
@@ -603,7 +603,7 @@
 
 1. Adicione o starter do Spring Cloud Stream Rabbit como dependência no `pom.xml` do API Gateway:
 
-  ####### api-gateway/pom.xml
+  ####### fj33-api-gateway/pom.xml
 
   ```xml
   <dependency>
@@ -616,7 +616,7 @@
 
   Dentro dessa classe, defina a interface `AtualizacaoPedidoSink` que deve conter o método `pedidoComStatusAtualizado`, anotado com `@Input` e retornando um `SubscribableChannel`. Essa interface deve conter também a constante `PEDIDO_COM_STATUS_ATUALIZADO`:
 
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/AmqpApiGatewayConfig.java
+  ####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/AmqpApiGatewayConfig.java
 
   ```java
   @EnableBinding(AtualizacaoPedidoSink.class)
@@ -636,7 +636,7 @@
 
 3. No `application.properties` do API Gateway, configure o usuário e senha do RabbitMQ. Defina também um Consumer Group para o exchange `pedidoComStatusAtualizado`:
 
-  ####### api-gateway/src/main/resources/application.properties
+  ####### fj33-api-gateway/src/main/resources/application.properties
 
   ```properties
   spring.rabbitmq.username=eats
@@ -651,7 +651,7 @@
 
   _DICA: basei-se nas classes do módulo de pedido do monólito._
 
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/pedido/ClienteDto.java
+  ####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/pedido/ClienteDto.java
 
   ```java
   @Data
@@ -670,7 +670,7 @@
   }
   ```
 
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/pedido/EntregaDto.java
+  ####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/pedido/EntregaDto.java
 
   ```java
   @Data
@@ -687,7 +687,7 @@
   }
   ```
 
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/pedido/ItemDoCardapioDto.java
+  ####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/pedido/ItemDoCardapioDto.java
 
   ```java
   @Data
@@ -704,7 +704,7 @@
   }
   ```
 
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/pedido/ItemDoPedidoDto.java
+  ####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/pedido/ItemDoPedidoDto.java
 
   ```java
   @Data
@@ -720,7 +720,7 @@
   }
   ```
 
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/pedido/PedidoDto.java
+  ####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/pedido/PedidoDto.java
 
   ```java
   @Data
@@ -758,7 +758,7 @@
 
   Anote o método `pedidoAtualizado` com `@StreamListener`, passando como parâmetro a constante `PEDIDO_COM_STATUS_ATUALIZADO` de `AtualizacaoPedidoSink`.
 
-  ####### api-gateway/src/main/java/br/com/caelum/apigateway/pedido/StatusDoPedidoService.java
+  ####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/pedido/StatusDoPedidoService.java
 
   ```java
   @Service
