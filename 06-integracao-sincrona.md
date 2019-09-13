@@ -24,7 +24,7 @@ class RestaurantesController {
   }
 
   @PutMapping("/restaurantes/{id}")
-  Restaurante atualiza(@PathVariable Long id, @RequestBody Restaurante restaurante) {
+  Restaurante atualiza(@PathVariable("id") Long id, @RequestBody Restaurante restaurante) {
     if (!repo.existsById(id)) {
       throw new ResourceNotFoundException();
     }
