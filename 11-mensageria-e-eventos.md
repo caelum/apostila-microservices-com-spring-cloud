@@ -1,4 +1,4 @@
-# Eventos e mensageria
+# Mensageria e Eventos
 
 ## Exercício: um serviço de nota fiscal
 
@@ -57,247 +57,263 @@
 
   O username deve ser _eats_ e a senha _caelum123_.
 
-## Exercício: publicando um evento de pagamento confirmado
+## Publicando um evento de pagamento confirmado com Spring Cloud Stream
 
-1. Adicione, no `pom.xml` do serviço de pagamento, o starter do projeto Spring Cloud Stream Rabbit:
+Adicione, no `pom.xml` do serviço de pagamento, o starter do projeto Spring Cloud Stream Rabbit:
 
-  ####### fj33-eats-pagamento-service/pom.xml
+####### fj33-eats-pagamento-service/pom.xml
 
-  ```xml
-  <dependency>
-    <groupId>org.springframework.cloud</groupId>
-    <artifactId>spring-cloud-starter-stream-rabbit</artifactId>
-  </dependency>
-  ```
+```xml
+<dependency>
+  <groupId>org.springframework.cloud</groupId>
+  <artifactId>spring-cloud-starter-stream-rabbit</artifactId>
+</dependency>
+```
 
-2. Adicione o usuário e senha do RabbitMQ no `application.properties` do serviço de pagamento:
+Adicione o usuário e senha do RabbitMQ no `application.properties` do serviço de pagamento:
 
-  ####### fj33-eats-pagamento-service/src/main/resources/application.properties
+####### fj33-eats-pagamento-service/src/main/resources/application.properties
 
-  ```properties
-  spring.rabbitmq.username=eats
-  spring.rabbitmq.password=caelum123
-  ```
+```properties
+spring.rabbitmq.username=eats
+spring.rabbitmq.password=caelum123
+```
 
-3. Crie uma classe `AmqpPagamentoConfig` no pacote `br.com.caelum.eats.pagamento` do serviço de pagamento, anotando-a com `@Configuration`.
+Crie uma classe `AmqpPagamentoConfig` no pacote `br.com.caelum.eats.pagamento` do serviço de pagamento, anotando-a com `@Configuration`.
 
-  Dentro dessa classe, crie uma interface `PagamentoSource`, que define um método `pagamentosConfirmados`. Esse método deve retornar um `MessageChannel` e tem a anotação `@Output`, indicando que o utilizaremos para enviar mensagens ao MOM.
+Dentro dessa classe, crie uma interface `PagamentoSource`, que define um método `pagamentosConfirmados`, que tem o nome do _exchange_ no RabbitMQ. Esse método deve retornar um `MessageChannel` e tem a anotação `@Output`, indicando que o utilizaremos para enviar mensagens ao MOM.
 
-  Defina também uma constante `PAGAMENTOS_CONFIRMADOS`, que conterá o nome do _exchange_ no RabbitMQ.
+A classe `AmqpPagamentoConfig` também deve ser anotada com `@EnableBinding`, passando como parâmetro a interface `PagamentoSource`:
 
-  A classe `AmqpPagamentoConfig` também deve ser anotada com `@EnableBinding`, passando como parâmetro a interface `PagamentoSource`:
+####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/AmqpPagamentoConfig.java
 
-  ####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/AmqpPagamentoConfig.java
+```java
+@EnableBinding(PagamentoSource.class)
+@Configuration
+class AmqpPagamentoConfig {
 
-  ```java
-  @EnableBinding(PagamentoSource.class)
-  @Configuration
-  public class AmqpPagamentoConfig {
+  static interface PagamentoSource {
 
-    public static interface PagamentoSource {
-      String PAGAMENTOS_CONFIRMADOS = "pagamentosConfirmados";
-
-      @Output
-      MessageChannel pagamentosConfirmados();
-    }
-
+    @Output
+    MessageChannel pagamentosConfirmados();
   }
-  ```
 
-  Os imports são os seguintes:
+}
+```
 
-  ```java
-  import org.springframework.cloud.stream.annotation.EnableBinding;
-  import org.springframework.cloud.stream.annotation.Output;
-  import org.springframework.context.annotation.Configuration;
-  import org.springframework.messaging.MessageChannel;
+Os imports são os seguintes:
 
-  import br.com.caelum.eats.pagamento.AmqpPagamentoConfig.PagamentoSource;
-  ```
+```java
+import org.springframework.cloud.stream.annotation.EnableBinding;
+import org.springframework.cloud.stream.annotation.Output;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.MessageChannel;
 
-4. Crie uma classe `PagamentoConfirmado`, que representará o payload da mensagem, no pacote `br.com.caelum.eats.pagamento` do serviço de pagamento. Essa classe deverá conter o id do pagamento e o id do pedido:
+import br.com.caelum.eats.pagamento.AmqpPagamentoConfig.PagamentoSource;
+```
 
-  ####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoConfirmado.java
+Crie uma classe `PagamentoConfirmado`, que representará o payload da mensagem, no pacote `br.com.caelum.eats.pagamento` do serviço de pagamento. Essa classe deverá conter o id do pagamento e o id do pedido:
 
-  ```java
-  @Data
-  @AllArgsConstructor
-  @NoArgsConstructor
-  public class PagamentoConfirmado {
+####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoConfirmado.java
 
-    private Long pagamentoId;
-    private Long pedidoId;
+```java
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+class PagamentoConfirmado {
 
+  private Long pagamentoId;
+  private Long pedidoId;
+
+}
+```
+
+Os imports são do Lombok:
+
+```java
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+```
+
+No mesmo pacote de `eats-pagamento-service`, crie uma classe `NotificadorPagamentoConfirmado`, anotando-a com `@Service`.
+
+Injete `PagamentoSource` na classe e adicione um método `notificaPagamentoConfirmado`, que recebe um `Pagamento`. Nesse método, crie um `PagamentoConfirmado` e use o `MessageChannel` de `PagamentoSource` para enviá-lo para o MOM:
+
+####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/NotificadorPagamentoConfirmado.java
+
+```java
+@Service
+@AllArgsConstructor
+class NotificadorPagamentoConfirmado {
+
+  private PagamentoSource source;
+
+  void notificaPagamentoConfirmado(Pagamento pagamento) {
+    Long pagamentoId = pagamento.getId();
+    Long pedidoId = pagamento.getPedidoId();
+    PagamentoConfirmado confirmado = new PagamentoConfirmado(pagamentoId, pedidoId);
+    source.pagamentosConfirmados().send(MessageBuilder.withPayload(confirmado).build());
   }
-  ```
 
-5. No mesmo pacote de `eats-pagamento-service`, crie uma classe `NotificadorPagamentoConfirmado`, anotando-a com `@Service`.
+}
+```
 
-  Injete `PagamentoSource` na classe e adicione um método `notificaPagamentoConfirmado`, que recebe um `Pagamento`. Nesse método, crie um `PagamentoConfirmado` e use o `MessageChannel` de `PagamentoSource` para enviá-lo para o MOM:
+Faça os imports a seguir:
 
-  ####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/NotificadorPagamentoConfirmado.java
+```java
+import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.stereotype.Service;
 
-  ```java
-  @Service
-  @AllArgsConstructor
-  public class NotificadorPagamentoConfirmado {
+import br.com.caelum.eats.pagamento.AmqpPagamentoConfig.PagamentoSource;
+import lombok.AllArgsConstructor;
+```
 
-    private PagamentoSource source;
+Em `PagamentoController`, adicione um atributo `NotificadorPagamentoConfirmado` e, no método `confirma`, invoque o método `notificaPagamentoConfirmado`, passando o pagamento que acabou de ser confirmado:
 
-    public void notificaPagamentoConfirmado(Pagamento pagamento) {
-      Long pagamentoId = pagamento.getId();
-      Long pedidoId = pagamento.getPedidoId();
-      PagamentoConfirmado confirmado = new PagamentoConfirmado(pagamentoId, pedidoId);
-      source.pagamentosConfirmados().send(MessageBuilder.withPayload(confirmado).build());
-    }
+####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoController.java
 
+```java
+// anotações ...
+class PagamentoController {
+
+  // outros atributos ...
+  private NotificadorPagamentoConfirmado pagamentoConfirmado; // adicionado
+
+  // código omitido ...
+
+  @PutMapping("/{id}")
+  Resource<PagamentoDto> confirma(@PathVariable Long id) {
+
+    Pagamento pagamento = pagamentoRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException());
+    pagamento.setStatus(Pagamento.Status.CONFIRMADO);
+    pagamentoRepo.save(pagamento);
+
+    pagamentoConfirmado.notificaPagamentoConfirmado(pagamento); // adicionado
+
+    Long pedidoId = pagamento.getPedidoId();
+    pedidoClient.avisaQueFoiPago(pedidoId);
+
+    return new PagamentoDto(pagamento);
   }
-  ```
 
-  Faça os imports a seguir:
+  // código omitido ...
 
-  ```java
-  import org.springframework.messaging.support.MessageBuilder;
-  import org.springframework.stereotype.Service;
+}
+```
 
-  import br.com.caelum.eats.pagamento.AmqpPagamentoConfig.PagamentoSource;
-  import lombok.AllArgsConstructor;
-  ```
+## Recebendo eventos de pagamentos confirmados com Spring Cloud Stream
 
-6. Em `PagamentoController`, adicione um atributo `NotificadorPagamentoConfirmado` e, no método `confirma`, invoque o método `notificaPagamentoConfirmado`, passando o pagamento que acabou de ser confirmado:
+Adicione ao `pom.xml` do `eats-nota-fiscal-service` uma dependência ao starter do projeto Spring Cloud Stream Rabbit:
 
-  ####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoController.java
+####### fj33-eats-nota-fiscal-service/pom.xml
 
-  ```java
-  // anotações ...
-  class PagamentoController {
+```xml
+<dependency>
+  <groupId>org.springframework.cloud</groupId>
+  <artifactId>spring-cloud-starter-stream-rabbit</artifactId>
+</dependency>
+```
 
-    // outros atributos ...
-    private NotificadorPagamentoConfirmado pagamentoConfirmado; // adicionado
+No `application.properties` do serviço de nota fiscal, defina o usuário e senha do RabbitMQ :
 
+####### fj33-eats-nota-fiscal-service/src/main/resources/application.properties
+
+```properties
+spring.rabbitmq.username=eats
+spring.rabbitmq.password=caelum123
+```
+
+No pacote `br.com.caelum.eats.notafiscal` do serviço de nota fiscal, crie uma classe `AmqpNotaFiscalConfig` , anotando-a com `@Configuration`.
+
+Defina a interface `PagamentoSink`, que será para configuração do consumo de mensagens do MOM. Dentro dessa interface, defina o método `pagamentosConfirmados`, com a anotação `@Input` e com `SubscribableChannel` como tipo de retorno.
+
+O nome do _exchange_ no , que é o mesmo do _source_ do serviço de pagamentos, deve ser definido na constante `PAGAMENTOS_CONFIRMADOS`.
+
+Não deixe de anotar a classe `AmqpNotaFiscalConfig` com `@EnableBinding`, tendo como parâmetro a interface `PagamentoSink`:
+
+####### fj33-eats-nota-fiscal-service/src/main/java/br/com/caelum/eats/notafiscal/AmqpNotaFiscalConfig.java
+
+```java
+@EnableBinding(PagamentoSink.class)
+@Configuration
+class AmqpNotaFiscalConfig {
+
+  static interface PagamentoSink {
+    String PAGAMENTOS_CONFIRMADOS = "pagamentosConfirmados";
+
+    @Input
+    SubscribableChannel pagamentosConfirmados();
+  }
+
+}
+```
+
+Adicione os imports corretos:
+
+```java
+import org.springframework.cloud.stream.annotation.EnableBinding;
+import org.springframework.cloud.stream.annotation.Input;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.SubscribableChannel;
+
+import br.com.caelum.notafiscal.AmqpNotaFiscalConfig.PagamentoSink;
+```
+
+Use a anotação `@StreamListener` no método `processaPagamento` da classe `ProcessadorDePagamentos`, passando a constante `PAGAMENTOS_CONFIRMADOS` de `PagamentoSink`:
+
+####### fj33-eats-nota-fiscal-service/src/main/java/br/com/caelum/notafiscal/ProcessadorDePagamentos.java
+
+```java
+// anotações ...
+class ProcessadorDePagamentos {
+
+  // código omitido ...
+
+  @StreamListener(PagamentoSink.PAGAMENTOS_CONFIRMADOS) // adicionado
+  void processaPagamento(PagamentoConfirmado pagamento) {
     // código omitido ...
-
-    @PutMapping("/{id}")
-    public Resource<PagamentoDto> confirma(@PathVariable Long id) {
-
-      Pagamento pagamento = pagamentoRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException());
-      pagamento.setStatus(Pagamento.Status.CONFIRMADO);
-      pagamentoRepo.save(pagamento);
-
-      pagamentoConfirmado.notificaPagamentoConfirmado(pagamento);
-
-      // código omitido ...
-    }
-
-    // código omitido ...
-
   }
+
+}
+```
+
+Faça os imports adequados:
+
+```java
+import org.springframework.cloud.stream.annotation.StreamListener;
+import br.com.caelum.notafiscal.AmqpNotaFiscalConfig.PagamentoSink;
+```
+
+## Exercício: Evento de Pagamento Confirmado com Spring Cloud Stream
+
+1. Faça checkout da branch `cap11-evento-de-pagamento-confirmado-com-spring-cloud-stream` nos projetos do serviços de pagamentos e de nota fiscal:
+
+  ```sh
+  cd ~/Desktop/fj33-eats-pagamento-service
+  git checkout -f cap11-evento-de-pagamento-confirmado-com-spring-cloud-stream
+
+  cd ~/Desktop/fj33-eats-nota-fiscal-service
+  git checkout -f cap11-evento-de-pagamento-confirmado-com-spring-cloud-stream
   ```
 
-7. Certifique-se que o serviço de pagamento e demais serviços estejam sendo executados.
+  Reinicie o serviço de pagamento.
+
+  Inicie o serviço de nota fiscal executando a classe `EatsNotaFiscalServiceApplication`.
+
+2. Certifique-se que o service registry, o serviço de pagamento, o serviço de nota fiscal e o monólito estejam sendo executados.
 
   Confirme um pagamento já existente com o cURL:
 
   ```txt
-  curl -X PUT -i http://localhost:9999/pagamentos/1
+  curl -X PUT -i http://localhost:8081/pagamentos/1
   ```
 
   _Observação: para facilitar testes durante o curso, a API de pagamentos permite reconfirmação de pagamentos. Talvez não seja o ideal..._
 
-8. Acesse a UI de gerenciamento do RabbitMQ, pela URL `http://localhost:15672`.
+  Acesse a UI de gerenciamento do RabbitMQ, pela URL `http://localhost:15672`.
 
   Veja nos gráficos que algumas mensagens foram publicadas. Veja `pagamentosConfirmados` listado em _Exchange_.
-
-## Exercício: recebendo pagamentos confirmados no serviço de nota fiscal
-
-1. Adicione ao `pom.xml` do `eats-nota-fiscal-service` uma dependência ao starter do projeto Spring Cloud Stream Rabbit:
-
-  ####### fj33-eats-nota-fiscal-service/pom.xml
-
-  ```xml
-  <dependency>
-    <groupId>org.springframework.cloud</groupId>
-    <artifactId>spring-cloud-starter-stream-rabbit</artifactId>
-  </dependency>
-  ```
-
-2. No `application.properties` do serviço de nota fiscal, defina o usuário e senha do RabbitMQ :
-
-  ####### fj33-eats-nota-fiscal-service/src/main/resources/application.properties
-
-  ```properties
-  spring.rabbitmq.username=eats
-  spring.rabbitmq.password=caelum123
-  ```
-
-3. No pacote `br.com.caelum.eats.notafiscal` do serviço de nota fiscal, crie uma classe `AmqpNotaFiscalConfig` , anotando-a com `@Configuration`.
-
-  Defina a interface `PagamentoSink`, que será para configuração do consumo de mensagens do MOM. Dentro dessa interface, defina o método `pagamentosConfirmados`, com a anotação `@Input` e com `SubscribableChannel` como tipo de retorno.
-
-  O nome do _exchange_ no , que é o mesmo do _source_ do serviço de pagamentos, deve ser definido na constante `PAGAMENTOS_CONFIRMADOS`.
-
-  Não deixe de anotar a classe `AmqpNotaFiscalConfig` com `@EnableBinding`, tendo como parâmetro a interface `PagamentoSink`:
-
-  ####### fj33-eats-nota-fiscal-service/src/main/java/br/com/caelum/eats/notafiscal/AmqpNotaFiscalConfig.java
-
-  ```java
-  @EnableBinding(PagamentoSink.class)
-  @Configuration
-  public class AmqpNotaFiscalConfig {
-
-    public static interface PagamentoSink {
-      String PAGAMENTOS_CONFIRMADOS = "pagamentosConfirmados";
-
-      @Input
-      SubscribableChannel pagamentosConfirmados();
-    }
-
-  }
-  ```
-
-  Adicione os imports corretos:
-
-  ```java
-  import org.springframework.cloud.stream.annotation.EnableBinding;
-  import org.springframework.cloud.stream.annotation.Input;
-  import org.springframework.context.annotation.Configuration;
-  import org.springframework.messaging.SubscribableChannel;
-
-  import br.com.caelum.notafiscal.AmqpNotaFiscalConfig.PagamentoSink;
-  ```
-
-4. Use a anotação `@StreamListener` no método `processaPagamento` da classe `ProcessadorDePagamentos`, passando a constante `PAGAMENTOS_CONFIRMADOS` de `PagamentoSink`:
-
-  ####### fj33-eats-nota-fiscal-service/src/main/java/br/com/caelum/notafiscal/services/ProcessadorDePagamentos.java
-
-  ```java
-  // anotações ...
-  public class ProcessadorDePagamentos {
-
-    // código omitido ...
-
-    @StreamListener(PagamentoSink.PAGAMENTOS_CONFIRMADOS) // adicionado
-    public void processaPagamento(PagamentoConfirmado pagamento) {
-      // código omitido ...
-    }
-
-  }
-  ```
-
-  Faça os imports adequados:
-
-  ```java
-  import org.springframework.cloud.stream.annotation.StreamListener;
-  import br.com.caelum.notafiscal.AmqpNotaFiscalConfig.PagamentoSink;
-  ```
-
-5. Inicie o serviço de nota fiscal executando a classe `EatsNotaFiscalServiceApplication`. Certifique-se que os demais serviços estejam rodando.
-
-  Novamente, use o cURL para :
-
-  ```txt
-  curl -X PUT -i http://localhost:9999/pagamentos/1
-  ```
 
   Observe, nos logs do serviço de nota fiscal, o XML da nota emitida. Algo parecido com:
 
@@ -340,6 +356,16 @@
   </xml>
   ```
 
+## Consumer Groups do Spring Cloud Stream
+
+Adicione um nome de grupo para as instâncias do serviço de nota fiscal, definindo a propriedade `spring.cloud.stream.bindings.pagamentosConfirmados.group` no `application.properties`:
+
+####### fj33-eats-nota-fiscal-service/src/main/resources/application.properties
+
+```properties
+spring.cloud.stream.bindings.pagamentosConfirmados.group=notafiscal
+```
+
 ## Exercício: Competing Consumers e Durable Subscriber com Consumer Groups
 
 1. Pare o serviço de nota fiscal e confirme alguns pagamentos pelo cURL.
@@ -368,13 +394,14 @@
 
   Note que o XML foi impresso nos logs das duas instâncias, `EatsNotaFiscalServiceApplication` e `EatsNotaFiscalServiceApplication (1)`. Ou seja, todas as instâncias recebem todas as mensagens publicadas no exchange `pagamentosConfirmados` do RabbitMQ.
 
-4. Adicione um nome de grupo para as instâncias do serviço de nota fiscal, definindo a propriedade `spring.cloud.stream.bindings.pagamentosConfirmados.group` no `application.properties`:
+4. Em um Terminal, vá até a branch `cap11-consumer-groups` do serviço de nota fiscal:
 
-  ####### fj33-eats-nota-fiscal-service/src/main/resources/application.properties
-
-  ```properties
-  spring.cloud.stream.bindings.pagamentosConfirmados.group=notafiscal
+  ```sh
+  cd ~/Desktop/fj33-eats-nota-fiscal-service
+  git checkout -f cap11-consumer-groups
   ```
+
+  Reinicie ambas as instâncias do serviço de nota fiscal.
 
 5. Novamente, confirme alguns pagamentos por meio do cURL.
 
@@ -397,31 +424,6 @@
   Armazenar mensagens publicadas enquanto um subscriber está fora do ar, entregando-as quando sobem novamente, é um pattern conhecido como _Durable Subscriber_.
 
   Como vimos, os _Consumer Groups_ do Spring Cloud Stream / RabbitMQ implementam os patterns _Competing Consumers_ e  _Durable Subscriber_.
-
-
-<!--
-
-  Execute todos os serviços, o monólito e a UI e acessa a página de status de um pedido. Será algo como:
-
-  http://localhost:4200/pedidos/6/status
-
-  Clique em F12 para abrir o Dev Tools do navegador. Veja que, nessa página de status, há diversos erro relacionados com WebSocket:
-
-  ```txt
-  WebSocket connection to 'ws://localhost:9999/socket/097/ldjsnvcq/websocket' failed: Error during WebSocket handshake: Unexpected response code: 400
-  
-  Refused to display 'http://localhost:9999/socket/iframe.html#0pn4s3nd' in a frame because it set 'X-Frame-Options' to 'deny'.
-  
-  Failed to execute 'postMessage' on 'DOMWindow': The target origin provided ('http://localhost:9999') does not match the recipient window's origin ('null').
-  
-  Failed to load resource: the server responded with a status of 504 ()
-  
-  Access to XMLHttpRequest at 'http://localhost:9999/socket/097/r52mepqt/xhr?t=1561148554812' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
-  ```
-
-  O que acontece é que não configuramos o API Gateway para fazer forwarding de WebSocket. Resolveremos esse problema usando o WebSocket no próprio API Gateway e, no serviço de pedido, publicando um evento de atualização de status.
-
--->
 
 ## Exercício Opcional: Configurações de WebSocket para o API Gateway
 
