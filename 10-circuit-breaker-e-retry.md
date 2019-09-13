@@ -12,7 +12,7 @@
     // código omitido ...
 
     private BigDecimal calculaDistancia() {
-      simulaDemora(); // adicionado
+      simulaDemora(); // modificado
       return new BigDecimal(Math.random() * 15);
     }
 
@@ -92,6 +92,12 @@ class DistanciaRestClient {
 }
 ```
 
+O import é o seguinte:
+
+```java
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+```
+
 <!--@note
 
 O timeout padrão do Hystrix é de 1s. Modificável pela propriedade:
@@ -105,63 +111,152 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
 
 -->
 
-## Exercício: fallback com @HystrixCommand no RestTemplate
+## Exercício: Testando o Circuit Breaker com Hystrix
+
+1. Mude para a branch `cap10-circuit-breaker-com-hystrix` do projeto `fj33-api-gateway`:
+
+  ```sh
+  cd ~/Desktop/fj33-api-gateway
+  git checkout -f cap10-circuit-breaker-com-hystrix
+  ```
+
+2. Reinicie o API Gateway e execute novamente a simulação com o ApacheBench, com o comando:
+
+  ```sh
+  ab -n 100 -c 10 http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1
+  ```
+
+  Observe nos resultados uma diminuição no tempo máximo de request de 19,6 para 1,5 segundos:
+
+  ```txt
+  Connection Times (ms)
+                min  mean[+/-sd] median   max
+  Connect:        0    0   0.7      0       7
+  Processing:    75  381 360.8    275    1557
+  Waiting:       67  375 359.0    270    1527
+  Total:         75  382 360.9    275    1558
+  ```
+
+## Fallback no @HystrixCommand
+
+Se acessarmos repetidas vezes, em um navegador, a URL a seguir:
+
+http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1
+
+Deve ocorrer, em algumas das vezes, uma exceção semelhante a:
+
+```txt
+There was an unexpected error (type=Internal Server Error, status=500).
+route:SendForwardFilter
+com.netflix.hystrix.exception.HystrixRuntimeException: porCepEId timed-out and fallback failed.
+  at com.netflix.hystrix.AbstractCommand$22.call(AbstractCommand.java:832)
+  at com.netflix.hystrix.AbstractCommand$22.call(AbstractCommand.java:807)
+  at rx.internal.operators.OperatorOnErrorResumeNextViaFunction$4.onError(OperatorOnErrorResumeNextViaFunction.java:140)
+  ...
+```
+
+A mensagem da exceção (_porCepEId timed-out and fallback failed_) ,indica que houve um erro de timeout.
+
+Em outras tentativas, teremos uma exceção semelhante, mas cuja mensagem indica que o Circuit Breaker está aberto e a resposta foi _short-circuited_, não chegando a invocar o serviço de destino da requisição:
+
+```txtx
+There was an unexpected error (type=Internal Server Error, status=500).
+route:SendForwardFilter
+com.netflix.hystrix.exception.HystrixRuntimeException: porCepEId short-circuited and fallback failed.
+	at com.netflix.hystrix.AbstractCommand$22.call(AbstractCommand.java:832)
+	at com.netflix.hystrix.AbstractCommand$22.call(AbstractCommand.java:807)
+	at rx.internal.operators.OperatorOnErrorResumeNextViaFunction$4.onError(OperatorOnErrorResumeNextViaFunction.java:140)
+```
+
+É possível fornecer um _fallback_, passando o nome de um método na propriedade `fallbackMethod` da anotação `@HystrixCommand`.
+
+Defina o método `restauranteSemDistanciaNemDetalhes`, que retorna apenas o restaurante com o id. Se a outra parte da API Composition, a interface `RestauranteRestClient` não der erro e retornar os dados do restaurante, teríamos todos os detalhes do restaurante menos a distância.
+
+####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/DistanciaRestClient.java
+
+```java
+@Service
+class DistanciaRestClient {
+
+  // código omitido...
+
+  @̶H̶y̶s̶t̶r̶i̶x̶C̶o̶m̶m̶a̶n̶d̶
+  @HystrixCommand(fallbackMethod="restauranteSemDistanciaNemDetalhes") // modificado
+  Map<String, Object>  porCepEId(String cep, Long restauranteId) {
+    String url = distanciaServiceUrl+"/restaurantes/"+cep+"/restaurante/"+restauranteId;
+    return restTemplate.getForObject(url, Map.class);
+  }
+
+  // método adicionado
+  Map<String, Object> restauranteSemDistanciaNemDetalhes(String cep, Long restauranteId) {
+    Map<String, Object> resultado = new HashMap<>();
+    resultado.put("restauranteId", restauranteId);
+    resultado.put("cep", cep);
+    return resultado;
+  }
+
+}
+```
+
+O seguinte import deve ser adicionado:
+
+```java
+import java.util.HashMap;
+```
+
+Observação: uma solução interessante seria manter um cache das distâncias entre CEPs e restaurantes e usá-lo como fallback, se possível. Porém, a _hit ratio_, a taxa de sucesso das consultas ao cache, deve ser baixa, já que os CEPs dos clientes mudam bastante.
+
+## Exercício: Testando o Fallback com Hystrix
 
 1. Acesse repetidas vezes, em um navegador, a URL a seguir:
 
   http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1
 
-  Deve ocorrer, em algumas das vezes, uma exceção semelhante a:
+  Deve ocorrer, em algumas das vezes, uma exceção `HystrixRuntimeException` com as mensagens:
 
-  ```txt
-  There was an unexpected error (type=Internal Server Error, status=500).
-  route:SendForwardFilter
-  com.netflix.hystrix.exception.HystrixRuntimeException: porCepEId timed-out and fallback failed.
-    at com.netflix.hystrix.AbstractCommand$22.call(AbstractCommand.java:832)
-    at com.netflix.hystrix.AbstractCommand$22.call(AbstractCommand.java:807)
-    at rx.internal.operators.OperatorOnErrorResumeNextViaFunction$4.onError(OperatorOnErrorResumeNextViaFunction.java:140)
-    ...
+  - _porCepEId timed-out and fallback failed._
+  - _porCepEId short-circuited and fallback failed._
+
+2. No projeto `fj33-api-gateway`, obtenha o código da branch `cap10-fallback-no-hystrix-command`:
+
+  ```sh
+  cd ~/Desktop/fj33-api-gateway
+  git checkout -f cap10-fallback-no-hystrix-command
   ```
-
-2. É possível fornecer um _fallback_, passando o nome de um método na propriedade `fallbackMethod` da anotação `@HystrixCommand`.
-
-  Defina o método `restauranteSemDistanciaNemDetalhes`, que retorna apenas o restaurante com o id. Se `RestauranteRestClient` não der erro, teríamos todos os detalhes do restaurante menos a distância.
-
-  ####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/DistanciaRestClient.java
-
-  ```java
-  @Service
-  public class DistanciaRestClient {
-
-    // código omitido...
-
-    @̶H̶y̶s̶t̶r̶i̶x̶C̶o̶m̶m̶a̶n̶d̶
-    @HystrixCommand(fallbackMethod="restauranteSemDistanciaNemDetalhes") // modificado
-    public Map<String, Object>  porCepEId(String cep, Long restauranteId) {
-      String url = distanciaServiceUrl+"/restaurantes/"+cep+"/restaurante/"+restauranteId;
-      return restTemplate.getForObject(url, Map.class);
-    }
-
-    // método adicionado
-    public Map<String, Object> restauranteSemDistanciaNemDetalhes(String cep, Long restauranteId) {
-      Map<String, Object> resultado = new HashMap<>();
-      resultado.put("restauranteId", restauranteId);
-      resultado.put("cep", cep);
-      return resultado;
-    }
-
-  }
-  ```
-
-  Uma solução mais interessante seria manter um cache das distâncias entre CEPs e restaurantes e usá-lo como fallback, se possível.
+  
+  Reinicie o API Gateway.
 
 3. Tente acessar várias vezes a URL testada anteriormente:
 
-    http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1
+  http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1
 
-  Observe que não ocorre mais uma exceção, mas a distância fica nula.
+  Observe que não ocorre mais uma exceção, mas não há a informação de distância. Apenas os detalhes do restaurante são retornados.
 
-4. Comente a chamada ao método que simula a demora em `DistanciaService` do `eats-distancia-service`. Veja se, quando não há demora, a distância volta a ser incluída na resposta.
+  Algo semelhante a:
+  
+  ```json
+  {
+    "id": 1,
+    "cnpj": "98444252000104",
+    "nome": "Long Fu",
+    "descricao": "O melhor da China aqui do seu lado.",
+    "cep": "71503510",
+    "endereco": "ShC/SUL COMERCIO LOCAL QD 404-BL D LJ 17-ASA SUL",
+    "taxaDeEntregaEmReais": 6,
+    "tempoDeEntregaMinimoEmMinutos": 40,
+    "tempoDeEntregaMaximoEmMinutos": 25,
+    "aprovado": true,
+    "tipoDeCozinha": {
+      "id": 1,
+      "nome": "Chinesa"
+    },
+    "restauranteId": 1
+  }
+  ```
+
+## Exercício: Removendo simulação de demora do serviço de distância
+
+1. Comente a chamada ao método que simula a demora em `DistanciaService` do `eats-distancia-service`. Veja se, quando não há demora, a distância volta a ser incluída na resposta.
 
   ####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/DistanciaService.java
 
@@ -178,7 +273,7 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
   }
   ```
 
-## Exercício: simulando demora no monólito e circuit breaker com Feign
+## Exercício: Simulando demora no monólito
 
 1. Altere o método `detalha` da classe `RestauranteController` do monólito para que tenha uma espera de 20 segundos:
 
@@ -193,7 +288,7 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
     @GetMapping("/restaurantes/{id}")
     RestauranteDto detalha(@PathVariable("id") Long id) {
 
-      // trecho de código adicionado...
+      // trecho de código adicionado ...
       try {
         Thread.sleep(20000);
       } catch (InterruptedException e) {
@@ -203,19 +298,36 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
       Restaurante restaurante = restauranteRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException());
       return new RestauranteDto(restaurante);
     }
+  
+  // restante do código ...
+
+  }
   ```
 
-2. No `application.properties` do API Gateway, é preciso adicionar a seguinte linha:
+## Circuit Breaker com Hystrix no Feign
 
-  ####### fj33-api-gateway/src/main/resources/application.properties
+No `application.properties` do API Gateway, é preciso adicionar a seguinte linha:
 
-  ```properties
-  feign.hystrix.enabled=true
+####### fj33-api-gateway/src/main/resources/application.properties
+
+```properties
+feign.hystrix.enabled=true
+```
+
+A integração entre o Feign e o Hystrix vem desabilitada por padrão, nas versões mais recentes. Por isso, é necessário habilitá-la.
+
+## Exercício: Testando a integração entre Hystrix e Feign
+
+1. Faça o checkout da branch `cap10-circuit-breaker-com-hystrix-no-feign` do projeto `fj33-api-gateway`:
+
+  ```sh
+  cd ~/Desktop/fj33-api-gateway
+  git checkout -f fj33-api-gateway
   ```
 
-  A integração entre o Feign e o Hystrix vem desabilitada por padrão, nas versões mais recentes. Por isso, é necessário habilitá-la.
+  Reinicie o API Gateway.
 
-3. Espere que o monólito e o API Gateway sejam reiniciados e tente acessar novamente a URL:
+2. Tente acessar novamente a URL:
 
   http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1
 
@@ -230,56 +342,80 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
     ...
   ```
 
-## Exercício: fallback com Feign
+  Quando o Circuit Breaker estiver aberto, a mensagem da exceção `HystrixRuntimeException` será um pouco diferente: _RestauranteRestClient#porId(Long) short-circuited and no fallback available_.
 
-1. No `api-gateway`, crie uma classe `RestauranteRestClientFallback`, que implementa a interface `RestauranteRestClient`.
+## Fallback com Feign
 
-  No método `porId`, deve ser fornecida uma lógica de fallback para o detalhamento de um restaurante.
+No Feign, definimos de maneira declarativa o cliente REST, por meio de uma interface.
 
-  Anote essa nova classe com `@Component`, para que seja gerenciada pelo Spring.
+A estratégia de Fallback na integração entre Hystrix e Feign é fornecer uma implementação para essa interface. Engenhoso!
 
-  ####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/RestauranteRestClientFallback.java
+No `api-gateway`, crie uma classe `RestauranteRestClientFallback`, que implementa a interface `RestauranteRestClient`. No método `porId`, deve ser fornecida uma lógica de fallback para o detalhamento de um restaurante. Anote essa nova classe com `@Component`, para que seja gerenciada pelo Spring.
 
-  ```java
-  @Component
-  class RestauranteRestClientFallback implements RestauranteRestClient {
+####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/RestauranteRestClientFallback.java
 
-    @Override
-    public Map<String,Object> porId(Long id) {
-      Map<String,Object> resultado = new HashMap<>();
-      resultado.put("id", id);
-      return resultado;
-    }
+```java
+@Component
+class RestauranteRestClientFallback implements RestauranteRestClient {
 
+  @Override
+  public Map<String,Object> porId(Long id) {
+    Map<String,Object> resultado = new HashMap<>();
+    resultado.put("id", id);
+    return resultado;
   }
+
+}
+```
+
+A seguir, estão os imports corretos:
+
+```java
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Component;
+```
+
+Observação: Uma solução mais interessante seria manter um cache dos dados dos restaurantes, com o `id` como chave, que seria usado em caso de fallback. Nesse caso, a _hit ratio_, a taxa de sucesso das consultas ao cache, seria bem alta: há um número limitado de restaurantes, que são escolhidos repetidas vezes, e os dados são raramente alterados.
+
+Altere a anotação `@FeignClient` de `RestauranteRestClient`, passando na propriedade `fallback` a classe criada no passo anterior.
+
+####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/RestauranteRestClient.java
+
+```java
+@̶F̶e̶i̶g̶n̶C̶l̶i̶e̶n̶t̶(̶"̶m̶o̶n̶o̶l̶i̶t̶o̶"̶)̶
+@FeignClient(name = "monolito", fallback=RestauranteRestClientFallback.class) // modificado
+interface RestauranteRestClient {
+
+  @GetMapping("/restaurantes/{id}")
+  Map<String,Object> porId(@PathVariable("id") Long id);
+
+}
+```
+
+## Exercício: Testando o Fallback do Feign
+
+1. Vá até a branch `cap10-fallback-com-feign` do projeto `fj33-api-gateway`:
+
+  ```sh
+  cd ~/Desktop/fj33-api-gateway
+  git checkout -f cap10-fallback-com-feign
   ```
 
-  Uma solução mais interessante seria manter um cache dos dados dos restaurantes, que seria usado em caso de fallback.
+  Certifique-se que o API Gateway foi reiniciado.
 
-2. Altere a anotação `@FeignClient` de `RestauranteRestClient`, passando na propriedade `fallback` a classe criada no passo anterior.
-
-  ####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/RestauranteRestClient.java
-
-  ```java
-  @̶F̶e̶i̶g̶n̶C̶l̶i̶e̶n̶t̶(̶"̶m̶o̶n̶o̶l̶i̶t̶o̶"̶)̶
-  @FeignClient(name = "monolito", fallback=RestauranteRestClientFallback.class) // modificado
-  interface RestauranteRestClient {
-
-    @GetMapping("/restaurantes/{id}")
-    Map<String,Object> porId(@PathVariable("id") Long id);
-
-  }
-  ```
-
-3. Por mais algumas vezes, tente acessar a URL:
+2. Por mais algumas vezes, tente acessar a URL:
 
     http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1
 
-  Veja que são mostrados apenas o id e a distância do restaurante. Os demais campos ficam nulos.
+  Veja que são mostrados apenas o id e a distância do restaurante. Os demais campos não são exibidos.
 
-4. Remova da classe `RestauranteController` do monólito, a simulação de demora.
+## Exercício: Removendo simulação de demora do monólito
+
+1. Remova da classe `RestauranteController` do monólito, a simulação de demora.
   
-    ####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/RestauranteController.java
+  ####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/RestauranteController.java
 
   ```java
   // anotações ...
@@ -301,26 +437,26 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
     }
   ```
 
-  Teste novamente a URL:
+  Teste novamente a URL: http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1
 
-    http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1
+  Os detalhes do restaurante devem voltar a ser exibidos!
 
-  Os detalhes do restaurante não devem ficar mais nulos!
+## Exercício: Forçando uma exceção no serviço de distância
 
-## Exercício: Tentando novamente com Spring Retry
+1. No serviço de distância, force o lançamento de uma exceção no método `atualiza` da classe `RestaurantesController`.
 
-1. No serviço de distância, force o lançamento de uma exceção no método `atualiza` da classe `RestaurantesController`:
+  Comente o código que está depois da exceção.
 
   ####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RestaurantesController.java
 
   ```java
   // anotações ...
-  public class RestaurantesController {
+  class RestaurantesController {
 
     // código omitido ...
 
     @PutMapping("/restaurantes/{id}")
-    public Restaurante atualiza(@PathVariable Long id, @RequestBody Restaurante restaurante) {
+    Restaurante atualiza(@PathVariable("id") Long id, @RequestBody Restaurante restaurante) {
 
       throw new RuntimeException();
 
@@ -336,86 +472,99 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
   }
   ```
 
-2. No módulo `eats-application` do monólito, adicione o Spring Retry como dependência:
+## Tentando novamente com Spring Retry
 
-  ####### fj33-eats-monolito-modular/eats/eats-application/pom.xml
+No módulo `eats-restaurante` do monólito, adicione o Spring Retry como dependência:
 
-  ```xml
-  <dependency>
-    <groupId>org.springframework.retry</groupId>
-    <artifactId>spring-retry</artifactId>
-  </dependency>
-  ```
+####### fj33-eats-monolito-modular/eats/eats-restaurante/pom.xml
 
-3. Adicione a anotação `@EnableRetry` na classe `EatsApplication` do módulo `eats-application` do monólito:
+```xml
+<dependency>
+  <groupId>org.springframework.retry</groupId>
+  <artifactId>spring-retry</artifactId>
+</dependency>
+```
 
-  ####### fj33-eats-monolito-modular/eats/eats-application/src/main/java/br/com/caelum/eats/EatsApplication.java
+Adicione a anotação `@EnableRetry` na classe `EatsApplication` do módulo `eats-application` do monólito:
 
-  ```java
-  @EnableRetry // adicionado
-  // outra anotações
-  public class EatsApplication {
+####### fj33-eats-monolito-modular/eats/eats-application/src/main/java/br/com/caelum/eats/EatsApplication.java
 
-    // código omitido...
+```java
+@EnableRetry // adicionado
+// outra anotações
+public class EatsApplication {
 
-  }
-  ```
+  // código omitido...
 
-  Faça o import adequado:
+}
+```
 
-  ```java
-  import org.springframework.retry.annotation.EnableRetry;
-  ```
+Faça o import adequado:
 
-4. Adicione a anotação `@Slf4j` à classe `DistanciaRestClient`, do módulo `eats-restaurante` do monólito, para configurar um logger que usaremos a seguir:
+```java
+import org.springframework.retry.annotation.EnableRetry;
+```
 
-  ####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/DistanciaRestClient.java
+Adicione a anotação `@Slf4j` à classe `DistanciaRestClient`, do módulo `eats-restaurante` do monólito, para configurar um logger que usaremos a seguir:
 
-  ```java
-  @Slf4j // adicionado
-  @Service
-  public class DistanciaRestClient {
+####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/DistanciaRestClient.java
 
-    // código omitido...
+```java
+@Slf4j // adicionado
+@Service
+public class DistanciaRestClient {
 
-  }
-  ```
+  // código omitido...
 
-  O import é o seguinte:
+}
+```
 
-  ```java
-  import lombok.extern.slf4j.Slf4j;
-  ```
+O import é o seguinte:
 
-5. Em seguida, anote o método `restauranteAtualizado` com `@Retryable` para que faça 5 tentativas, logando as tentativas de acesso:
+```java
+import lombok.extern.slf4j.Slf4j;
+```
 
-  ####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/DistanciaRestClient.java
+Em seguida, anote o método `restauranteAtualizado` com `@Retryable` para que faça 5 tentativas, logando as tentativas de acesso:
 
-  ```java
-  // anotações ...
-  public class DistanciaRestClient {
+####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/DistanciaRestClient.java
+
+```java
+// anotações ...
+public class DistanciaRestClient {
+
+  // código omitido ...
+
+  @Retryable(maxAttempts=5) // adicionado
+  public void restauranteAtualizado(Restaurante restaurante) {
+    log.info("monólito tentando chamar distancia-service");
 
     // código omitido ...
-
-    @Retryable(maxAttempts=5) // adicionado
-    public void restauranteAtualizado(Restaurante restaurante) {
-      log.info("monólito tentando chamar distancia-service");
-
-      // código omitido ...
-    }
-
   }
+
+}
+```
+
+Certifique-se que o import correto foi realizado:
+
+```java
+import org.springframework.retry.annotation.Retryable;
+```
+
+## Exercício: Testando o Spring Retry
+
+1. Faça o checkout da branch `cap10-retry` do monólito:
+
+  ```sh
+  cd ~/Desktop/fj33-eats-monolito-modular
+  git checkout -f cap10-retry
   ```
 
-  Certifique-se que o import correto foi realizado:
+  Reinicie o monólito.
 
-  ```java
-  import org.springframework.retry.annotation.Retryable;
-  ```
+2. Garanta que o monólito, o serviço de distância e que a UI estejam no ar.
 
-6. Garanta que o monólito e o serviço de distância foram reiniciados e que a UI está no ar.
-
-  Faça login como dono de um restaurante e mude o CEP ou tipo de cozinha.
+  Faça login como dono de um restaurante (por exemplo, `longfu`/`123456`) e mude o CEP ou tipo de cozinha.
 
   Perceba que nos logs que foram feitas 5 tentativas de chamada ao serviço de distância. Algo como o que segue:
 
@@ -431,34 +580,42 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
     ...
   ```
 
-## Exercício: Backoff
+## Exponential Backoff
 
-1. Vamos configurar um backoff para ter um tempo progressivo entre as tentativas de 2, 4, 8 e 16 segundos:
+Vamos configurar um backoff para ter um tempo progressivo entre as tentativas de 2, 4, 8 e 16 segundos:
 
-  ####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/DistanciaRestClient.java
+####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/DistanciaRestClient.java
 
-  ```java
-  // anotações ...
-  public class DistanciaRestClient {
+```java
+// anotações ...
+public class DistanciaRestClient {
 
+  // código omitido ...
+
+  @̶R̶e̶t̶r̶y̶a̶b̶l̶e̶(̶m̶a̶x̶A̶t̶t̶e̶m̶p̶t̶s̶=̶5̶)̶
+  @Retryable(maxAttempts=5, backoff=@Backoff(delay=2000,multiplier=2))
+  public void restauranteAtualizado(Restaurante restaurante) {
     // código omitido ...
-
-    @̶R̶e̶t̶r̶y̶a̶b̶l̶e̶(̶m̶a̶x̶A̶t̶t̶e̶m̶p̶t̶s̶=̶5̶)̶
-    @Retryable(maxAttempts=5, backoff=@Backoff(delay=2000,multiplier=2))
-    public void restauranteAtualizado(Restaurante restaurante) {
-      // código omitido ...
-    }
-
   }
-  ```
 
-  O import a seguir deve ser adicionado:
+}
+```
 
-  ```java
-  import org.springframework.retry.annotation.Backoff;
-  ```
+O import a seguir deve ser adicionado:
 
-2. Faça novamente o login como dono de um restaurante e modifique o CEP ou tipo de cozinha.
+```java
+import org.springframework.retry.annotation.Backoff;
+```
+
+## Exercício: Testando o Exponential Backoff
+
+1. Vá até a branch `cap10-backoff` do projeto `fj33-eats-monolito-modular`:
+
+  ```sh
+  cd ~/Desktop/fj33-eats-monolito-modular
+  git checkout -f cap10-backoff
+
+2. Pela UI, faça novamente o login como dono de um restaurante (por exemplo, com `longfu`/`123456`) e modifique o CEP ou tipo de cozinha.
 
   Note o tempo progressivo nos logs. Será alguma coisa semelhante a:
 
@@ -473,20 +630,24 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
   ...
   ```
 
-3. Agora que testamos o retry e o backoff, vamos remover a exceção que forçamos anteriormente na classe `RestaurantesController` do serviço de distância:
+## Exercício: Removendo exceção forçada do serviço de distância
+
+1. Agora que testamos o retry e o backoff, vamos remover a exceção que forçamos anteriormente na classe `RestaurantesController` do serviço de distância:
 
   ####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RestaurantesController.java
 
   ```java
   // anotações ...
-  public class RestaurantesController {
+  class RestaurantesController {
 
     // código omitido ...
 
     @PutMapping("/restaurantes/{id}")
-    public Restaurante atualiza(@PathVariable Long id, @RequestBody Restaurante restaurante) {
+    Restaurante atualiza(@PathVariable("id") Long id, @RequestBody Restaurante restaurante) {
 
       t̶h̶r̶o̶w̶ ̶n̶e̶w̶ ̶R̶u̶n̶t̶i̶m̶e̶E̶x̶c̶e̶p̶t̶i̶o̶n̶(̶)̶;̶
+
+      // descomente o código abaixo ...
 
       if (!repo.existsById(id)) {
         throw new ResourceNotFoundException();
@@ -496,4 +657,4 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
     }
 
   }
-```
+  ```
