@@ -860,7 +860,7 @@ Ufa! Mais um serviço extraído do monólito. Em um projeto real, isso seria fei
 
   ```sh
   cd ~/Desktop/fj33-eats-monolito-modular
-  git checkout -f cap3-extrai-pagamento-service
+  git checkout -f cap3-extrai-distancia-service
   ```
 
   Execute novamente a classe `EatsApplication` do módulo `eats-application` do monólito.
