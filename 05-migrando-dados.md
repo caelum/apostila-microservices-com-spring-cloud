@@ -186,7 +186,7 @@ Os pagamentos devem ter sido migrados.
   > Finalmente, dentro do container do MySQL de pagamentos, faça o import do dump:
   > 
   > ```
-  > mysql -upagamento -p < eats_pagamento.sql
+  > mysql -upagamento -p eats_pagamento < eats_pagamento.sql
   > ```
   >
   > Lembrando que o `<NOME-DO-CONTAINER>` pode ser descoberto com um `docker ps`.
@@ -211,7 +211,7 @@ Os pagamentos devem ter sido migrados.
   > Dentro do container, execute o comando `mysql`:
   > 
   > ```sh
-  > mysql -upagamento -p
+  > mysql -upagamento -p eats_pagamento
   > ```
   >
 
