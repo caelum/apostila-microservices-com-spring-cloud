@@ -303,10 +303,17 @@ Note que a porta `3307` foi incluída na URL, mas mantivemos ainda `localhost`.
   > 
   > Digite a senha de root do MySQL do monólito. Execute a query, salvando o arquivo `restaurantes.csv` no diretório `/var/lib/mysql-files/`.
   > 
-  > Então, obtenha o texto do `restaurantes.csv` e o copie para o diretório `/tmp`.
+  > ```sh
+ >  mysql> select r.id, r.cep, r.tipo_de_cozinha_id from restaurante r where r.aprovado = true into outfile '/var/lib/mysql-files/restaurantes.csv' fields terminated by ',' enclosed by '"' lines terminated by '\n';
+  > ```
+  > 
+  > A query do código anterior pode ser obtida em: https://gitlab.com/snippets/1895021
+  > 
+  > Então, obtenha o texto do `restaurantes.csv` e o copie para o diretório `/tmp` com o seguinte comando:
   > 
   > ```sh
   > docker exec -it <NOME-DO-CONTAINER> cat /var/lib/mysql-files/restaurantes.csv > /tmp/restaurantes.csv
+  > ```
   >
   > Lembrando que o `<NOME-DO-CONTAINER>` pode ser descoberto com um `docker ps`.
 
@@ -335,7 +342,7 @@ Note que a porta `3307` foi incluída na URL, mas mantivemos ainda `localhost`.
   Execute um bash no container com o comando:
 
   ```sh
-  docker exec -it `<NOME-DO-CONTAINER>` bash
+  docker exec -it <NOME-DO-CONTAINER> bash
   ```
 
   Importe os dados do CSV para a collection `restaurantes` do MongoDB de distância:

@@ -149,7 +149,7 @@ export class RestauranteService {
 
   ```sh
   cd ~/Desktop/fj33-eats-ui
-  git checkout -g cap7-ui-chama-api-gateway
+  git checkout -f cap7-ui-chama-api-gateway
   ```
 
 4. Com o monólito, os serviços de pagamentos e distância e o API Gateway no ar, suba o front-end por meio do comando `ng serve`.
