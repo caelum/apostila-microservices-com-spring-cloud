@@ -255,7 +255,7 @@ Note que a porta `3307` foi incluída na URL, mas mantivemos ainda `localhost`.
   git checkout -f cap5_apontando_pagamentos_para_BD_proprio
   ```
 
-  Execute `EatsPagamentoServiceApplication`.
+  Reinicie o serviço de pagamentos, executando a classe `EatsPagamentoServiceApplication`.
 
 2. Abra um Terminal e crie um novo pagamento:
 
