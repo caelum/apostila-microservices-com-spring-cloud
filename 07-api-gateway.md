@@ -490,7 +490,7 @@ Como apenas o API Gateway será chamado diretamente pelo navegador e não há re
 
 ## Exercício: API Composition no API Gateway
 
-1. Para o API Gateway.
+1. Pare o API Gateway.
 
   Faça o checkout da branch `cap7-api-composition-no-api-gateway` do projeto `fj33-api-gateway`:
 
@@ -526,7 +526,22 @@ Como apenas o API Gateway será chamado diretamente pelo navegador e não há re
   }
   ```
 
-2. Obtenha o código da branch `cap7-api-composition-no-api-gateway` do projeto `fj33-eats-ui`:
+2. Como a UI chama apenas o API Gateway e CORS é uma tecnologia de front-end, devemos remover a classe `CorsConfig` do monólito modular e dos serviços de pagamento e distância. Essa classe já está incluída no código do API Gateway.
+
+  ```sh
+  cd ~/Desktop/fj33-eats-monolito-modular
+  git checkout -f cap7-api-composition-no-api-gateway
+
+  cd ~/Desktop/fj33-eats-pagamento-service
+  git checkout -f cap7-api-composition-no-api-gateway
+
+  cd ~/Desktop/fj33-eats-distancia-service
+  git checkout -f cap7-api-composition-no-api-gateway
+  ```
+
+  Reinicie o monólito e os serviços de pagamento e distância.
+
+3. Obtenha o código da branch `cap7-api-composition-no-api-gateway` do projeto `fj33-eats-ui`:
 
   ```sh
   cd ~/Desktop/fj33-eats-ui
@@ -536,8 +551,6 @@ Como apenas o API Gateway será chamado diretamente pelo navegador e não há re
   Com os serviços de distância e o monólito rodando, inicie o front-end com o comando `ng serve`.
 
   Digite um CEP, busque os restaurantes próximos e escolha algum. Na página de detalhes de um restaurantes, chamamos a API Composition. Veja se os dados do restaurante e a distância são exibidos corretamente.
-
-3. (opcional) Como a UI chama apenas o API Gateway e CORS é uma tecnologia de front-end, podemos remover a classe `CorsConfig` dos serviço de pagamento e distância, assim como do monólito modular. Se desejar, faça checkout da branch `cap7-api-composition-no-api-gateway` desses projetos.
 
 ## LocationRewriteFilter no Zuul para além de redirecionamentos
 
@@ -649,7 +662,7 @@ Agora sim! Ao receber um status `201 Created`, depois de criar algum recurso em 
   @Component
   public class RateLimitingZuulFilter extends ZuulFilter {
 
-    private final RateLimiter rateLimiter = RateLimiter.create(1.0 / 30.0); //queries per second
+    private final RateLimiter rateLimiter = RateLimiter.create(1.0 / 30.0); // permits per second
 
     @Override
     public String filterType() {
@@ -678,7 +691,7 @@ Agora sim! Ao receber um status `201 Created`, depois de criar algum recurso em 
           currentContext.setSendZuulResponse(false);
         }
       } catch (IOException e) {
-        ReflectionUtils.rethrowRuntimeException(e);
+        throw new RuntimeException(e);
       }
       return null;
     }
@@ -696,7 +709,6 @@ Agora sim! Ao receber um status `201 Created`, depois de criar algum recurso em 
   import org.springframework.core.Ordered;
   import org.springframework.http.HttpStatus;
   import org.springframework.stereotype.Component;
-  import org.springframework.util.ReflectionUtils;
 
   import com.google.common.util.concurrent.RateLimiter;
   import com.netflix.zuul.ZuulFilter;
