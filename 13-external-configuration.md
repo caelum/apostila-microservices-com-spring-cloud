@@ -304,6 +304,8 @@ j̶w̶t̶.̶s̶e̶c̶r̶e̶t̶ ̶=̶ ̶u̶m̶-̶s̶e̶g̶r̶e̶d̶o̶-̶b̶e̶m�
 j̶w̶t̶.̶e̶x̶p̶i̶r̶a̶t̶i̶o̶n̶ ̶=̶ ̶6̶0̶4̶8̶0̶0̶0̶0̶0̶
 ```
 
+Observação: o novo arquivo deve ser comitado no `config-repo`, conforme a necessidade. Para repositório locais, que devem ser usados só para testes, o commit não é necessário.
+
 Faça o mesmo para o serviço de pagamentos. Crie o arquivo `pagamentos.properties` no repositório de configurações, com as configurações de BD:
 
 ####### config-repo/pagamentos.properties
@@ -377,6 +379,8 @@ s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶.̶m̶o̶n̶g̶o̶d̶b̶.̶p̶o̶r̶t̶=̶2̶7�
   ```
 
   O conteúdo anterior pode ser encontrado em: https://gitlab.com/snippets/1896524
+
+  Observação: não precisamos comitar os novos arquivos no repositório Git porque estamos usando um repositório local.
 
 3. Ainda no `config-repo`, crie um arquivo `pagamentos.properties`:
 
