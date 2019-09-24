@@ -322,7 +322,7 @@ A integração entre o Feign e o Hystrix vem desabilitada por padrão, nas vers�
 
   ```sh
   cd ~/Desktop/fj33-api-gateway
-  git checkout -f fj33-api-gateway
+  git checkout -f cap10-circuit-breaker-com-hystrix-no-feign
   ```
 
   Reinicie o API Gateway.
