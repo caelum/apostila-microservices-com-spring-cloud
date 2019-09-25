@@ -614,6 +614,7 @@ import org.springframework.retry.annotation.Backoff;
   ```sh
   cd ~/Desktop/fj33-eats-monolito-modular
   git checkout -f cap10-backoff
+  ```
 
 2. Pela UI, faça novamente o login como dono de um restaurante (por exemplo, com `longfu`/`123456`) e modifique o CEP ou tipo de cozinha.
 
