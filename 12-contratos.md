@@ -795,11 +795,11 @@ Rode o teste. Sucesso!
 
 ## Exercício: Contract Test para comunicação assíncrona
 
-1. Abra um Terminal e vá até a branch `cap12-contrato-cliente-servidor` do projeto do serviço de pagamentos:
+1. Abra um Terminal e vá até a branch `cap12-contrato-publisher-subscriber` do projeto do serviço de pagamentos:
 
   ```sh
   cd ~/Desktop/fj33-eats-pagamento-service
-  git checkout -f cap12-contrato-cliente-servidor
+  git checkout -f cap12-contrato-publisher-subscriber
   ```
 
   Então, faça o build, rode o Contract Test no próprio serviço, gere o JAR com os stubs do contrato e instale no repositório local do Maven. Para isso, basta executar o comando:
@@ -830,15 +830,15 @@ Rode o teste. Sucesso!
 
   Observe, pelas mensagens anteriores, que o JAR com os stubs foi instalado no diretório `.m2`, o repositório local Maven, do usuário do curso.
 
-2. No projeto do serviço de nota fiscal, faça checkout da branch `cap12-contrato-cliente-servidor`:
+2. No projeto do serviço de nota fiscal, faça checkout da branch `cap12-contrato-publisher-subscriber`:
 
   ```sh
   cd ~/Desktop/fj33-eats-nota-fiscal-service
-  git checkout -f cap12-contrato-cliente-servidor
+  git checkout -f cap12-contrato-publisher-subscriber
   ```
 
   Faça o refresh do projeto no Eclipse.
 
-  Clique com o botão direito na classe `ProcessadorDePagamentosTest`, do módulo `eats-application` do monólito, e, então, em _Run As... > Run Configurations..._. Clique com o botão direito em _JUnit_ e, a seguir, em _New Configuration_. Em _Test runner_, escolha o JUnit 4. Então, clique em _Run_.
+  Clique com o botão direito na classe `ProcessadorDePagamentosTest` e, então, em _Run As... > Run Configurations..._. Clique com o botão direito em _JUnit_ e, a seguir, em _New Configuration_. Em _Test runner_, escolha o JUnit 4. Então, clique em _Run_.
 
   Aguarde a execução dos testes. Sucesso!
