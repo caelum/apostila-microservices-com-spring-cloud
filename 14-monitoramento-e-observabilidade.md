@@ -471,27 +471,48 @@ spring.cloud.stream.bindings.hystrixStreamOutput.destination=springCloudHystrixS
 
   http://localhost:9411/zipkin/
 
-<!-- TODO: parei aqui -->
+## Enviando informações para o Zipkin com Spring Cloud Sleuth
 
-## Exercício: enviando informações para o Zipkin com Spring Cloud Sleuth
+Adicione uma dependência ao starter do Spring Cloud Zipkin no `pom.xml` do API Gateway:
 
-1. Adicione uma dependência ao starter do Spring Cloud Zipkin no `pom.xml` do API Gateway:
+####### fj33-api-gateway/pom.xml
 
-  ####### fj33-api-gateway/pom.xml
+```xml
+<dependency>
+  <groupId>org.springframework.cloud</groupId>
+  <artifactId>spring-cloud-starter-zipkin</artifactId>
+</dependency>
+```
 
-  ```xml
-  <dependency>
-    <groupId>org.springframework.cloud</groupId>
-    <artifactId>spring-cloud-starter-zipkin</artifactId>
-  </dependency>
+Faça o mesmo no `pom.xml` do:
+
+- módulo `eats-application` do monólito
+- serviço de pagamentos
+- serviço de distância
+- serviço de nota fiscal
+
+## Exercício: Distributed Tracing com Spring Cloud Sleuth e Zipkin
+
+1. Vá até a branch `cap14-spring-cloud-sleuth` dos projetos do API Gateway, do Monólito Modular e dos serviços de distância, pagamentos e notas fiscais:
+
+  ```sh
+  cd ~/Desktop/fj33-api-gateway
+  git checkout -f cap14-spring-cloud-sleuth
+
+  cd ~/Desktop/fj33-eats-monolito-modular
+  git checkout -f cap14-spring-cloud-sleuth
+
+  cd ~/Desktop/fj33-eats-pagamento-service
+  git checkout -f cap14-spring-cloud-sleuth
+
+  cd ~/Desktop/fj33-eats-distancia-service
+  git checkout -f cap14-spring-cloud-sleuth
+
+  cd ~/Desktop/fj33-eats-nota-fiscal-service
+  git checkout -f cap14-spring-cloud-sleuth
   ```
 
-  Faça o mesmo no `pom.xml` do:
-
-  - módulo `eats-application` do monólito
-  - serviço de pagamentos
-  - serviço de distância
-  - serviço de nota fiscal
+  Faça refresh no Eclipse e reinicie os projetos.
 
 2. Por padrão, o Spring Cloud Sleuth faz rastreamento por amostragem de 10% das chamadas. É um bom valor, mas inviável pelo pouco volume de nossos requests.
 
@@ -503,88 +524,94 @@ spring.cloud.stream.bindings.hystrixStreamOutput.destination=springCloudHystrixS
   spring.sleuth.sampler.probability=1.0
   ```
 
-  Não esqueça de comitar a alteração:
-
-  ```sh
-  git commit -m "configuração do Spring Cloud Sleuth"
-  ```
-
 3. Reinicie os serviços que foram modificados no passo anterior. Garanta que a UI esteja no ar.
 
   Faça um novo pedido, até a confirmação do pagamento. Faça o login como dono do restaurante e aprove o pedido. Edite o tipo de cozinha e/ou CEP de um restaurante.
 
-  Vá até a interface Web do Zipkin e, em selecione um serviço em _Service Name_. Então, clique em _Find traces_ e veja os rastreamentos. Clique para ver os detalhes.
+  Vá até a interface Web do Zipkin acessando: http://localhost:9411/zipkin/
+
+  Selecione um serviço em _Service Name_. Então, clique em _Find traces_ e veja os rastreamentos. Clique para ver os detalhes.
 
   Na aba _Dependencies_, veja um gráfico com as dependências entre os serviços baseadas no uso real (e não apenas em diagramas arquiteturais).
 
-## Exercício: Spring Boot Admin
+## Spring Boot Admin
 
-1. Pelo navegador, abra `https://start.spring.io/`.
-  Em _Project_, mantenha _Maven Project_.
-  Em _Language_, mantenha _Java_.
-  Em _Spring Boot_, mantenha a versão padrão.
-  No trecho de _Project Metadata_, defina:
+Pelo navegador, abra `https://start.spring.io/`.
+Em _Project_, mantenha _Maven Project_.
+Em _Language_, mantenha _Java_.
+Em _Spring Boot_, mantenha a versão padrão.
+No trecho de _Project Metadata_, defina:
 
-  - `br.com.caelum` em _Group_
-  - `admin-server` em _Artifact_
+- `br.com.caelum` em _Group_
+- `admin-server` em _Artifact_
 
-  Mantenha os valores em _More options_.
- 
-  Mantenha o _Packaging_ como `Jar`.
-  Mantenha a _Java Version_ em `8`.
+Mantenha os valores em _More options_.
 
-  Em _Dependencies_, adicione:
+Mantenha o _Packaging_ como `Jar`.
+Mantenha a _Java Version_ em `8`.
 
-  - Spring Boot Admin (Server)
-  - Config Client
-  - Eureka Discovery Client
+Em _Dependencies_, adicione:
 
-  Clique em _Generate Project_.
-2. Extraia o `admin-server.zip` e copie a pasta para seu Desktop.
-3. No Eclipse, no workspace de microservices, importe o projeto `admin-server`, usando o menu _File > Import > Existing Maven Projects_.
-4. Adicione a anotação `@EnableAdminServer` à classe `AdminServerApplication`:
+- Spring Boot Admin (Server)
+- Config Client
+- Eureka Discovery Client
 
-  ####### fj33-admin-server/src/main/java/br/com/caelum/adminserver/AdminServerApplication.java
+Clique em _Generate Project_.
 
-  ```java
-  @EnableAdminServer
-  @SpringBootApplication
-  public class AdminServerApplication {
+Extraia o `admin-server.zip` e copie a pasta para seu Desktop.
 
-    public static void main(String[] args) {
-      SpringApplication.run(AdminServerApplication.class, args);
-    }
+Adicione a anotação `@EnableAdminServer` à classe `AdminServerApplication`:
 
+####### fj33-admin-server/src/main/java/br/com/caelum/adminserver/AdminServerApplication.java
+
+```java
+@EnableAdminServer
+@SpringBootApplication
+public class AdminServerApplication {
+
+  public static void main(String[] args) {
+    SpringApplication.run(AdminServerApplication.class, args);
   }
+
+}
+```
+
+Adicione o import:
+
+```java
+import de.codecentric.boot.admin.server.config.EnableAdminServer;
+```
+
+No arquivo `application.properties`, modifique a porta para `6666`:
+
+####### fj33-admin-server/src/main/resources/application.properties
+
+```properties
+server.port=6666
+```
+
+Crie um arquivo `bootstrap.properties` no diretório `src/main/resources` do Admin Server, definindo o nome da aplicação e o endereço do Config Server:
+
+```properties
+spring.application.name=adminserver
+spring.cloud.config.uri=http://localhost:8888
+```
+
+## Exercício: Visualizando os microservices com Spring Boot Admin
+
+1. Faça clone do projeto `fj33-admin-server`:
+
+  ```sh
+  git clone https://gitlab.com/aovs/projetos-cursos/fj33-admin-server.git
   ```
 
-  Adicione o import:
+  No Eclipse, no workspace de microservices, importe o projeto `admin-server`, usando o menu _File > Import > Existing Maven Projects_.
 
-  ```java
-  import de.codecentric.boot.admin.server.config.EnableAdminServer;
-  ```
+  Execute a classe `AdminServerApplication`.
 
-5. No arquivo `application.properties`, modifique a porta para `8084`:
+2. Pelo navegador, acesse a URL:
 
-  ####### fj33-admin-server/src/main/resources/application.properties
-
-  ```properties
-  server.port=8084
-  ```
-
-6. Crie um arquivo `bootstrap.properties` no diretório `src/main/resources` do Admin Server, definindo o nome da aplicação e o endereço do Config Server:
-
-  ```properties
-  spring.application.name=adminserver
-
-  spring.cloud.config.uri=http://localhost:8888
-  ```
-
-7. Execute a classe `AdminServerApplication`.
-
-  Pelo navegador, acesse a URL:
-
-  http://localhost:8084
+  http://localhost:6666
 
   Veja informações sobre as aplicações e instâncias.
 
