@@ -203,6 +203,7 @@ O Config Server ainda tem como backend para as configurações:
   ```sh
   cd ~/Desktop/fj33-config-server
   git checkout -f cap13-repositorio-git-no-config-server
+  ```
 
   Reinicie o Config Server, parando e rodando novamente a classe `ConfigServerApplication`.
 
