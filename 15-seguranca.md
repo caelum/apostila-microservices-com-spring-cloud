@@ -14,7 +14,7 @@ Para isso, criamos um novo projeto Spring Boot com as seguintes dependências:
 - Eureka Discovery Client
 - Zipkin Client
 
-Então, movemos as seguintes classes do módulo `eats-administrativo` do monólito para o novo serviço `eats-administrativo-service`:
+Então, movemos as seguintes classes do módulo Administrativo do monólito para o novo serviço:
 
 - FormaDePagamento
 - FormaDePagamentoController
@@ -31,18 +31,95 @@ No `application.properties`, deve ser definida `8084` na porta a ser utilizada.
 
 Então, o módulo `eats-administrativo` do monólito pode ser removido, assim como suas autorizações no módulo `eats-seguranca`.
 
+Remova a dependência a `eats-administrativo` do `pom.xml` do módulo `eats-application` do monólito:
+
+####### fj33-eats-monolito-modular/eats/eats-application/pom.xml
+
+```xml
+<̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
+̶ ̶ ̶<̶g̶r̶o̶u̶p̶I̶d̶>̶b̶r̶.̶c̶o̶m̶.̶c̶a̶e̶l̶u̶m̶<̶/̶g̶r̶o̶u̶p̶I̶d̶>̶
+̶ ̶<̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶e̶a̶t̶s̶-̶a̶d̶m̶i̶n̶i̶s̶t̶r̶a̶t̶i̶v̶o̶<̶/̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶
+̶ ̶ ̶<̶v̶e̶r̶s̶i̶o̶n̶>̶$̶{̶p̶r̶o̶j̶e̶c̶t̶.̶v̶e̶r̶s̶i̶o̶n̶}̶<̶/̶v̶e̶r̶s̶i̶o̶n̶>̶
+̶<̶/̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
+```
+
+Faço o mesmo nos arquivos `pom.xml` dos módulos `eats-restaurante` e `eats-pedido` do monólito.
+
+No projeto pai dos módulos, o projeto `eats`, remova o módulo `eats-administrativo`  do `pom.xml`:
+
+####### fj33-eats-monolito-modular/eats/pom.xml
+
+```xml
+<modules>
+  <̶m̶o̶d̶u̶l̶e̶>̶e̶a̶t̶s̶-̶a̶d̶m̶i̶n̶i̶s̶t̶r̶a̶t̶i̶v̶o̶<̶/̶m̶o̶d̶u̶l̶e̶>̶
+  <module>eats-restaurante</module>
+  <module>eats-pedido</module>
+  <module>eats-seguranca</module>
+  <module>eats-application</module>
+</modules>
+```
+
+Apague o módulo `eats-administrativo` do monólito. Pelo Eclipse, tecle _Delete_ em cima do módulo, selecione a opção _Delete project contents on disk (cannot be undone)_ e clique em _OK_.
+
+Remova, da classe `SecurityConfig` do módulo `eats-seguranca` do monólito,  as configurações de autorização dos endpoints que foram movidos:
+
+####### fj33-eats-monolito-modular/eats/eats-seguranca/src/main/java/br/com/caelum/eats/SecurityConfig.java
+
+```java
+class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+  // código omitido ...
+
+  @Override
+  protected void configure(HttpSecurity http) throws Exception {
+    http.authorizeRequests()
+      .antMatchers("/restaurantes/**", "/pedidos/**",̶ ̶"̶/̶t̶i̶p̶o̶s̶-̶d̶e̶-̶c̶o̶z̶i̶n̶h̶a̶/̶*̶*̶"̶,̶ ̶"̶/̶f̶o̶r̶m̶a̶s̶-̶d̶e̶-̶p̶a̶g̶a̶m̶e̶n̶t̶o̶/̶*̶*̶"̶).permitAll()
+      .antMatchers("/actuator/**").permitAll()
+      .̶a̶n̶t̶M̶a̶t̶c̶h̶e̶r̶s̶(̶"̶/̶a̶d̶m̶i̶n̶/̶*̶*̶"̶)̶.̶h̶a̶s̶R̶o̶l̶e̶(̶R̶o̶l̶e̶.̶R̶O̶L̶E̶S̶.̶A̶D̶M̶I̶N̶.̶n̶a̶m̶e̶(̶)̶)̶
+      // código omitido ...
+  }
+
+}
+```
+
+Também é necessário alterar as referências às classes `TipoDeCozinha` e `FormaDePagamento` no `DistanciaRestClientWiremockTest` do módulo `eats-application`.
+
+Já no módulo de restaurantes do monólito, é preciso alterar referências às classes migradas para o serviço Administrativo para apenas utilizarem os ids dos agregados `TipoDeCozinha` e `FormaDePagamento`. Isso afeta diversas classes do módulo `eats-restaurante`:
+
+- Restaurante
+- RestauranteController
+- RestauranteDto
+- RestauranteFormaDePagamento
+- RestauranteFormaDePagamentoController
+- RestauranteFormaDePagamentoRepository
+- RestauranteParaServicoDeDistancia
+- RestauranteRepository
+- RestauranteService
+
+A UI também será afetada. Uma das mudanças é que chamadas relativas a tipos de cozinha e formas de pagamento devem ser direcionadas para o serviço Administrativo. Esse serviço registra-se no Eureka Server com o nome `administrativo`, o seu application name. O API Gateway faz o roteamento dinâmico baseado nas instâncias disponíveis no Service Registry. Por isso, podemos trocar chamadas como a seguinte para utilizarem o prefixo `administrativo`:
+
+####### fj33-eats-ui/src/app/services/tipo-de-cozinha.service.ts
+
+```typescript
+export class TipoDeCozinhaService {
+
+  p̶r̶i̶v̶a̶t̶e̶ ̶A̶P̶I̶ ̶=̶ ̶e̶n̶v̶i̶r̶o̶n̶m̶e̶n̶t̶.̶b̶a̶s̶e̶U̶r̶l̶;̶
+  private API = environment.baseUrl + '/administrativo';
+
+  // código omitido ...
+
+}
+```
+
+O mesmo deve ser feito para a classe `FormaDePagamentoService`.
+
+As diversas mudanças no módulo de restaurantes do monólito também afetam a UI.
+
 ![Serviço administrativo extraído do monólito {w=93}](imagens/15-seguranca/administrativo-extraido-do-monolito.png)
 
 ## Exercício: um serviço Administrativo
 
-1. Clone o projeto `fj33-eats-administrativo-service` para o seu Desktop:
-
-  ```sh
-  cd ~/Desktop
-  git clone https://gitlab.com/aovs/projetos-cursos/fj33-eats-administrativo-service.git
-  ```
-
-2. Crie um arquivo `administrativo.properties` no `config-repo`, definindo um data source que aponta para o mesmo BD do monólito:
+1. Crie um arquivo `administrativo.properties` no `config-repo`, definindo um data source que aponta para o mesmo BD do monólito:
 
   ####### config-repo/administrativo.properties
 
@@ -52,54 +129,30 @@ Então, o módulo `eats-administrativo` do monólito pode ser removido, assim co
   spring.datasource.password=
   ```
 
-3. Remova a dependência a `eats-administrativo` do `pom.xml` do módulo `eats-application` do monólito:
+2. Clone o projeto `fj33-eats-administrativo-service` para o seu Desktop:
 
-  ####### fj33-eats-monolito-modular/eats/eats-application/pom.xml
-
-  ```xml
-  <̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
-  ̶ ̶ ̶<̶g̶r̶o̶u̶p̶I̶d̶>̶b̶r̶.̶c̶o̶m̶.̶c̶a̶e̶l̶u̶m̶<̶/̶g̶r̶o̶u̶p̶I̶d̶>̶
-  ̶ ̶<̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶e̶a̶t̶s̶-̶a̶d̶m̶i̶n̶i̶s̶t̶r̶a̶t̶i̶v̶o̶<̶/̶a̶r̶t̶i̶f̶a̶c̶t̶I̶d̶>̶
-  ̶ ̶ ̶<̶v̶e̶r̶s̶i̶o̶n̶>̶$̶{̶p̶r̶o̶j̶e̶c̶t̶.̶v̶e̶r̶s̶i̶o̶n̶}̶<̶/̶v̶e̶r̶s̶i̶o̶n̶>̶
-  ̶<̶/̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶>̶
+  ```sh
+  cd ~/Desktop
+  git clone https://gitlab.com/aovs/projetos-cursos/fj33-eats-administrativo-service.git
   ```
 
-2. No projeto pai dos módulos, o projeto `eats`, remova o módulo `eats-administrativo`  do `pom.xml`:
+  No Eclipse, no workspace de microservices, importe o projeto `fj33-eats-administrativo-service`, usando o menu _File > Import > Existing Maven Projects_.
 
-  ####### fj33-eats-monolito-modular/eats/pom.xml
+  Com o Service Registry e o Config Server no ar, suba o serviço Administrativo executando a classe `EatsAdministrativoServiceApplication`.
 
-  ```xml
-  <modules>
-    <̶m̶o̶d̶u̶l̶e̶>̶e̶a̶t̶s̶-̶a̶d̶m̶i̶n̶i̶s̶t̶r̶a̶t̶i̶v̶o̶<̶/̶m̶o̶d̶u̶l̶e̶>̶
-    <module>eats-restaurante</module>
-    <module>eats-pedido</module>
-    <module>eats-seguranca</module>
-    <module>eats-application</module>
-  </modules>
+3. Faça checkout da branch `cap15-extrai-administrativo-service` do monólito modular e da UI:
+
+  ```sh
+  cd ~/Desktop/fj33-eats-monolito-modular
+  git checkout -f cap15-extrai-administrativo-service
+
+  cd ~/Desktop/fj33-eats-ui
+  git checkout -f cap15-extrai-administrativo-service
   ```
 
-3. Apague o módulo `eats-administrativo` do monólito. Pelo Eclipse, tecle _Delete_ em cima do módulo, selecione a opção _Delete project contents on disk (cannot be undone)_ e clique em _OK_.
+  Faça refresh do monólito modular no Eclipse.
 
-4. Remova, da classe `SecurityConfig` do módulo `eats-seguranca` do monólito,  as configurações de autorização dos endpoints que foram movidos:
-
-  ####### fj33-eats-monolito-modular/eats/eats-seguranca/src/main/java/br/com/caelum/eats/SecurityConfig.java
-
-  ```java
-  class SecurityConfig extends WebSecurityConfigurerAdapter {
-
-    // código omitido ...
-
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-      http.authorizeRequests()
-        .antMatchers("/restaurantes/**", "/pedidos/**",̶ ̶"̶/̶t̶i̶p̶o̶s̶-̶d̶e̶-̶c̶o̶z̶i̶n̶h̶a̶/̶*̶*̶"̶,̶ ̶"̶/̶f̶o̶r̶m̶a̶s̶-̶d̶e̶-̶p̶a̶g̶a̶m̶e̶n̶t̶o̶/̶*̶*̶"̶).permitAll()
-        .antMatchers("/actuator/**").permitAll()
-        .̶a̶n̶t̶M̶a̶t̶c̶h̶e̶r̶s̶(̶"̶/̶a̶d̶m̶i̶n̶/̶*̶*̶"̶)̶.̶h̶a̶s̶R̶o̶l̶e̶(̶R̶o̶l̶e̶.̶R̶O̶L̶E̶S̶.̶A̶D̶M̶I̶N̶.̶n̶a̶m̶e̶(̶)̶)̶
-        // código omitido ...
-    }
-  
-  }
-  ```
+  Suba os serviços e o front-end. Teste o Caelum Eats. Deve funcionar!
 
 ## Autenticação e Autorização
 
@@ -388,39 +441,561 @@ Vamos modificar esse cenário, passando a responsabilidade de geração de token
 
 ![Geração de tokens no API Gateway e validação no módulo de segurança do monólito e no serviço Administrativo {w=39}](imagens/15-seguranca/geracao-de-tokens-no-api-gateway-e-validacao-no-modulo-de-seguranca-do-monolito.png)
 
-## Exercício Opcional: Autenticação no API Gateway
+## Autenticação no API Gateway
 
-1. Poderíamos ter um BD específico para conter dados de usuários nas tabelas `user`, `role` e `user_authorities`. Porém, para simplificar, vamos manter os dados de usuários no BD do próprio monólito.
+Poderíamos ter um BD específico para conter dados de usuários nas tabelas `user`, `role` e `user_authorities`. Porém, para simplificar, vamos manter os dados de usuários no BD do próprio monólito.
 
-  Adicione, ao API Gateway, dependências ao starter do Spring Data JPA e ao driver do MySQL. Adicione também o JJWT, biblioteca que gera e valida tokens JWT, e ao starter do Spring Security.
+No `config-repo`, adicione um arquivo `apigateway.properties` com o dados de conexão do BD do monólito, além das configurações da chave e expiração do JWT, que são usadas na geração do token:
 
-  ####### fj33-api-gateway/pom.xml
+####### config-repo/apigateway.properties
 
-  ```xml
-  <dependency>
-    <groupId>io.jsonwebtoken</groupId>
-    <artifactId>jjwt</artifactId>
-    <version>0.9.1</version>
-  </dependency>
+```properties
+#DATASOURCE CONFIGS
+spring.datasource.url=jdbc:mysql://localhost/eats?createDatabaseIfNotExist=true
+spring.datasource.username=root
+spring.datasource.password=
 
-  <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-security</artifactId>
-  </dependency>
+#JWT CONFIGS
+jwt.secret = um-segredo-bem-secreto
+jwt.expiration = 604800000
+```
 
-  <dependency>
-    <groupId>mysql</groupId>
-    <artifactId>mysql-connector-java</artifactId>
-    <scope>runtime</scope>
-  </dependency>
+Adicione, ao API Gateway, dependências ao starter do Spring Data JPA e ao driver do MySQL. Adicione também o JJWT, biblioteca que gera e valida tokens JWT, e ao starter do Spring Security.
 
-  <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-data-jpa</artifactId>
-  </dependency>
+####### fj33-api-gateway/pom.xml
+
+```xml
+<dependency>
+  <groupId>io.jsonwebtoken</groupId>
+  <artifactId>jjwt</artifactId>
+  <version>0.9.1</version>
+</dependency>
+
+<dependency>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+
+<dependency>
+  <groupId>mysql</groupId>
+  <artifactId>mysql-connector-java</artifactId>
+  <scope>runtime</scope>
+</dependency>
+
+<dependency>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-data-jpa</artifactId>
+</dependency>
+```
+
+Copie as classes a seguir do módulo `eats-seguranca` do monólito para o pacote `br.com.caelum.apigateway.seguranca` do API Gateway:
+
+- AuthenticationController
+- AuthenticationDto
+- Role
+- User
+- UserInfoDto
+- UserRepository
+- UserService
+
+Copie a seguinte classe do módulo de segurança do monólito para o pacote `br.com.caelum.apigateway` do API Gateway:
+
+- PasswordEncoderConfig
+
+Não esqueça de ajustar o pacote das classes copiadas.
+
+Essas classes fazem a autenticação de usuários, assim como o cadastro de novos donos de restaurante.
+
+Defina uma classe `SecurityConfig` no pacote `br.com.caelum.apigateway` para que permita toda e qualquer requisição, desabilitando a autorização, que será feita pelos serviços. A autenticação será _stateless_.
+
+####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/SecurityConfig.java
+
+```java
+@Configuration
+@EnableWebSecurity
+@AllArgsConstructor
+class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+  private UserService userService;
+  private PasswordEncoder passwordEncoder;
+
+  @Override
+  protected void configure(HttpSecurity http) throws Exception {
+    http.authorizeRequests()
+        .anyRequest().permitAll()
+        .and().cors()
+        .and().csrf().disable()
+        .formLogin().disable()
+        .httpBasic().disable()
+        .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+  }
+
+  @Override
+  protected void configure(final AuthenticationManagerBuilder auth) throws Exception {
+    auth.userDetailsService(userService).passwordEncoder(passwordEncoder);
+  }
+
+  @Override
+  @Bean(BeanIds.AUTHENTICATION_MANAGER)
+  public AuthenticationManager authenticationManagerBean() throws Exception {
+    return super.authenticationManagerBean();
+  }
+
+}
+```
+
+Não deixe de fazer os imports corretos:
+
+####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/SecurityConfig.java
+
+```java
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.BeanIds;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import br.com.caelum.apigateway.seguranca.UserService;
+import lombok.AllArgsConstructor;
+```
+
+Defina, no pacote `br.com.caelum.apigateway.seguranca` do API Gateway, uma classe `JwtTokenManager`, responsável pela geração dos tokens. A validação e extração de informações de um token serão responsabilidade de cada serviço.
+
+É importante adicionar o username e os roles do usuário aos _claims_ do JWT.
+
+####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/seguranca/JwtTokenManager.java
+
+```java
+@Component
+class JwtTokenManager {
+
+  private String secret;
+  private long expirationInMillis;
+
+  public JwtTokenManager(@Value("${jwt.secret}") String secret,
+              @Value("${jwt.expiration}") long expirationInMillis) {
+    this.secret = secret;
+    this.expirationInMillis = expirationInMillis;
+  }
+
+  public String generateToken(User user) {
+    final Date now = new Date();
+    final Date expiration = new Date(now.getTime() + this.expirationInMillis);
+    return Jwts.builder()
+        .setIssuer("Caelum Eats")
+        .setSubject(Long.toString(user.getId()))
+        .claim("roles", user.getRoles())
+        .claim("username", user.getUsername())
+        .setIssuedAt(now)
+        .setExpiration(expiration)
+        .signWith(SignatureAlgorithm.HS256, this.secret)
+        .compact();
+  }
+
+}
+```
+
+Cheque os imports:
+
+####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/seguranca/JwtTokenManager.java
+
+```java
+import java.util.Date;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+```
+
+Ainda no API Gateway, adicione um _forward_ para a URL do `AuthenticationController`, de maneira que o Zuul não tente fazer o proxy dessa chamada:
+
+####### fj33-api-gateway/src/main/resources/application.properties
+
+```properties
+zuul.routes.auth.path=/auth/**
+zuul.routes.auth.url=forward:/auth
+```
+
+_Observação: essa configuração deve ficar antes da rota "coringa", que direciona todas as requisições para o monólito._
+
+Podemos fazer uma chamada como a seguinte, que autentica o administrador:
+
+```sh
+curl -i -X POST -H 'Content-type: application/json' -d '{"username":"admin", "password":"123456"}' http://localhost:9999/auth
+```
+
+O retorno obtido será algo como:
+
+```txt
+{"username":"admin","roles":["ADMIN"],"token":"eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJDYWVsdW0gRWF0cyIsInN1YiI6IjEiLCJyb2xlcyI6WyJBRE1JTiJdLCJ1c2VybmFtZSI6ImFkbWluIiwiaWF0IjoxNTY2NTE4NzIyLCJleHAiOjE1NjcxMjM1MjJ9.FmH2QkryLBxWZjt2DMKHsCmjQNCmk3hrRAC0keam5_w"}
+```
+
+São retornados, no corpo da resposta, informações sobre o usuário, seus roles e um token. O token, no formato JWS, contém as mesmas informações e uma assinatura.
+
+## Validando o token JWT e implementando autorização no Monólito
+
+Remova as seguintes classes do módulo `eats-seguranca` do monólito, cujas responsabilidades foram passadas para o API Gateway. Elas estão no pacote `br.com.caelum.eats.seguranca`:
+
+- AuthenticationController
+- AuthenticationDto
+- UserInfoDto
+- UserRepository
+- UserService
+
+Remova também a classe a seguir, do pacote `br.com.caelum.eats`:
+
+- PasswordEncoderConfig
+
+A classe `SecurityConfig` deve apresentar um erro de compilação.
+
+Altere a classe `SecurityConfig` do módulo de segurança do monólito, removendo o código associado a autenticação e cadastro de novos usuários:
+
+####### fj33-eats-monolito-modular/eats/eats-seguranca/src/main/java/br/com/caelum/eats/SecurityConfig.java
+
+```java
+@Configuration
+@EnableWebSecurity
+@AllArgsConstructor
+class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+  p̶r̶i̶v̶a̶t̶e̶ ̶U̶s̶e̶r̶S̶e̶r̶v̶i̶c̶e̶ ̶u̶s̶e̶r̶S̶e̶r̶v̶i̶c̶e̶;̶
+  private JwtAuthenticationFilter jwtAuthenticationFilter;
+  private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+  p̶r̶i̶v̶a̶t̶e̶ ̶P̶a̶s̶s̶w̶o̶r̶d̶E̶n̶c̶o̶d̶e̶r̶ ̶p̶a̶s̶s̶w̶o̶r̶d̶E̶n̶c̶o̶d̶e̶r̶;̶
+
+  // código omitido...
+
+  @̶O̶v̶e̶r̶r̶i̶d̶e̶
+  p̶r̶o̶t̶e̶c̶t̶e̶d̶ ̶v̶o̶i̶d̶ ̶c̶o̶n̶f̶i̶g̶u̶r̶e̶(̶f̶i̶n̶a̶l̶ ̶A̶u̶t̶h̶e̶n̶t̶i̶c̶a̶t̶i̶o̶n̶M̶a̶n̶a̶g̶e̶r̶B̶u̶i̶l̶d̶e̶r̶ ̶a̶u̶t̶h̶)̶ ̶t̶h̶r̶o̶w̶s̶ ̶E̶x̶c̶e̶p̶t̶i̶o̶n̶ ̶{̶
+    a̶u̶t̶h̶.̶u̶s̶e̶r̶D̶e̶t̶a̶i̶l̶s̶S̶e̶r̶v̶i̶c̶e̶(̶u̶s̶e̶r̶S̶e̶r̶v̶i̶c̶e̶)̶.̶p̶a̶s̶s̶w̶o̶r̶d̶E̶n̶c̶o̶d̶e̶r̶(̶t̶h̶i̶s̶.̶p̶a̶s̶s̶w̶o̶r̶d̶E̶n̶c̶o̶d̶e̶r̶)̶;̶
+  }̶
+
+  @̶O̶v̶e̶r̶r̶i̶d̶e̶
+  @̶B̶e̶a̶n̶(̶B̶e̶a̶n̶I̶d̶s̶.̶A̶U̶T̶H̶E̶N̶T̶I̶C̶A̶T̶I̶O̶N̶_̶M̶A̶N̶A̶G̶E̶R̶)̶
+  p̶u̶b̶l̶i̶c̶ ̶A̶u̶t̶h̶e̶n̶t̶i̶c̶a̶t̶i̶o̶n̶M̶a̶n̶a̶g̶e̶r̶ ̶a̶u̶t̶h̶e̶n̶t̶i̶c̶a̶t̶i̶o̶n̶M̶a̶n̶a̶g̶e̶r̶B̶e̶a̶n̶(̶)̶ ̶t̶h̶r̶o̶w̶s̶ ̶E̶x̶c̶e̶p̶t̶i̶o̶n̶ ̶{̶
+    r̶e̶t̶u̶r̶n̶ ̶s̶u̶p̶e̶r̶.̶a̶u̶t̶h̶e̶n̶t̶i̶c̶a̶t̶i̶o̶n̶M̶a̶n̶a̶g̶e̶r̶B̶e̶a̶n̶(̶)̶;̶
+  }̶
+
+
+}
+```
+
+Remove os seguintes imports:
+
+####### fj33-eats-monolito-modular/eats/eats-seguranca/src/main/java/br/com/caelum/eats/SecurityConfig.java
+
+```java
+i̶m̶p̶o̶r̶t̶ ̶o̶r̶g̶.̶s̶p̶r̶i̶n̶g̶f̶r̶a̶m̶e̶w̶o̶r̶k̶.̶c̶o̶n̶t̶e̶x̶t̶.̶a̶n̶n̶o̶t̶a̶t̶i̶o̶n̶.̶B̶e̶a̶n̶;̶
+̶i̶m̶p̶o̶r̶t̶ ̶o̶r̶g̶.̶s̶p̶r̶i̶n̶g̶f̶r̶a̶m̶e̶w̶o̶r̶k̶.̶s̶e̶c̶u̶r̶i̶t̶y̶.̶a̶u̶t̶h̶e̶n̶t̶i̶c̶a̶t̶i̶o̶n̶.̶A̶u̶t̶h̶e̶n̶t̶i̶c̶a̶t̶i̶o̶n̶M̶a̶n̶a̶g̶e̶r̶;̶
+̶i̶m̶p̶o̶r̶t̶ ̶o̶r̶g̶.̶s̶p̶r̶i̶n̶g̶f̶r̶a̶m̶e̶w̶o̶r̶k̶.̶s̶e̶c̶u̶r̶i̶t̶y̶.̶c̶o̶n̶f̶i̶g̶.̶B̶e̶a̶n̶I̶d̶s̶;̶
+̶i̶m̶p̶o̶r̶t̶ ̶o̶r̶g̶.̶s̶p̶r̶i̶n̶g̶f̶r̶a̶m̶e̶w̶o̶r̶k̶.̶s̶e̶c̶u̶r̶i̶t̶y̶.̶c̶o̶n̶f̶i̶g̶.̶a̶n̶n̶o̶t̶a̶t̶i̶o̶n̶.̶a̶u̶t̶h̶e̶n̶t̶i̶c̶a̶t̶i̶o̶n̶.̶b̶u̶i̶l̶d̶e̶r̶s̶.̶A̶u̶t̶h̶e̶n̶t̶i̶c̶a̶t̶i̶o̶n̶M̶a̶n̶a̶g̶e̶r̶B̶u̶i̶l̶d̶e̶r̶;̶
+̶i̶m̶p̶o̶r̶t̶ ̶o̶r̶g̶.̶s̶p̶r̶i̶n̶g̶f̶r̶a̶m̶e̶w̶o̶r̶k̶.̶s̶e̶c̶u̶r̶i̶t̶y̶.̶c̶r̶y̶p̶t̶o̶.̶p̶a̶s̶s̶w̶o̶r̶d̶.̶P̶a̶s̶s̶w̶o̶r̶d̶E̶n̶c̶o̶d̶e̶r̶;̶
+̶i̶m̶p̶o̶r̶t̶ ̶b̶r̶.̶c̶o̶m̶.̶c̶a̶e̶l̶u̶m̶.̶e̶a̶t̶s̶.̶s̶e̶g̶u̶r̶a̶n̶c̶a̶.̶U̶s̶e̶r̶S̶e̶r̶v̶i̶c̶e̶;̶
+```
+
+Modifique o `JwtTokenManager` do módulo de segurança do monólito, removendo o código de geração de token e o atributo `expirationInMillis`, deixando apenas a validação e extração de dados do token.
+
+####### fj33-eats-monolito-modular/eats/eats-seguranca/src/main/java/br/com/caelum/eats/seguranca/JwtTokenManager.java
+
+```java
+@Component
+class JwtTokenManager {
+
+  private String secret;
+  p̶r̶i̶v̶a̶t̶e̶ ̶l̶o̶n̶g̶ ̶e̶x̶p̶i̶r̶a̶t̶i̶o̶n̶I̶n̶M̶i̶l̶l̶i̶s̶;̶
+
+  public JwtTokenManager(@Value("${jwt.secret}") String secret,̶
+              @̶V̶a̶l̶u̶e̶(̶"̶$̶{̶j̶w̶t̶.̶e̶x̶p̶i̶r̶a̶t̶i̶o̶n̶}̶"̶)̶ ̶l̶o̶n̶g̶ ̶e̶x̶p̶i̶r̶a̶t̶i̶o̶n̶I̶n̶M̶i̶l̶l̶i̶s̶) {
+    this.secret = secret;
+    t̶h̶i̶s̶.̶e̶x̶p̶i̶r̶a̶t̶i̶o̶n̶I̶n̶M̶i̶l̶l̶i̶s̶ ̶=̶ ̶e̶x̶p̶i̶r̶a̶t̶i̶o̶n̶I̶n̶M̶i̶l̶l̶i̶s̶;̶
+  }
+
+  p̶u̶b̶l̶i̶c̶ ̶S̶t̶r̶i̶n̶g̶ ̶g̶e̶n̶e̶r̶a̶t̶e̶T̶o̶k̶e̶n̶(̶U̶s̶e̶r̶ ̶u̶s̶e̶r̶)̶ ̶{̶
+
+  ̶ ̶ ̶}̶
+
+  public boolean isValid(String jwt) {
+    // não modificado ...
+  }
+
+  @SuppressWarnings("unchecked")
+  public User getUserFromToken(String jwt) {
+    // não modificado ...
+  }
+
+}
+```
+
+Remova os imports desnecessários:
+
+####### fj33-eats-monolito-modular/eats/eats-seguranca/src/main/java/br/com/caelum/eats/seguranca/JwtTokenManager.java
+
+```java
+i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶.̶u̶t̶i̶l̶.̶D̶a̶t̶e̶;̶
+̶i̶m̶p̶o̶r̶t̶ ̶i̶o̶.̶j̶s̶o̶n̶w̶e̶b̶t̶o̶k̶e̶n̶.̶S̶i̶g̶n̶a̶t̶u̶r̶e̶A̶l̶g̶o̶r̶i̶t̶h̶m̶;̶
+```
+
+Remova as anotações do JPA e Beans Validator das classes `User` e `Role` do módulo de segurança do monólito. O cadastro de usuários será feito pelo API Gateway.
+
+####### fj33-eats-monolito-modular/eats/eats-seguranca/src/main/java/br/com/caelum/eats/seguranca/User.java
+
+```java
+@̶E̶n̶t̶i̶t̶y̶
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
+public class User implements UserDetails {
+
+  private static final long serialVersionUID = 1L;
+
+  @̶I̶d̶
+  @̶G̶e̶n̶e̶r̶a̶t̶e̶d̶V̶a̶l̶u̶e̶(̶s̶t̶r̶a̶t̶e̶g̶y̶ ̶=̶ ̶G̶e̶n̶e̶r̶a̶t̶i̶o̶n̶T̶y̶p̶e̶.̶I̶D̶E̶N̶T̶I̶T̶Y̶)̶
+  private Long id;
+
+  @̶N̶o̶t̶B̶l̶a̶n̶k̶ ̶@̶J̶s̶o̶n̶I̶g̶n̶o̶r̶e̶
+  private String name;
+
+  @̶N̶o̶t̶B̶l̶a̶n̶k̶ ̶@̶J̶s̶o̶n̶I̶g̶n̶o̶r̶e̶
+  private String password;
+
+  @̶M̶a̶n̶y̶T̶o̶M̶a̶n̶y̶(̶f̶e̶t̶c̶h̶ ̶=̶ ̶F̶e̶t̶c̶h̶T̶y̶p̶e̶.̶E̶A̶G̶E̶R̶)̶ ̶@̶J̶s̶o̶n̶I̶g̶n̶o̶r̶e̶
+  private List<Role> authorities = new ArrayList<>();
+
+  // restante do código ...
+```
+
+Limpe os imports da classe `User`:
+
+####### fj33-eats-monolito-modular/eats/eats-seguranca/src/main/java/br/com/caelum/eats/seguranca/User.java
+
+```java
+i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶p̶e̶r̶s̶i̶s̶t̶e̶n̶c̶e̶.̶E̶n̶t̶i̶t̶y̶;̶
+̶i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶p̶e̶r̶s̶i̶s̶t̶e̶n̶c̶e̶.̶F̶e̶t̶c̶h̶T̶y̶p̶e̶;̶
+̶i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶p̶e̶r̶s̶i̶s̶t̶e̶n̶c̶e̶.̶G̶e̶n̶e̶r̶a̶t̶e̶d̶V̶a̶l̶u̶e̶;̶
+̶i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶p̶e̶r̶s̶i̶s̶t̶e̶n̶c̶e̶.̶G̶e̶n̶e̶r̶a̶t̶i̶o̶n̶T̶y̶p̶e̶;̶
+̶i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶p̶e̶r̶s̶i̶s̶t̶e̶n̶c̶e̶.̶I̶d̶;̶
+̶i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶p̶e̶r̶s̶i̶s̶t̶e̶n̶c̶e̶.̶M̶a̶n̶y̶T̶o̶M̶a̶n̶y̶;̶
+̶i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶v̶a̶l̶i̶d̶a̶t̶i̶o̶n̶.̶c̶o̶n̶s̶t̶r̶a̶i̶n̶t̶s̶.̶N̶o̶t̶B̶l̶a̶n̶k̶;̶
+
+i̶m̶p̶o̶r̶t̶ ̶c̶o̶m̶.̶f̶a̶s̶t̶e̶r̶x̶m̶l̶.̶j̶a̶c̶k̶s̶o̶n̶.̶a̶n̶n̶o̶t̶a̶t̶i̶o̶n̶.̶J̶s̶o̶n̶I̶g̶n̶o̶r̶e̶;̶
+```
+
+####### fj33-eats-monolito-modular/eats/eats-seguranca/src/main/java/br/com/caelum/eats/seguranca/Role.java
+
+```java
+@̶E̶n̶t̶i̶t̶y̶
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
+public class Role implements GrantedAuthority {
+
+  // código omitido...
+
+  @̶I̶d̶
+  private String authority;
+
+  // restante do código...
+```
+
+Limpe também os imports da classe `Role`:
+
+####### fj33-eats-monolito-modular/eats/eats-seguranca/src/main/java/br/com/caelum/eats/seguranca/Role.java
+
+```java
+i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶p̶e̶r̶s̶i̶s̶t̶e̶n̶c̶e̶.̶E̶n̶t̶i̶t̶y̶;̶
+̶i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶p̶e̶r̶s̶i̶s̶t̶e̶n̶c̶e̶.̶I̶d̶;̶
+```
+
+Como a classe `User` não é mais uma entidade, devemos modificar seu relacionamento na classe `Restaurante` do módulo `eats-restaurante` do monólito:
+
+####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/Restaurante.java
+
+```java
+@Entity
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
+public class Restaurante {
+
+  // código omitido...
+
+  @̶O̶n̶e̶T̶o̶O̶n̶e̶
+  p̶r̶i̶v̶a̶t̶e̶ ̶U̶s̶e̶r̶ ̶u̶s̶e̶r̶;̶
+  private Long userId; // modificado
+
+}
+```
+
+Os imports devem ser ajustados:
+
+####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/Restaurante.java
+
+```java
+i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶p̶e̶r̶s̶i̶s̶t̶e̶n̶c̶e̶.̶O̶n̶e̶T̶o̶O̶n̶e̶;̶
+̶i̶m̶p̶o̶r̶t̶ ̶b̶r̶.̶c̶o̶m̶.̶c̶a̶e̶l̶u̶m̶.̶e̶a̶t̶s̶.̶s̶e̶g̶u̶r̶a̶n̶c̶a̶.̶U̶s̶e̶r̶;̶
+```
+
+Modifique também o uso do atributo `user` do `Restaurante` na classe `RestauranteController`:
+
+####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/RestauranteController.java
+
+```java
+@RestController
+@AllArgsConstructor
+class RestauranteController {
+
+  // código omitido...
+
+  @PutMapping("/parceiros/restaurantes/{id}")
+  public Restaurante atualiza(@RequestBody Restaurante restaurante) {
+    Restaurante doBD = restauranteRepo.getOne(restaurante.getId());
+
+    r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶.̶s̶e̶t̶U̶s̶e̶r̶(̶d̶o̶B̶D̶.̶g̶e̶t̶U̶s̶e̶r̶(̶)̶)̶;̶
+    restaurante.setUserId(doBD.getUserId()); // modificado
+
+    restaurante.setAprovado(doBD.getAprovado());
+
+    // código omitido...
+
+    return restauranteRepo.save(restaurante);
+  }
+
+  // código omitido...
+
+}
+```
+
+Ajuste a interface `RestauranteRepository`:
+
+####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/RestauranteRepository.java
+
+```java
+interface RestauranteRepository extends JpaRepository<Restaurante, Long> {
+
+  // código omitido...
+
+  R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶ ̶f̶i̶n̶d̶B̶y̶U̶s̶e̶r̶(̶U̶s̶e̶r̶ ̶u̶s̶e̶r̶)̶;̶
+  Restaurante findByUserId(Long userId); // modificado
+
+  // código omitido...
+
+}
+```
+
+Limpe o import:
+
+####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/RestauranteRepository.java
+
+```java
+i̶m̶p̶o̶r̶t̶ ̶b̶r̶.̶c̶o̶m̶.̶c̶a̶e̶l̶u̶m̶.̶e̶a̶t̶s̶.̶s̶e̶g̶u̶r̶a̶n̶c̶a̶.̶U̶s̶e̶r̶;̶
+```
+
+Faça com que a classe `RestauranteAuthorizationService` use o novo método do repository:
+
+####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/RestauranteAuthorizationService.java
+
+```java
+@Service
+@AllArgsConstructor
+class RestauranteAuthorizationService  {
+
+  private RestauranteRepository restauranteRepo;
+
+  public boolean checaId(Authentication authentication, long id) {
+    User user = (User) authentication.getPrincipal();
+    if (user.isInRole(Role.ROLES.PARCEIRO)) {
+      R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶ ̶=̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶R̶e̶p̶o̶.̶f̶i̶n̶d̶B̶y̶U̶s̶e̶r̶(̶u̶s̶e̶r̶)̶;̶
+      Restaurante restaurante = restauranteRepo.findByUserId(user.getId());
+      if (restaurante != null) {
+        return id == restaurante.getId();
+      }
+    }
+    return false;
+  }
+
+  // código omitido...
+
+}
+```
+
+Mude o `monolito.properties` do `config-repo`, removendo a configuração de expiração do token JWT. Essa configuração será usada apenas pelo gerador de tokens, o API Gateway. A chave privada, presente na propriedade `jwt.secret` ainda deve ser mantida, pois é usada na validação do token HS256.
+
+####### config-repo/monolito.properties
+
+```properties
+j̶w̶t̶.̶e̶x̶p̶i̶r̶a̶t̶i̶o̶n̶ ̶=̶ ̶6̶0̶4̶8̶0̶0̶0̶0̶0̶
+```
+
+As URLS que não tem acesso protegido continuam funcionando sem a necessidade de um token. Por exemplo:
+
+http://localhost:9999/restaurantes/1
+
+ou
+
+http://localhost:8080/restaurantes/1
+
+Porém, URLs protegidas precisarão de um _access token_ válido e que foi emitido para um usuário que tenha permissão para fazer operações no recurso solicitado.
+
+Se tentarmos acessar uma URL como a seguir, teremos o acesso negado:
+
+http://localhost:8080/parceiros/restaurantes/1
+
+A resposta será um erro HTTP 401 (Unauthorized). Algo como:
+
+Ai usarmos um token obtido na autenticação no API Gateway, colocando-o no cabeçalho HTTP `Authorization`, depois do valor `Bearer`. O comando cURL em um Terminal, parece com:
+
+```sh
+curl -i -X PUT -H 'Content-type: application/json' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJDYWVsdW0gRWF0cyIsInN1YiI6IjEiLCJyb2xlcyI6WyJBRE1JTiJdLCJ1c2VybmFtZSI6ImFkbWluIiwiaWF0IjoxNTY2NTE4NzIyLCJleHAiOjE1NjcxMjM1MjJ9.FmH2QkryLBxWZjt2DMKHsCmjQNCmk3hrRAC0keam5_w' -d '{"id": 3, "tipo": "CARTAO_CREDITO", "nome": "American Express"}' http://localhost:9999/admin/formas-de-pagamento/3
+```
+
+Você pode encontrar o comando anterior em: https://gitlab.com/snippets/1888252
+
+Deverá ser obtida uma resposta bem sucedida, com os dados da forma de pagamento alterados!
+
+```txt
+HTTP/1.1 200 
+Date: Fri, 23 Aug 2019 00:56:00 GMT
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Pragma: no-cache
+Expires: 0
+X-Frame-Options: DENY
+Content-Type: application/json;charset=UTF-8
+Transfer-Encoding: chunked
+
+{"id":3,"tipo":"CARTAO_CREDITO","nome":"American Express"}
+```
+
+Isso indica que o módulo de segurança do monólito reconheceu o token como válido e extraiu a informação dos roles do usuário, reconhecendo-o no role ADMIN.
+
+## Exercício: Autenticação no API Gateway e Autorização no monólito
+
+1. Faça checkout da branch `cap15-autenticacao-no-api-gateway-e-autorizacao-nos-servicos` nos projeto do monólito modular, API Gateway e UI:
+
+  ```sh
+  cd ~/Desktop/fj33-eats-monolito-modular
+  git checkout -f cap15-autenticacao-no-api-gateway-e-autorizacao-nos-servicos
+
+  cd ~/Desktop/fj33-api-gateway
+  git checkout -f cap15-autenticacao-no-api-gateway-e-autorizacao-nos-servicos
+
+  cd ~/Desktop/fj33-eats-ui
+  git checkout -f cap15-autenticacao-no-api-gateway-e-autorizacao-nos-servicos
   ```
 
-2. No `config-repo`, adicione um arquivo `apigateway.properties` com o dados de conexão do BD do monólito, além das configurações da chave e expiração do JWT, que são usadas na geração do token:
+  Faça refresh no Eclipse nos projetos do monólito modular e do API Gateway.
+
+2. Poderíamos ter um BD específico para conter dados de usuários nas tabelas `user`, `role` e `user_authorities`. Porém, para simplificar, vamos manter os dados de usuários no BD do próprio monólito.
+
+  No `config-repo`, adicione um arquivo `apigateway.properties` com o dados de conexão do BD do monólito, além das configurações da chave e expiração do JWT, que são usadas na geração do token:
 
   ####### config-repo/apigateway.properties
 
@@ -435,119 +1010,12 @@ Vamos modificar esse cenário, passando a responsabilidade de geração de token
   jwt.expiration = 604800000
   ```
 
-3. Mova as classes a seguir do módulo `eats-seguranca` do monólito para o API Gateway, no pacote `br.com.caelum.apigateway`, apagando do pacote original:
+3. Execute `ApiGatewayApplication`, certificando-se que o Service Registry e o Config Server estão no ar.
 
-  - AuthenticationController.java
-  - AuthenticationDto.java
-  - UserInfoDto.java
-  - UserRepository.java
-  - UserService.java
-  - PasswordEncoderConfig.java
-
-  Além dessas, copie as seguintes classes, mantendo-as também no módulo `eats-seguranca` do monólito:
-
-  - Role.java
-  - User.java
-
-  Copie também a seguinte classe do módulo `eats-application` do monólito:
-
-  - CorsConfig.java
-
-  Não esqueça de ajustar o pacote das classes copiadas.
-
-  Essas classes fazem geração e validação de tokens JWT, assim como o cadastro de novos donos de restaurante.
-
-4. Defina uma classe `SecurityConfig` no pacote `br.com.caelum.apigateway` para que permita toda e qualquer requisição, desabilitando a autorização, que será feita pelos serviços. A autenticação será _stateless_.
-
-  ####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/SecurityConfig.java
-
-  ```java
-  @Configuration
-  @EnableWebSecurity
-  @AllArgsConstructor
-  class SecurityConfig extends WebSecurityConfigurerAdapter {
-
-    private UserService userService;
-    private PasswordEncoder passwordEncoder;
-
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-      http.authorizeRequests()
-          .anyRequest().permitAll()
-          .and().cors()
-          .and().csrf().disable()
-          .formLogin().disable()
-          .httpBasic().disable()
-          .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-    }
-
-    @Override
-    protected void configure(final AuthenticationManagerBuilder auth) throws Exception {
-      auth.userDetailsService(userService).passwordEncoder(passwordEncoder);
-    }
-
-    @Override
-    @Bean(BeanIds.AUTHENTICATION_MANAGER)
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-      return super.authenticationManagerBean();
-    }
-
-  }
-  ```
-
-5. Defina, no mesmo pacote do API Gateway, uma classe `JwtTokenManager`, responsável pela geração dos tokens. A validação e extração de informações de um token serão responsabilidade de cada serviços.
-
-  É importante adicionar o username e os roles do usuário aos _claims_ do JWT.
-
-  ####### fj33-api-gateway/src/main/java/br/com/caelum/apigateway/JwtTokenManager.java
-
-  ```java
-  @Component
-  class JwtTokenManager {
-
-    private String secret;
-    private long expirationInMillis;
-
-    public JwtTokenManager(@Value("${jwt.secret}") String secret,
-                @Value("${jwt.expiration}") long expirationInMillis) {
-      this.secret = secret;
-      this.expirationInMillis = expirationInMillis;
-    }
-
-    public String generateToken(User user) {
-      final Date now = new Date();
-      final Date expiration = new Date(now.getTime() + this.expirationInMillis);
-      return Jwts.builder()
-          .setIssuer("Caelum Eats")
-          .setSubject(Long.toString(user.getId()))
-          .claim("roles", user.getRoles())
-          .claim("username", user.getUsername())o
-          .setIssuedAt(now)
-          .setExpiration(expiration)
-          .signWith(SignatureAlgorithm.HS256, this.secret)
-          .compact();
-    }
-
-  }
-  ```
-
-6. Ainda no API Gateway, adicione um _forward_ para a URL do `AuthenticationController`, de maneira que o Zuul não tente fazer o proxy dessa chamada:
-
-  ####### fj33-api-gateway/src/main/resources/application.properties
-
-  ```properties
-  zuul.routes.auth.path=/auth/**
-  zuul.routes.auth.url=forward:/auth
-  ```
-
-  _Observação: essa configuração deve ficar antes da rota que direciona todas as requisições para o monólito._
-
-8. Execute `ApiGatewayApplication`, certificando-se que o Service Registry e o Config Server estão no ar.
-
-  Então, abra o terminal e simule a autenticação do administrador:
+  Então, abra o terminal e simule a autenticação do dono do restaurante Long Fu:
 
   ```sh
-  curl -i -X POST -H 'Content-type: application/json' -d '{"username":"admin", "password":"123456"}' http://localhost:9999/auth
+  curl -i -X POST -H 'Content-type: application/json' -d '{"username":"longfu", "password":"123456"}' http://localhost:9999/auth
   ```
 
   Use o seguinte snippet, para evitar digitação: https://gitlab.com/snippets/1888245
@@ -555,7 +1023,7 @@ Vamos modificar esse cenário, passando a responsabilidade de geração de token
   Você deve obter um retorno parecido com:
 
   ```txt
-  HTTP/1.1 200 
+  HTTP/1.1 200
   X-Content-Type-Options: nosniff
   X-XSS-Protection: 1; mode=block
   Cache-Control: no-cache, no-store, max-age=0, must-revalidate
@@ -566,279 +1034,39 @@ Vamos modificar esse cenário, passando a responsabilidade de geração de token
   Transfer-Encoding: chunked
   Date: Fri, 23 Aug 2019 00:05:22 GMT
 
-  {"username":"admin","roles":["ADMIN"],"token":"eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJDYWVsdW0gRWF0cyIsInN1YiI6IjEiLCJyb2xlcyI6WyJBRE1JTiJdLCJ1c2VybmFtZSI6ImFkbWluIiwiaWF0IjoxNTY2NTE4NzIyLCJleHAiOjE1NjcxMjM1MjJ9.FmH2QkryLBxWZjt2DMKHsCmjQNCmk3hrRAC0keam5_w"}
+  {"userId":2,"username":"longfu","roles":["PARCEIRO"],"token":"eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJDYWVsdW0gRWF0cyIsInN1YiI6IjIiLCJyb2xlcyI6WyJQQVJDRUlSTyJdLCJ1c2VybmFtZSI6ImxvbmdmdSIsImlhdCI6MTU2OTU1MDYyOCwiZXhwIjoxNTcwMTU1NDI4fQ.S1V7aBNN206NpxPEEaIibtluJD9Bd-gHPK-MaUHcgxs"}
   ```
 
   São retornados, no corpo da resposta, informações sobre o usuário, seus roles e um token. Guarde esse token: o usaremos em breve!
 
-## Exercício Opcional: Validando o token JWT e implementando autorização no Monólito
-
-1. Modifique o `JwtTokenManager` do módulo de segurança do monólito, removendo o código de geração de token e o atributo `expirationInMillis`, deixando apenas a validação e extração de dados. Modifique o método `getUserIdFromToken` para que obtenha os dados do usuário somente a partir dos claims do token JWT.
-
-  ####### fj33-eats-monolito-modular/eats/eats-seguranca/src/main/java/br/com/caelum/eats/seguranca/JwtTokenManager.java
-
-  ```java
-  @Component
-  class JwtTokenManager {
-
-    private String secret;
-    p̶r̶i̶v̶a̶t̶e̶ ̶l̶o̶n̶g̶ ̶e̶x̶p̶i̶r̶a̶t̶i̶o̶n̶I̶n̶M̶i̶l̶l̶i̶s̶;̶
-
-    public JwtTokenManager(@Value("${jwt.secret}") String secret,̶
-                @̶V̶a̶l̶u̶e̶(̶"̶$̶{̶j̶w̶t̶.̶e̶x̶p̶i̶r̶a̶t̶i̶o̶n̶}̶"̶)̶ ̶l̶o̶n̶g̶ ̶e̶x̶p̶i̶r̶a̶t̶i̶o̶n̶I̶n̶M̶i̶l̶l̶i̶s̶) {
-      this.secret = secret;
-      t̶h̶i̶s̶.̶e̶x̶p̶i̶r̶a̶t̶i̶o̶n̶I̶n̶M̶i̶l̶l̶i̶s̶ ̶=̶ ̶e̶x̶p̶i̶r̶a̶t̶i̶o̶n̶I̶n̶M̶i̶l̶l̶i̶s̶;̶
-    }
-
-    p̶u̶b̶l̶i̶c̶ ̶S̶t̶r̶i̶n̶g̶ ̶g̶e̶n̶e̶r̶a̶t̶e̶T̶o̶k̶e̶n̶(̶U̶s̶e̶r̶ ̶u̶s̶e̶r̶)̶ ̶{̶
-  
-    ̶ ̶ ̶}̶
-
-    public boolean isValid(String jwt) {
-      // não modificado
-    }
-
-    public User getUserFromToken(String jwt) {
-      // não modificado
-    }
-
-  }
-  ```
-
-  Não deixe de importar:
-
-  ```java
-  import java.util.List;
-  ```
-
-2. Remova as anotações do JPA e Beans Validator das classes `User` e `Role` do módulo de segurança do monólito. O cadastro de usuários será feito pelo API Gateway.
-
-  ####### fj33-eats-monolito-modular/eats/eats-seguranca/src/main/java/br/com/caelum/eats/seguranca/User.java
-
-  ```java
-  @̶E̶n̶t̶i̶t̶y̶
-  @NoArgsConstructor
-  @AllArgsConstructor
-  @Data
-  public class User implements UserDetails {
-
-    private static final long serialVersionUID = 1L;
-
-    @̶I̶d̶
-    @̶G̶e̶n̶e̶r̶a̶t̶e̶d̶V̶a̶l̶u̶e̶(̶s̶t̶r̶a̶t̶e̶g̶y̶ ̶=̶ ̶G̶e̶n̶e̶r̶a̶t̶i̶o̶n̶T̶y̶p̶e̶.̶I̶D̶E̶N̶T̶I̶T̶Y̶)̶
-    private Long id;
-
-    @̶N̶o̶t̶B̶l̶a̶n̶k̶ ̶@̶J̶s̶o̶n̶I̶g̶n̶o̶r̶e̶
-    private String name;
-
-    @̶N̶o̶t̶B̶l̶a̶n̶k̶ ̶@̶J̶s̶o̶n̶I̶g̶n̶o̶r̶e̶
-    private String password;
-
-    @̶M̶a̶n̶y̶T̶o̶M̶a̶n̶y̶(̶f̶e̶t̶c̶h̶ ̶=̶ ̶F̶e̶t̶c̶h̶T̶y̶p̶e̶.̶E̶A̶G̶E̶R̶)̶ ̶@̶J̶s̶o̶n̶I̶g̶n̶o̶r̶e̶
-    private List<Role> authorities = new ArrayList<>();
-
-    // restante do código ...
-  ```
-
-  ####### fj33-eats-monolito-modular/eats/eats-seguranca/src/main/java/br/com/caelum/eats/seguranca/Role.java
-
-  ```java
-  @̶E̶n̶t̶i̶t̶y̶
-  @NoArgsConstructor
-  @AllArgsConstructor
-  @Data
-  public class Role implements GrantedAuthority {
-
-    // código omitido...
-
-    @̶I̶d̶
-    private String authority;
-
-    // restante do código...
-  ```
-
-  3. Altere a classe `SecurityConfig` do módulo de segurança do monólito, removendo código associado a autenticação e cadastro de novos usuários:
-
-  ####### fj33-eats-monolito-modular/eats/eats-seguranca/src/main/java/br/com/caelum/eats/SecurityConfig.java
-
-  ```java
-  @Configuration
-  @EnableWebSecurity
-  @AllArgsConstructor
-  class SecurityConfig extends WebSecurityConfigurerAdapter {
-
-    p̶r̶i̶v̶a̶t̶e̶ ̶U̶s̶e̶r̶S̶e̶r̶v̶i̶c̶e̶ ̶u̶s̶e̶r̶S̶e̶r̶v̶i̶c̶e̶;̶
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
-    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-    p̶r̶i̶v̶a̶t̶e̶ ̶B̶C̶r̶y̶p̶t̶P̶a̶s̶s̶w̶o̶r̶d̶E̶n̶c̶o̶d̶e̶r̶ ̶b̶C̶r̶y̶p̶t̶P̶a̶s̶s̶w̶o̶r̶d̶E̶n̶c̶o̶d̶e̶r̶;̶
-
-    // código omitido...
-
-    @̶O̶v̶e̶r̶r̶i̶d̶e̶
-  ̶ ̶ ̶p̶r̶o̶t̶e̶c̶t̶e̶d̶ ̶v̶o̶i̶d̶ ̶c̶o̶n̶f̶i̶g̶u̶r̶e̶(̶f̶i̶n̶a̶l̶ ̶A̶u̶t̶h̶e̶n̶t̶i̶c̶a̶t̶i̶o̶n̶M̶a̶n̶a̶g̶e̶r̶B̶u̶i̶l̶d̶e̶r̶ ̶a̶u̶t̶h̶)̶ ̶t̶h̶r̶o̶w̶s̶ ̶E̶x̶c̶e̶p̶t̶i̶o̶n̶ ̶{̶
-  ̶ ̶ ̶ ̶ ̶a̶u̶t̶h̶.̶u̶s̶e̶r̶D̶e̶t̶a̶i̶l̶s̶S̶e̶r̶v̶i̶c̶e̶(̶u̶s̶e̶r̶S̶e̶r̶v̶i̶c̶e̶)̶.̶p̶a̶s̶s̶w̶o̶r̶d̶E̶n̶c̶o̶d̶e̶r̶(̶b̶C̶r̶y̶p̶t̶P̶a̶s̶s̶w̶o̶r̶d̶E̶n̶c̶o̶d̶e̶r̶)̶;̶
-  ̶ ̶ ̶}̶
-
-    @̶O̶v̶e̶r̶r̶i̶d̶e̶
-  ̶ ̶ ̶@̶B̶e̶a̶n̶(̶B̶e̶a̶n̶I̶d̶s̶.̶A̶U̶T̶H̶E̶N̶T̶I̶C̶A̶T̶I̶O̶N̶_̶M̶A̶N̶A̶G̶E̶R̶)̶
-  ̶ ̶ ̶p̶u̶b̶l̶i̶c̶ ̶A̶u̶t̶h̶e̶n̶t̶i̶c̶a̶t̶i̶o̶n̶M̶a̶n̶a̶g̶e̶r̶ ̶a̶u̶t̶h̶e̶n̶t̶i̶c̶a̶t̶i̶o̶n̶M̶a̶n̶a̶g̶e̶r̶B̶e̶a̶n̶(̶)̶ ̶t̶h̶r̶o̶w̶s̶ ̶E̶x̶c̶e̶p̶t̶i̶o̶n̶ ̶{̶
-  ̶ ̶ ̶ ̶ ̶r̶e̶t̶u̶r̶n̶ ̶s̶u̶p̶e̶r̶.̶a̶u̶t̶h̶e̶n̶t̶i̶c̶a̶t̶i̶o̶n̶M̶a̶n̶a̶g̶e̶r̶B̶e̶a̶n̶(̶)̶;̶
-  ̶ ̶ ̶}̶
-
-  }
-  ```
-
-4. Como a classe `User` não é mais uma entidade, devemos modificar seu relacionamento na classe `Restaurante` do módulo `eats-restaurante` do monólito:
-
-  ####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/Restaurante.java
-
-  ```java
-  @Entity
-  @NoArgsConstructor
-  @AllArgsConstructor
-  @Data
-  public class Restaurante {
-
-    // código omitido...
-
-    @̶O̶n̶e̶T̶o̶O̶n̶e̶
-    p̶r̶i̶v̶a̶t̶e̶ ̶U̶s̶e̶r̶ ̶u̶s̶e̶r̶;̶
-    private Long userId; // modificado
-
-  }
-  ```
-
-  Modifique também o uso do atributo `user` do `Restaurante` na classe `RestauranteController`:
-
-  ####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/RestauranteController.java
-
-  ```java
-  @RestController
-  @AllArgsConstructor
-  class RestauranteController {
-
-    // código omitido...
-
-    @PutMapping("/parceiros/restaurantes/{id}")
-    public Restaurante atualiza(@RequestBody Restaurante restaurante) {
-      Restaurante doBD = restauranteRepo.getOne(restaurante.getId());
-
-      r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶.̶s̶e̶t̶U̶s̶e̶r̶(̶d̶o̶B̶D̶.̶g̶e̶t̶U̶s̶e̶r̶(̶)̶)̶;̶
-      restaurante.setUserId(doBD.getUserId()); // modificado
-
-      restaurante.setAprovado(doBD.getAprovado());
-
-      // código omitido...
-
-      return restauranteRepo.save(restaurante);
-    }
-  
-    // código omitido...
-
-  }
-  ```
-
-  Ajuste a interface `RestauranteRepository`:
-
-  ####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/RestauranteRepository.java
-
-  ```java
-  interface RestauranteRepository extends JpaRepository<Restaurante, Long> {
-
-    // código omitido...
-
-    R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶ ̶f̶i̶n̶d̶B̶y̶U̶s̶e̶r̶(̶U̶s̶e̶r̶ ̶u̶s̶e̶r̶)̶;̶
-    Restaurante findByUserId(Long userId); // modificado
-
-    // código omitido...
-
-  }
-  ```
-
-  Faça com que a classe `RestauranteAuthorizationTargetService` use o novo método do repository:
-
-  ####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/RestauranteAuthorizationService.java
-
-  ```java
-  @Service
-  @AllArgsConstructor
-  class RestauranteAuthorizationTargetService  {
-
-    private RestauranteRepository restauranteRepo;
-
-    public boolean checaId(Authentication authentication, long id) {
-      User user = (User) authentication.getPrincipal();
-      if (user.isInRole(Role.ROLES.PARCEIRO)) {
-        R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶ ̶=̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶R̶e̶p̶o̶.̶f̶i̶n̶d̶B̶y̶U̶s̶e̶r̶(̶u̶s̶e̶r̶)̶;̶
-        Restaurante restaurante = restauranteRepo.findByUserId(user.getId());
-        if (restaurante != null) {
-          return id == restaurante.getId();
-        }
-      }
-      return false;
-    }
-
- 
-  // código omitido...
-
-  }
-  ```
-
-6. Mude o `monolito.properties` do `config-repo`, removendo a configuração de expiração do token JWT. Essa configuração será usada apenas pelo gerador de tokens, o API Gateway.
-
-  ####### config-repo/monolito.properties
-
-  ```properties
-  j̶w̶t̶.̶e̶x̶p̶i̶r̶a̶t̶i̶o̶n̶ ̶=̶ ̶6̶0̶4̶8̶0̶0̶0̶0̶0̶
-  ```
-
-7. Execute o `EatsApplication` do módulo `eats-application` do monólito.  Certifique-se que o Service Registry, Config Server e API Gateway estejam sendo executados.
+4. Execute o `EatsApplication` do módulo `eats-application` do monólito.  Certifique-se que o Service Registry, Config Server e API Gateway estejam sendo executados.
 
   As URLS que não tem acesso protegido continuam funcionando. Por exemplo, acesse, pelo navegador, a URL a seguir para obter todas as formas de pagamento:
 
-  http://localhost:9999/formas-de-pagamento
+  http://localhost:9999/restaurantes/1
 
   ou
 
-  http://localhost:8080/formas-de-pagamento
+  http://localhost:8080/restaurantes/1
 
   Deve funcionar e retornar algo como:
 
   ```json
-  [{"id":4,"tipo":"VALE_REFEICAO","nome":"Alelo"},{"id":3,"tipo":"CARTAO_CREDITO","nome":"Amex"},{"id":2,"tipo":"CARTAO_CREDITO","nome":"MasterCard"},{"id":6,"tipo":"CARTAO_DEBITO","nome":"MasterCard Maestro"},{"id":5,"tipo":"VALE_REFEICAO","nome":"Ticket Restaurante"},{"id":1,"tipo":"CARTAO_CREDITO","nome":"Visa"},{"id":7,"tipo":"CARTAO_DEBITO","nome":"Visa Débito"}]
+  {"id":1,"cnpj":"98444252000104","nome":"Long Fu","descricao":"O melhor da China aqui do seu lado.","cep":"70238500","endereco":"ShC/SUL COMERCIO LOCAL QD 404-BL D LJ 17-ASA SUL","taxaDeEntregaEmReais":6.00,"tempoDeEntregaMinimoEmMinutos":40,"tempoDeEntregaMaximoEmMinutos":25,"aprovado":true,"tipoDeCozinhaId":1}
   ```
 
   Porém, URLs protegidas precisarão de um _access token_ válido e que foi emitido para um usuário que tenha permissão para fazer operações no recurso solicitado.
 
-  Abra um Terminal e tente modificar o nome de uma forma de pagamento usando o cURL:
+  Tente acessar uma variação da URL anterior que só é acessível para usuários com o role PARCEIRO:
 
-  ```sh
-  curl -i -X PUT -H 'Content-type: application/json' -d '{"id": 3, "tipo": "CARTAO_CREDITO", "nome": "American Express"}' http://localhost:9999/admin/formas-de-pagamento/3
-  ```
+  http://localhost:8080/parceiros/restaurantes/1
 
-  O comando anterior pode ser encontrado em: https://gitlab.com/snippets/1888251
-
-  A resposta será um erro HTTP 401 (Unauthorized), com uma mensagem de acesso negado. Algo como:
-
-  ```txt
-  HTTP/1.1 401 
-  Date: Fri, 23 Aug 2019 00:50:11 GMT
-  X-Content-Type-Options: nosniff
-  X-XSS-Protection: 1; mode=block
-  Cache-Control: no-cache, no-store, max-age=0, must-revalidate
-  Pragma: no-cache
-  Expires: 0
-  X-Frame-Options: DENY
-  Content-Type: application/json;charset=UTF-8
-  Transfer-Encoding: chunked
-
-  {"timestamp":"2019-08-23T00:50:11.652+0000","status":401,"error":"Unauthorized","message":"Você não está autorizado a acessar esse recurso.","path":"/admin/formas-de-pagamento/3"}
-  ```
+  A resposta será um erro HTTP 401 (Unauthorized), com uma mensagem de acesso negado.
 
   Use o token obtido no exercício anterior, de autenticação no API Gateway, colocando-o no cabeçalho HTTP `Authorization`, depois do valor `Bearer`. Faça o seguinte comando cURL em um Terminal:
 
   ```sh
-  curl -i -X PUT -H 'Content-type: application/json' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJDYWVsdW0gRWF0cyIsInN1YiI6IjEiLCJyb2xlcyI6WyJBRE1JTiJdLCJ1c2VybmFtZSI6ImFkbWluIiwiaWF0IjoxNTY2NTE4NzIyLCJleHAiOjE1NjcxMjM1MjJ9.FmH2QkryLBxWZjt2DMKHsCmjQNCmk3hrRAC0keam5_w' -d '{"id": 3, "tipo": "CARTAO_CREDITO", "nome": "American Express"}' http://localhost:9999/admin/formas-de-pagamento/3
+  curl -i -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJDYWVsdW0gRWF0cyIsInN1YiI6IjIiLCJyb2xlcyI6WyJQQVJDRUlSTyJdLCJ1c2VybmFtZSI6ImxvbmdmdSIsImlhdCI6MTU2OTU1MDYyOCwiZXhwIjoxNTcwMTU1NDI4fQ.S1V7aBNN206NpxPEEaIibtluJD9Bd-gHPK-MaUHcgxs' http://localhost:8080/parceiros/restaurantes/1
   ```
 
   Você pode encontrar o comando anterior em: https://gitlab.com/snippets/1888252
@@ -857,37 +1085,27 @@ Vamos modificar esse cenário, passando a responsabilidade de geração de token
   Content-Type: application/json;charset=UTF-8
   Transfer-Encoding: chunked
 
-  {"id":3,"tipo":"CARTAO_CREDITO","nome":"American Express"}
+  {"id":1,"cnpj":"98444252000104","nome":"Long Fu","descricao":"O melhor da China aqui do seu lado.","cep":"70238500","endereco":"ShC/SUL COMERCIO LOCAL QD 404-BL D LJ 17-ASA SUL","taxaDeEntregaEmReais":6.00,"tempoDeEntregaMinimoEmMinutos":40,"tempoDeEntregaMaximoEmMinutos":25,"aprovado":true,"tipoDeCozinhaId":1}
   ```
 
-  Isso indica que o módulo de segurança do monólito reconheceu o token como válido e extraiu a informação dos roles do usuário, reconhecendo-o no role ADMIN.
+  Isso indica que o módulo de segurança do monólito reconheceu o token como válido e extraiu a informação dos roles do usuário, reconhecendo-o no role PARCEIRO.
 
-8. Altere o payload do JWT, definindo um valor diferente para o `sub`, o Subject, que indica o id do usuário.
+5. Altere o payload do JWT, definindo um valor diferente para o `sub`, o Subject, que indica o id do usuário assim como para o ROLE.
 
-  Para isso, vá até um site como o http://www.base64url.com/ e defina no campo _Base 64 URL Encoding_ o payload do token JWT recebido do API Gateway:
+  Para isso, vá até um site como o http://www.base64url.com/ e defina no campo _Base 64 URL Encoding_ o payload do token JWT recebido do API Gateway.
+
+  Altere o `sub` para `1`, simulando um usuário malicioso tentando forjar um token para roubar a identidade de outro usuário, de id diferente. Mude também o role para `ADMIN` e o nome do usuário para `admin`.
+
+  O texto codificado em Base 64 URL Encoding será algo como:
 
   ```txt
   eyJpc3MiOiJDYWVsdW0gRWF0cyIsInN1YiI6IjEiLCJyb2xlcyI6WyJBRE1JTiJdLCJ1c2VybmFtZSI6ImFkbWluIiwiaWF0IjoxNTY2NTE4NzIyLCJleHAiOjE1NjcxMjM1MjJ9
   ```
 
-  Será exibido em _Plain Text_, um JSON parecido com:
-
-  ```json
-  {"iss":"Caelum Eats","sub":"1","roles":["ADMIN"],"username":"admin","iat":1566518722,"exp":1567123522}
-  ```
-
-  Altere o `sub` para `2`, simulando um usuário malicioso tentando forjar um token para roubar a identidade de outro usuário, de id diferente. O texto codificado em Base 64 URL Encoding será algo como:
-
-  ```txt
-  eyJpc3MiOiJDYWVsdW0gRWF0cyIsInN1YiI6IjIiLCJyb2xlcyI6WyJBRE1JTiJdLCJ1c2VybmFtZSI6ImFkbWluIiwiaWF0IjoxNTY2NTE4NzIyLCJleHAiOjE1NjcxMjM1MjJ9
-  ```
-
-  Observe que a codificação é quase idêntica: apenas o 39º caractere foi modificado de `E` para `I`.
-
   Através de um Terminal, use o cURL para tentar alterar uma forma de pagamento utilizando o payload modificado do JWT:
 
   ```sh
-  curl -i -X PUT -H 'Content-type: application/json' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJDYWVsdW0gRWF0cyIsInN1YiI6IjIiLCJyb2xlcyI6WyJBRE1JTiJdLCJ1c2VybmFtZSI6ImFkbWluIiwiaWF0IjoxNTY2NTE4NzIyLCJleHAiOjE1NjcxMjM1MjJ9.FmH2QkryLBxWZjt2DMKHsCmjQNCmk3hrRAC0keam5_w' -d '{"id": 3, "tipo": "CARTAO_CREDITO", "nome": "Amex Express"}' http://localhost:9999/admin/formas-de-pagamento/3
+  curl -i -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJDYWVsdW0gRWF0cyIsInN1YiI6IjEiLCJyb2xlcyI6WyJBRE1JTiJdLCJ1c2VybmFtZSI6ImFkbWluIiwiaWF0IjoxNTY2NTE4NzIyLCJleHAiOjE1NjcxMjM1MjJ9.S1V7aBNN206NpxPEEaIibtluJD9Bd-gHPK-MaUHcgxs' http://localhost:8080/parceiros/restaurantes/1
   ```
 
   Obtenha o comando anterior na seguinte URL: https://gitlab.com/snippets/1888416
@@ -906,7 +1124,7 @@ Vamos modificar esse cenário, passando a responsabilidade de geração de token
   Content-Type: application/json;charset=UTF-8
   Transfer-Encoding: chunked
 
-  {"timestamp":"2019-08-23T12:47:07.785+0000","status":401,"error":"Unauthorized","message":"Você não está autorizado a acessar esse recurso.","path":"/admin/formas-de-pagamento/3"}
+  {"timestamp":"2019-08-23T12:47:07.785+0000","status":401,"error":"Unauthorized","message":"Você não está autorizado a acessar esse recurso.","path":"/parceiros/restaurantes/1"}
   ```
 
   Teste também com o cURL o acesso direto ao monólito, usando a porta `8080`. O acesso deve ser negado, da mesma maneira.
