@@ -625,19 +625,19 @@ zuul.routes.auth.url=forward:/auth
 
 _Observação: essa configuração deve ficar antes da rota "coringa", que direciona todas as requisições para o monólito._
 
-Podemos fazer uma chamada como a seguinte, que autentica o administrador:
+Podemos fazer uma chamada como a seguinte, que autentica o dono do restaurante Long Fu:
 
 ```sh
-curl -i -X POST -H 'Content-type: application/json' -d '{"username":"admin", "password":"123456"}' http://localhost:9999/auth
+curl -i -X POST -H 'Content-type: application/json' -d '{"username":"longfu", "password":"123456"}' http://localhost:9999/auth
 ```
 
 O retorno obtido será algo como:
 
 ```txt
-{"username":"admin","roles":["ADMIN"],"token":"eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJDYWVsdW0gRWF0cyIsInN1YiI6IjEiLCJyb2xlcyI6WyJBRE1JTiJdLCJ1c2VybmFtZSI6ImFkbWluIiwiaWF0IjoxNTY2NTE4NzIyLCJleHAiOjE1NjcxMjM1MjJ9.FmH2QkryLBxWZjt2DMKHsCmjQNCmk3hrRAC0keam5_w"}
+{"userId":2,"username":"longfu","roles":["PARCEIRO"],"token":"eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJDYWVsdW0gRWF0cyIsInN1YiI6IjIiLCJyb2xlcyI6WyJQQVJDRUlSTyJdLCJ1c2VybmFtZSI6ImxvbmdmdSIsImlhdCI6MTU2OTU1MDYyOCwiZXhwIjoxNTcwMTU1NDI4fQ.S1V7aBNN206NpxPEEaIibtluJD9Bd-gHPK-MaUHcgxs"}
 ```
 
-São retornados, no corpo da resposta, informações sobre o usuário, seus roles e um token. O token, no formato JWS, contém as mesmas informações e uma assinatura.
+São retornados, no corpo da resposta, informações sobre o usuário, seus roles e um token. O token, no formato JWS, contém as mesmas informações do corpo da resposta, mas em base 64, e uma assinatura.
 
 ## Validando o token JWT e implementando autorização no Monólito
 
@@ -947,20 +947,18 @@ Se tentarmos acessar uma URL como a seguir, teremos o acesso negado:
 
 http://localhost:8080/parceiros/restaurantes/1
 
-A resposta será um erro HTTP 401 (Unauthorized). Algo como:
+A resposta será um erro HTTP 401 (Unauthorized).
 
-Ai usarmos um token obtido na autenticação no API Gateway, colocando-o no cabeçalho HTTP `Authorization`, depois do valor `Bearer`. O comando cURL em um Terminal, parece com:
+Devemos usar um token obtido na autenticação como o API Gateway, colocando-o no cabeçalho HTTP `Authorization`, com `Bearer` como prefixo. O comando cURL em um Terminal, parece com:
 
 ```sh
-curl -i -X PUT -H 'Content-type: application/json' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJDYWVsdW0gRWF0cyIsInN1YiI6IjEiLCJyb2xlcyI6WyJBRE1JTiJdLCJ1c2VybmFtZSI6ImFkbWluIiwiaWF0IjoxNTY2NTE4NzIyLCJleHAiOjE1NjcxMjM1MjJ9.FmH2QkryLBxWZjt2DMKHsCmjQNCmk3hrRAC0keam5_w' -d '{"id": 3, "tipo": "CARTAO_CREDITO", "nome": "American Express"}' http://localhost:9999/admin/formas-de-pagamento/3
+curl -i -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJDYWVsdW0gRWF0cyIsInN1YiI6IjIiLCJyb2xlcyI6WyJQQVJDRUlSTyJdLCJ1c2VybmFtZSI6ImxvbmdmdSIsImlhdCI6MTU2OTU1MDYyOCwiZXhwIjoxNTcwMTU1NDI4fQ.S1V7aBNN206NpxPEEaIibtluJD9Bd-gHPK-MaUHcgxs' http://localhost:8080/parceiros/restaurantes/1
 ```
 
-Você pode encontrar o comando anterior em: https://gitlab.com/snippets/1888252
-
-Deverá ser obtida uma resposta bem sucedida, com os dados da forma de pagamento alterados!
+Deverá ser obtida uma resposta bem sucedida!
 
 ```txt
-HTTP/1.1 200 
+HTTP/1.1 200
 Date: Fri, 23 Aug 2019 00:56:00 GMT
 X-Content-Type-Options: nosniff
 X-XSS-Protection: 1; mode=block
@@ -971,10 +969,10 @@ X-Frame-Options: DENY
 Content-Type: application/json;charset=UTF-8
 Transfer-Encoding: chunked
 
-{"id":3,"tipo":"CARTAO_CREDITO","nome":"American Express"}
+{"id":1,"cnpj":"98444252000104","nome":"Long Fu","descricao":"O melhor da China aqui do seu lado.","cep":"70238500","endereco":"ShC/SUL COMERCIO LOCAL QD 404-BL D LJ 17-ASA SUL","taxaDeEntregaEmReais":6.00,"tempoDeEntregaMinimoEmMinutos":40,"tempoDeEntregaMaximoEmMinutos":25,"aprovado":true,"tipoDeCozinhaId":1}
 ```
 
-Isso indica que o módulo de segurança do monólito reconheceu o token como válido e extraiu a informação dos roles do usuário, reconhecendo-o no role ADMIN.
+Isso indica que o módulo de segurança do monólito reconheceu o token como válido e extraiu a informação dos roles do usuário, reconhecendo-o no role PARCEIRO.
 
 ## Exercício: Autenticação no API Gateway e Autorização no monólito
 
@@ -1129,7 +1127,7 @@ Isso indica que o módulo de segurança do monólito reconheceu o token como vá
 
   Teste também com o cURL o acesso direto ao monólito, usando a porta `8080`. O acesso deve ser negado, da mesma maneira.
 
-6. (desafio) Faça com que o novo serviço Adminstrativo também tenha autorização, fazendo com que apenas usuários no role ADMIN tenham acesso a URLS que começam com `/admin`.
+6. (desafio) Faça com que o novo serviço Administrativo também tenha autorização, fazendo com que apenas usuários no role ADMIN tenham acesso a URLS que começam com `/admin`.
 
 ## Deixando de reinventar a roda com OAuth 2.0
 
@@ -1179,7 +1177,7 @@ A autenticação no API Gateway é feita usando o nome do usuário e a respectiv
 
 Poderíamos reimplementar a autenticação e autorização com OAuth usando código já pronto das bibliotecas Spring Security OAuth 2 e Spring Cloud Security, diminuindo o código que precisamos manter e cujas vulnerabilidades temos que sanar. Para isso, podemos definir um Authorization Server separado do API Gateway, responsável apenas pela autenticação e gerenciamento de tokens.
 
-![Roles OAuth no Caelum Eats {w=54}](imagens/15-seguranca/roles-oauth-no-caelum-eats.png)
+![Roles OAuth no Caelum Eats {w=73}](imagens/15-seguranca/roles-oauth-no-caelum-eats.png)
 
 ## Authorization Server com Spring Security OAuth 2
 
@@ -1341,6 +1339,14 @@ HTTP/1.1 400
 ...
 {"error":"invalid_token","error_description":"Token was not recognised"}
 ```
+
+<!--
+
+TODO: parei aqui
+
+LEMBRETES no caderno
+
+-->
 
 ## JWT como formato de token no Spring Security OAuth 2
 
@@ -1603,73 +1609,121 @@ No caso de token self-contained JWT, devemos definir a propriedade `security.oau
 
 Por padrão, todos os endereços requerem autenticação. Porém, é possível customizar esse e outros detalhes fornecendo uma implementação da interface `ResourceServerConfigurer`. É possível herdar da classe `ResourceServerConfigurerAdapter` para facilitar as configurações.
 
-## Exercício: protegendo o serviço Administrativo
+## Protegendo o serviço Administrativo
 
-1. Adicione os starters do Spring Security OAuth 2 e Spring Cloud Security ao `pom.xml` do `eats-administrativo-service`:
+Adicione os starters do Spring Security OAuth 2 e Spring Cloud Security ao `pom.xml` do `eats-administrativo-service`:
 
-  ####### fj33-eats-administrativo-service/pom.xml
+####### fj33-eats-administrativo-service/pom.xml
 
-  ```xml
-  <dependency>
-    <groupId>org.springframework.cloud</groupId>
-    <artifactId>spring-cloud-starter-oauth2</artifactId>
-  </dependency>
-  <dependency>
-    <groupId>org.springframework.cloud</groupId>
-    <artifactId>spring-cloud-starter-security</artifactId>
-  </dependency>
-  ```
+```xml
+<dependency>
+  <groupId>org.springframework.cloud</groupId>
+  <artifactId>spring-cloud-starter-oauth2</artifactId>
+</dependency>
+<dependency>
+  <groupId>org.springframework.cloud</groupId>
+  <artifactId>spring-cloud-starter-security</artifactId>
+</dependency>
+```
 
-2. Anote a  classe `EatsAdministrativoServiceApplication` com `@EnableResourceServer`:
+Anote a  classe `EatsAdministrativoServiceApplication` com `@EnableResourceServer`:
 
-  ####### fj33-eats-administrativo-service/src/main/java/br/com/caelum/eats/admin/EatsAdministrativoServiceApplication.java
+####### fj33-eats-administrativo-service/src/main/java/br/com/caelum/eats/administrativo/EatsAdministrativoServiceApplication.java
 
-  ```java
-  @EnableResourceServer // adicionado
-  @EnableDiscoveryClient
-  @SpringBootApplication
-  public class EatsAdministrativoServiceApplication {
+```java
+@EnableResourceServer // adicionado
+@EnableDiscoveryClient
+@SpringBootApplication
+public class EatsAdministrativoServiceApplication {
 
-    public static void main(String[] args) {
-      SpringApplication.run(EatsAdministrativoServiceApplication.class, args);
-    }
-
+  public static void main(String[] args) {
+    SpringApplication.run(EatsAdministrativoServiceApplication.class, args);
   }
-  ```
 
-3. Adicione ao `admin.properties` do `config-repo`, a mesma chave usada no Authorization Server na propriedade `security.oauth2.resource.jwt.key-value`:
+}
+```
 
-  ####### config-repo/admin.properties
+O import correto é o seguinte:
 
-  ```properties
-  security.oauth2.resource.jwt.key-value = um-segredo-bem-secreto
-  ```
+####### fj33-eats-administrativo-service/src/main/java/br/com/caelum/eats/administrativo/EatsAdministrativoServiceApplication.java
 
-4. Crie uma classe `OAuthResourceServerConfig`. Herde da classe `ResourceServerConfigurerAdapter` e permita que todos acessem a listagem de tipos de cozinha e formas de pagamento, assim como os endpoints do Spring Boot Actuator. As URLs que começam com `/admin` devem ser restritas a usuário que tem o role `ADMIN`.
+```java
+import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
+```
 
-  ####### fj33-eats-administrativo-service/src/main/java/br/com/caelum/eats/admin/OAuthResourceServerConfig.java
+Adicione ao `administrativo.properties` do `config-repo`, a mesma chave usada no Authorization Server, porém na propriedade `security.oauth2.resource.jwt.key-value`:
 
-  ```java
-  @Configuration
-  public class OAuthResourceServerConfig extends ResourceServerConfigurerAdapter {
+####### config-repo/administrativo.properties
 
-    @Override
-    public void configure(HttpSecurity http) throws Exception {
-      http.authorizeRequests()
-      .antMatchers("/tipos-de-cozinha/**", "/formas-de-pagamento/**").permitAll()
-      .antMatchers("/actuator/**").permitAll()
-      .antMatchers("/admin/**").hasRole("ADMIN")
-      .anyRequest().authenticated()
-      .and().cors()
-      .and().csrf().disable()
-      .formLogin().disable()
-      .httpBasic().disable();
-    }
+```properties
+security.oauth2.resource.jwt.key-value = um-segredo-bem-secreto
+```
 
+Crie uma classe `OAuthResourceServerConfig`. Herde da classe `ResourceServerConfigurerAdapter` e permita que todos acessem a listagem de tipos de cozinha e formas de pagamento, assim como os endpoints do Spring Boot Actuator. As URLs que começam com `/admin` devem ser restritas a usuário que tem o role `ADMIN`.
+
+####### fj33-eats-administrativo-service/src/main/java/br/com/caelum/eats/administrativo/OAuthResourceServerConfig.java
+
+```java
+@Configuration
+class OAuthResourceServerConfig extends ResourceServerConfigurerAdapter {
+
+  @Override
+  public void configure(HttpSecurity http) throws Exception {
+    http.authorizeRequests()
+    .antMatchers("/tipos-de-cozinha/**", "/formas-de-pagamento/**").permitAll()
+    .antMatchers("/actuator/**").permitAll()
+    .antMatchers("/admin/**").hasRole("ADMIN")
+    .anyRequest().authenticated()
+    .and().cors()
+    .and().csrf().disable()
+    .formLogin().disable()
+    .httpBasic().disable();
   }
+
+}
+```
+
+Certifique-se que os imports estão corretos:
+
+####### fj33-eats-administrativo-service/src/main/java/br/com/caelum/eats/administrativo/OAuthResourceServerConfig.java
+
+```java
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
+```
+
+URLs abertas, como a que lista todas as formas de pagamento, terão sucesso sem nenhum token ser passado:
+
+http://localhost:8084/formas-de-pagamento
+
+Já URLs como a que permite a alteração dos dados de uma forma de pagamento estarão protegidas:
+
+```sh
+curl -i -X PUT -H 'Content-type: application/json' -d '{"id": 3, "tipo": "CARTAO_CREDITO", "nome": "American Express"}' http://localhost:9999/admin/formas-de-pagamento/3
+```
+
+Como resposta, teríamos um erro `401 (Unauthorized)`:
+
+```txt
+HTTP/1.1 401
+{"error":"unauthorized","error_description":"Full authentication is required to access this resource"}
+```
+
+Será necessário passar um token obtido do Authorization Server que contém o role `ADMIN` para que a chamada anterior seja bem sucedida.
+
+## Exercício: Protegendo o serviço Administrativo com Spring Security OAuth 2
+
+1. Faça checkout da branch `cap15-resource-server-com-spring-security-oauth-2` do serviço Administrativo:
+
+  ```sh
+  cd ~/Desktop/fj33-eats-administrativo-service
+  git checkout -f cap15-resource-server-com-spring-security-oauth-2
   ```
 
-5. Abra um terminal e tente listas todas as formas de pagamento sem passar nenhum token:
+  Faça refresh do projeto no Eclipse e o reinicie.
+
+2. Abra um terminal e tente listas todas as formas de pagamento sem passar nenhum token:
 
   ```sh
   curl http://localhost:8084/formas-de-pagamento
