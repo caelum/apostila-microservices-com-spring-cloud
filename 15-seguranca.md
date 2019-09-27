@@ -1129,6 +1129,8 @@ Isso indica que o módulo de segurança do monólito reconheceu o token como vá
 
   Teste também com o cURL o acesso direto ao monólito, usando a porta `8080`. O acesso deve ser negado, da mesma maneira.
 
+6. (desafio) Faça com que o novo serviço Adminstrativo também tenha autorização, fazendo com que apenas usuários no role ADMIN tenham acesso a URLS que começam com `/admin`.
+
 ## Deixando de reinventar a roda com OAuth 2.0
 
 Da maneira como implementamos a autenticação anteriormente, acabamos definindo mais uma responsabilidade para o API Gateway: além de proxy e API Composer, passou a servir como autenticador e gerador de tokens. E, para isso, o API Gateway precisou conhecer tabelas dos usuários e seus respectivos roles. E mais: implementamos a geração e verificação de tokens manualmente.
