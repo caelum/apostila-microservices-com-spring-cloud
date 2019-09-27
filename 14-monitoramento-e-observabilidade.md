@@ -605,7 +605,7 @@ spring.cloud.config.uri=http://localhost:8888
   git clone https://gitlab.com/aovs/projetos-cursos/fj33-admin-server.git
   ```
 
-  No Eclipse, no workspace de microservices, importe o projeto `admin-server`, usando o menu _File > Import > Existing Maven Projects_.
+  No Eclipse, no workspace de microservices, importe o projeto `fj33-admin-server`, usando o menu _File > Import > Existing Maven Projects_.
 
   Execute a classe `AdminServerApplication`.
 
