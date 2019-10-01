@@ -2,7 +2,9 @@
 
 ## Da bagunça a camadas
 
-Muitos desenvolvedores associam a palavra **monólito** a código mal feito, sem estrutura aparente, com muito código repetido e com dados compartilhados entre partes pouco relacionadas. É o que comumente chamado de código **Spaghetti** ou, [Big Ball of Mud](http://www.laputan.org/mud/mud.html) (FOOTE; YODER, 1999).
+Qual é a emoção que a palavra **monólito** traz pra você?
+
+Muitos desenvolvedores associam a palavra monólito a código mal feito, sem estrutura aparente, com muito código repetido e com dados compartilhados entre partes pouco relacionadas. É o que comumente chamado de código **Spaghetti** ou, [Big Ball of Mud](http://www.laputan.org/mud/mud.html) (FOOTE; YODER, 1999).
 
 Porém, é possível criar monólitos bem estruturados. Uma maneira comum de organizar um monólito é usar camadas: cada camada provê um serviço para a camada de cima e é um cliente das camadas de baixo.
 
@@ -102,12 +104,99 @@ Todo domínio tem entidades importantes, que são um ponto de entrada para o neg
 > **AGREGADO**
 >
 > Agrupamento de objetos associados que são tratados como uma unidade para fiz de alterações nos dados. Referências externas são restritas a um único membro do AGREGADO, designado como _raiz_. Um conjunto de regras de consistência se aplicada dentro dos limites do AGREGADO.
+>
+> [Domain Driven Design](https://www.amazon.com/Domain-Driven-Design-Tackling-Complexity-Software/dp/0321125215) (EVANS, 2003)
 
 Referências a outros objetos, de fora desse Agregado, devem ser feitas por meio do objeto principal, a raiz do Agregado. Uma relação entre um pedido e um restaurante deve ser feita pelo pedido, e não pela entrega ou o pagamento.
 
 Os dados de um Agregado são alterados em conjunto. Por isso, Banco de Dados Orientados a Documentos, como o MongoDB, em que um documento pode ter um grafo de outros objetos conectados, são interessantes para persistir Agregados.
 
-<!-- TODO: explorar agregados no Caelum Eats -->
+E no Caelum Eats?
+
+<!--@note
+  Falar para o pessoal abrir o pacote `model` e ir explorando com eles os objetos principais.
+  Explorar os outros pacotes, desenho o que o pessoal acha que são os agregados.
+  Classes como `RestauranteComDistanciaDto` e `MediaAvaliacoesDto` são objetos interessante que estão no pacote `dto`.
+  Uma classe especial é a DistanciaService, do pacote `service`. Faz parte do agregado de Restaurante ou não?
+-->
+
+Um objeto muito importante é o `Pedido`. Associado a um `Pedido` temos uma lista de `ItemDoPedido` e uma `Entrega`. Uma `Entrega` está associada a um `Cliente`. Cada `Pedido` também pode ter uma `Avaliacao`. Há, possivelmente, um `Pagamento` para cada `Pedido`. E um `Pagamento` tem uma `FormaDePagamento`. Um `Pedido` também está associado a um `Restaurante`.
+
+Um `Restaurante` tem seu cadastro mantido por seu dono e é aprovado pelo administrador do Caelum Eats. Um `Restaurante` pode existir sem nenhum pedido, o que acontece logo que foi cadastrado. Um `Restaurante` está relacionado a um `Cardapio` que contém uma lista de `CategoriaDoCardapio` que, por sua vez, contém uma lista de `ItemDoCardapio`. Um `Restaurante` possui também uma lista de `HorarioDeFuncionamento` e das `FormaDePagamento` aceitas, assim como um `TipoDeCozinha`.
+
+Um `Restaurante` também possui um `User`, que representa seu dono. O `User` também é utilizado pelo administrador do Caelum Eats. Um `User` tem um ou mais `Role`.
+
+Uma `FormaDePagamento` existe independentemente de um `Restaurante` e os valores possíveis são mantidos pelo administrador. O mesmo ocorre para `TipoDeCozinha`.
+
+Há algumas classes interessantes como `MediaAvaliacoesDto` e `RestauranteComDistanciaDto`, que associam um restaurante à média das notas das avaliações e a uma distância a um dado CEP, respectivamente.
+
+![Agrupando agregados no Caelum Eats](imagens/02-decompondo-o-monolito/agregados-do-caelum-eats.png)
+
+Poderíamos alinhar o código do Caelum Eats com o domínio, utilizando os agregados identificados anteriormente.
+
+### Contexto Delimitado
+
+Um foco importante do DDD é na linguagem. Os **especialistas de domínio** usam certos termos que devem ser representados nos requisitos, nos testes e, claro, no código de produção. A linguagem do negócio deve estar representada em código, no que chamamos de **Modelo de Domínio** (em inglês, _Domain Model_). Essa linguagem estruturada em torno do domínio e usada por todos os envolvidos no desenvolvimento do software é chamada pelo DDD de **Linguagem Onipresente** (em inglês, _Ubiquitous Language_).
+
+Porém, para uma aplicação de grande porte as coisas não são tão simples. Por exemplo, em uma aplicação de e-commerce, o que é um Produto? Para diferentes especialistas de domínio e desenvolvedores, um Produto tem diferentes significados.
+
+Para os da Loja Online, um Produto é algo que tem preço, altura, largura e peso.
+Para os do Estoque, um Produto é algo que tem uma quantidade em um inventário.
+Para os do Financeiro, um Produto é algo que tem um preço e descontos.
+Para os de Entrega, um Produto é algo que tem uma altura, largura e peso.
+
+Até atributos de um Produto tem diferentes significados, dependendo do contexto. Para a Loja Online, o que interessa é a altura, largura e peso de um produto fora da caixa, que servem para um cliente saber se o item caberá na pia da sua cozinha ou em seu armário. Já para a Entrega, esses atributos devem incluir a caixa e vão influenciar nos custos de transporte.
+
+Para aplicações maiores, manter apenas um Modelo de Domínio é inviável. A origem do problema está na linguagem utilizada pelos especialistas de domínio: não há só uma Linguagem Onipresente. Nessa situação, tentar unificar o Modelo de Domínio o tornará inconsistente.
+
+A linguagem utilizada pelos especialistas de domínio está atrelada a uma área de negócio. Há um contexto em que um Modelo de Domínio é consistente, porque representa a linguagem de uma área de negócio. No DDD, é importante identificarmos esses **Contextos Delimitados** (em inglês, _Bounded Contexts_), para que não haja degradação dos _vários_ Modelos de Domínio.
+
+> **CONTEXTO DELIMITADO**
+>
+> Aplicabilidade delimitada de um determinado modelo. CONTEXTOS DELIMITADOS dão aos membros de uma equipe um entendimento claro e compartilhado do que deve ser consistente e o que pode se desenvolver independentemente.
+>
+> [Domain Driven Design](https://www.amazon.com/Domain-Driven-Design-Tackling-Complexity-Software/dp/0321125215) (EVANS, 2003)
+
+No fim das contas, ao alinhar as linguagens utilizadas nas áreas de negócio aos modelos representados em código, estamos caminhando na direção de uma velha promessa: _alinhar TI com o Negócio_.
+
+No Caelum Eats, podemos verificar como a empresa é organizada para encontrar os Contextos Delimitados e influenciar na organização do nosso código.
+
+Digamos que a Caelum Eats tem, atualmente, as seguintes áreas de negócio:
+
+- _Administrativo_, que mantém os cadastros básicos como tipos de cozinha e formas de pagamento aceitas, além de aprovar novos restaurantes
+- _Pedido_, que acompanha e dá suporte aos pedidos dos clientes
+- _Pagamento_, que cuida da parte Financeira e está explorando novos meios de pagamento como criptomoedas e QR Code
+- _Distância_, que contém especialistas em geoprocessamento
+- _Restaurante_, que lida com tudo que envolve os donos do restaurantes
+
+Esses seriam os Contextos Delimitados, que definem uma fronteira para um Modelo de Domínio consistente.
+
+Poderíamos reorganizar o código para que a estrutura básica de pacotes seja parecida com a seguinte:
+
+```txt
+eats
+├── administrativo
+├── distancia
+├── pagamento
+├── pedido
+└── restaurante
+```
+
+Há ainda o código de Segurança, um domínio bastante técnico que cuida de um requisito transversal (ou não-funcional), utilizado por todas as outras partes do sistema.
+
+Poderíamos incluir um pacote responsável por agrupar o código de segurança:
+
+```txt
+eats
+├── administrativo
+├── distancia
+├── pagamento
+├── pedido
+├── restaurante
+└── seguranca
+```
+
+<!-- TODO: continuar daqui -->
 
 ## Exercício opcional: decomposição em pacotes
 
