@@ -134,6 +134,33 @@ Há algumas classes interessantes como `MediaAvaliacoesDto` e `RestauranteComDis
 
 Poderíamos alinhar o código do Caelum Eats com o domínio, utilizando os agregados identificados anteriormente.
 
+## A Lei de Conway
+
+No artigo [How Do Committees Invent?](http://www.melconway.com/Home/Committees_Paper.html) (CONWAY, 1968), Melvin Conway descreve como sistemas tendem a reproduzir as estruturas de comunicação das empresas/orgãos/corporações que os produziram:
+
+> **Lei de Conway**
+>
+> _Qualquer organização que faz design de sistemas vai inevitavelmente produzir um design cuja estrutura é uma cópia das estruturas de comunicação dessa organização._
+
+No estudo preliminar _Exploring the Duality between Product and Organizational Architectures_ (2008, MACCORMACK et al.) da Harvard Business School, os autores testam o que chamam de Hipótese do Espelho (em inglês, _Mirroring Hypothesis_): a estrutura dos times influencia na modularidade dos softwares produzidos. Os autores dividem as organizações entre as _altamente acopladas_, em que as visões e os objetivos estão altamente alinhados, e as _baixamente acopladas_, organizadas como comunidades open-source distribuídas geograficamente. Para produtos similares, organizações altamente acopladas tendem a produzir softwares menos modulares.
+
+Um exemplo da Lei de Conway aplicada pode ser encontrada no caso da Amazon, que tem uma regra conhecida como _two pizza team_: um time tem que poder ser alimentado por duas pizzas. Um tanto subjetivo, mas traz a ideia de que os times na Amazon são pequenos. Na Amazon, os times são independentes e autônomos, cuidando de todo o ciclo de vida do software, da concepção à operação. E isso influencia na arquitetura do software.
+
+No artigo [Contending with Creaky Platforms CIO](http://jonnyleroy.com/2011/02/03/dealing-with-creaky-legacy-platforms/) (SIMONS; LEROY, 2010), Matthew Simons e Jonny Leroy, argumentam que a Lei de Conway pode ser descrita como: organizações disfuncionais criam aplicações disfuncionais. Por isso, refazer uma aplicação mantendo a mesma estrutura organizacional levaria às mesmas disfunções do software original. Para obter um software mais modular e organizado, poderíamos começar quebrando silos que restringem a habilidades dos times colaborarem de maneira efetiva. Os autores chamam essa ideia de Manobra Inversa de Conway (em inglês, _Inverse Conway's Maneuver_).
+
+Pesquisadores da UFMG analisaram se a Lei de Conway se aplica ao kernel do Linux. Para isso, criaram uma métrica que chamaram de DOA (Degree of Authorship), que indica o quanto um determinado desenvolvedor é "autor" de um arquivo do código fonte. O DOA foi estimado por meio da verificação do histórico de uma década dos arquivos no controle de versões. A métrica é relaciona um autor a um arquivo e é proporcional a quem criou o arquivo, ao número de mudanças feitas por um determinado autor e é inversamente proporcional ao número de mudanças feitas por outros desenvolvedores. No artigo de divulgação [Does Conway’s Law apply to Linux?](https://medium.com/@aserg.ufmg/does-conways-law-apply-to-linux-6acf23c1ef15) (ASERG-UFMG, 2017), é descrita a conclusão de que o kernel do Linux segue uma forma inversa da Lei de Conway, já que a arquitetura definida ao longo dos anos é que influenciou na organização e nas especializações do time de desenvolvimento.
+
+<!--@note
+
+  Não há prova científica da Lei de Conway, mas apenas a forte impressão de que ela vale por desenvolvedores experientes.
+  Há muitos artigos tentando quantificar a Lei de Conway. Alguns dizem comprová-la e outros refutá-la.
+  Mas é algo sempre presente nas discussões sobre decomposição de microservices.
+
+  Um artigo clássico sobre decomposição em módulos, de 1972, é On the Criteria To Be Used in Decomposing Systems into Modules, do David Parnas.
+  A conclusão é que módulos devem ser modelados de maneira que escondam decisões prováveis de serem alteradas.
+  https://www.win.tue.nl/~wstomv/edu/2ip30/references/criteria_for_modularization.pdf
+-->
+
 ## Contextos Delimitados (Bounded Contexts)
 
 Um foco importante do DDD é na linguagem. Os **especialistas de domínio** usam certos termos que devem ser representados nos requisitos, nos testes e, claro, no código de produção. A linguagem do negócio deve estar representada em código, no que chamamos de **Modelo de Domínio** (em inglês, _Domain Model_). Essa linguagem estruturada em torno do domínio e usada por todos os envolvidos no desenvolvimento do software é chamada pelo DDD de **Linguagem Onipresente** (em inglês, _Ubiquitous Language_).
@@ -208,7 +235,6 @@ Martin Fowler fala sobre isso no texto PresentationDomainDataLayering e descreve
 https://martinfowler.com/bliki/PresentationDomainDataLayering.html
 
 -->
-
 
 ## Nem tudo precisa ser público
 
@@ -392,11 +418,23 @@ Se houver uma dependência a outros submódulos, é possível usar `${project.ve
 
 O submódulo `eats-application` depende de todos os outros e contém a classe principal, que contém o `main`. Ao executarmos o build, com o comando `mvn clean package` no diretório do supermódulo `eats`, o _Fat JAR_ do Spring Boot é gerado no diretório _target_ do `eats-application`, contendo o código compilado da aplicação e de todas as bibliotecas utilizadas.
 
-<!-- TODO: 
-  discutir sobre as dependências dos módulos spring-boot-starter-data-jpa, spring-boot-starter-web e spring-boot-starter-validation
-  discutir duplicação, módulo common/util e ResourceNotFoundException
-  mencionar ArchUnit? https://blogs.oracle.com/javamagazine/unit-test-your-architecture-with-archunit  
--->
+## Pragmatismo e (um pouco de) Duplicação
+
+Onde colocar dependências comuns a todos os módulos, como os starters do Web, Validation e Spring Data JPA?
+
+Onde colocar classes comuns à maioria dos módulos, como a `ResourceNotFoundException`, uma exceção que gerará o status HTTP `404 (Not Found)` quando lançada?
+
+Muitos projetos colocam esses códigos comuns em um módulo (ou pacote) chamado `common` ou `util`. Assim evitaríamos duplicação. Afinal de contas, um lema importante no design de código é _Don't Repeat Yourself_ (não se repita).
+
+Porém, criar um módulo `common` seria inserir mais uma dependência à maioria dos outros módulos.
+
+Uma eventual extração de um módulo para outro projeto levaria à necessidade de carregar junto o conteúdo do módulo `common`.
+
+E, possivelmente, o módulo `common` ficaria com código necessário apenas alguns módulos específicos.
+
+Talvez fosse mais interessante extrair esse código para bibliotecas externas (JARs), bem focadas: uma para gráficos, outra para relatórios.
+
+Uma ideia, visando tornar os módulos o mais independentes o possível, é aceitar um pouco de duplicação. Trocaríamos o purismo da qualidade de código por pragmatismo, pensando nos próximos passos do projeto.
 
 ## Exercício: o monólito modular
 
@@ -412,3 +450,4 @@ O submódulo `eats-application` depende de todos os outros e contém a classe pr
 4. Para executar a aplicação, acesse o módulo `eats-application` e execute a classe `EatsApplication` com _CTRL+F11_. Certifique-se que as versões anteriores do projeto não estão sendo executadas.
 5. Com o projeto `fj33-eats-ui` no ar, teste as funcionalidades por meio de `http://localhost:4200`. Deve funcionar!
 6. Observe os diferentes módulos Maven. Note as dependências entre esses módulos, declaradas nos `pom.xml` de cada módulo.
+  Note se há alguma duplicação entre os módulos.
