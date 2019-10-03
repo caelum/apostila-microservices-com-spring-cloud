@@ -85,7 +85,7 @@ Depois do login efetuado, o dono do restaurante terá acesso ao menu.
 
 Uma das funcionalidades permite que o dono do restaurante atualize o cadastro, manipulando informações do restaurante como o nome, CPNJ, CEP, endereço, tipo de cozinha, taxa de entrega e tempos mínimo e máximo de entrega.
 
-Além disso, o dono do restaurante pode escolher quais formas de pagamento são aceitas, o horário de funcionamento e cadastar o cardápio do restaurante.
+Além disso, o dono do restaurante pode escolher quais formas de pagamento são aceitas, o horário de funcionamento e cadastrar o cardápio do restaurante.
 
 ![Dono do restaurante atualiza o cadastro {w=67}](imagens/01-conhecendo-o-projeto/dono-do-restaurante-3-atualiza-endereco.png)
 

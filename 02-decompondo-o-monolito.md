@@ -4,7 +4,7 @@
 
 Qual é a emoção que a palavra **monólito** traz pra você?
 
-Muitos desenvolvedores associam a palavra monólito a código mal feito, sem estrutura aparente, com muito código repetido e com dados compartilhados entre partes pouco relacionadas. É o que comumente chamado de código **Spaghetti** ou, [Big Ball of Mud](http://www.laputan.org/mud/mud.html) (FOOTE; YODER, 1999).
+Muitos desenvolvedores associam a palavra monólito a código mal feito, sem estrutura aparente, com muito código repetido e com dados compartilhados entre partes pouco relacionadas. É o que comumente é chamado de código **Spaghetti** ou, [Big Ball of Mud](http://www.laputan.org/mud/mud.html) (FOOTE; YODER, 1999).
 
 Porém, é possível criar monólitos bem estruturados. Uma maneira comum de organizar um monólito é usar camadas: cada camada provê um serviço para a camada de cima e é um cliente das camadas de baixo.
 
@@ -17,7 +17,7 @@ Usualmente, o código de uma aplicação é estruturado em 3 camadas:
 Uma maneira de representar essas camadas em um código Java é utilizar pacotes, o que é conhecido como _Package by Layer_.
 
 > Na verdade, é preciso distinguir dois tipos de camadas que influenciam a arquitetura do software: as camadas físicas e as camadas lógicas.
-> Uma camada física, ou _tier_ em inglê, descreve a estrutura de implantação do software, ou seja, as máquinas utilizadas.
+> Uma camada física, ou _tier_ em inglês, descreve a estrutura de implantação do software, ou seja, as máquinas utilizadas.
 > O que descrevemos no texto anterior é o conceito de camada lógica. Em inglês, a camada lógica é chamada de _layer_. Trata de agrupar o código que corresponde às camadas descritas anteriormente.
 
 ### Camadas no Caelum Eats
@@ -62,17 +62,21 @@ Veja a estrutura de diretórios abaixo:
 └── views
 ```
 
-Os diretórios anteriores são a estrutura padrão para um framework aplicações Web muito influente: Ruby On Rails.
+Os diretórios anteriores são a estrutura padrão de um framework de aplicações Web muito influente: o Ruby On Rails.
 
 Perceba que interessante: a estrutura básica de diretórios é familiar; em alguns casos, até temos um palpite sobre qual o framework utilizado; mas não temos ideia do **domínio** da aplicação. Qual é o problema que está sendo resolvido?
 
-No post [Screaming Architecture](https://blog.cleancoder.com/uncle-bob/2011/09/30/Screaming-Architecture.html) (MARTIN, 2011), Robert "Uncle Bob" Martin diz que a partir das plantas, conseguimos saber que trata-se de uma casa ou uma biblioteca: a arquitetura "grita" a finalidade da construção.
+No post [Screaming Architecture](https://blog.cleancoder.com/uncle-bob/2011/09/30/Screaming-Architecture.html) (MARTIN, 2011), Robert "Uncle Bob" Martin diz que a partir das plantas de edifícios, conseguimos saber se trata-se de uma casa ou uma biblioteca: a arquitetura "grita" a finalidade da construção.
+
+> Na realidade, a construção civil tem diferentes plantas: a elétrica, a hidráulica, a estrutural, etc.
+> Uncle Bob parece referir-se a um tipo específico de planta: a **planta baixa**. É feita por um arquiteto e é mais próxima do cliente. A partir dela são projetadas outras plantas mais técnicas e específicas.
+> É aquele tipo de planta que encontramos em lançamentos de imóveis.
 
 Para projetos de software, entretanto, é usual que a estrutura básica de diretórios indique qual o framework ou qual a ferramenta de build utilizados. Porém, para Uncle Bob, o framework é um detalhe; o Banco de Dados é um detalhe; a Web é um mecanismo de entrega da UI, um detalhe.
 
 Uncle Bob cita a ideia de Ivar Jacobson, um dos criadores do UML, descrita no livro [Object Oriented Software Engineering: A Use-Case Driven Approach](https://www.amazon.com/Object-Oriented-Software-Engineering-Approach/dp/0201544350) (JACOBSON, 1992), de que a arquitetura de um software deveria ser _centrada nos casos de uso_ e não em detalhes técnicos.
 
-## Clean Architecture
+## Por arquiteturas centradas no domínio
 
 No livro [Clean Architecture](https://www.amazon.com/Clean-Architecture-Craftsmans-Software-Structure/dp/0134494164) (MARTIN, 2017), Uncle Bob define uma abordagem arquitetural que torna a aplicação:
 
@@ -87,9 +91,9 @@ Uncle Bob ainda cita, no mesmo livro, outras arquiteturas semelhantes:
 - DCI (Data, Context and Interaction), descrita por James Coplien, pioneiro dos Design Patterns, e Trygve Reenskaug, criador do MVC.
 - BCE (Boundary-Control-Entity), introduzida por Ivar Jacobson no livro mencionado anteriormente.
 
-## Explorando o domínio com DDD
+## Explorando o domínio
 
-Até um certo tamanho, uma aplicação estruturada em camadas no estilo Package by Layer, é fácil de entender. Novos desenvolvedores entram no projeto sem muitas dificuldades para entender a organização do código, já que é uma forma comum.
+Até um certo tamanho, uma aplicação estruturada em camadas no estilo Package by Layer, é fácil de entender. Novos desenvolvedores entram no projeto sem muitas dificuldades para entender a organização do código, já que é há uma certa familiaridade.
 
 Mas há um momento em que é interessante reorganizar os pacotes ao redor do domínio, o que alguns chamam de _Package by Feature_. O intuito é que fique bem clara qual é a área de negócio de cade parte do código.
 
@@ -97,17 +101,17 @@ Mas qual critério usar para decompor o monólito? Uma funcionalidade é um paco
 
 Uma fonte de _insights_ interessantes em como explorar o domínio de uma aplicação é o livro [Domain Driven Design](https://www.amazon.com/Domain-Driven-Design-Tackling-Complexity-Software/dp/0321125215), de Eric Evans (EVANS, 2003).
 
-## Agregado
+## Caçando entidades importantes
 
 Todo domínio tem entidades importantes, que são um ponto de entrada para o negócio e tem várias outras entidades ligadas. Um objeto que representa um pedido, por exemplo, terá informações dos itens do pedido, do cliente, da entrega e do pagamento. É o que é chamado, nos termos do DDD, de _Agregado_.
 
 > **AGREGADO**
 >
-> Agrupamento de objetos associados que são tratados como uma unidade para fiz de alterações nos dados. Referências externas são restritas a um único membro do AGREGADO, designado como _raiz_. Um conjunto de regras de consistência se aplicada dentro dos limites do AGREGADO.
+> Agrupamento de objetos associados que são tratados como uma unidade para fins de alterações nos dados. Referências externas são restritas a um único membro do AGREGADO, designado como _raiz_. Um conjunto de regras de consistência se aplicada dentro dos limites do AGREGADO.
 >
 > [Domain Driven Design](https://www.amazon.com/Domain-Driven-Design-Tackling-Complexity-Software/dp/0321125215) (EVANS, 2003)
 
-Referências a outros objetos, de fora desse Agregado, devem ser feitas por meio do objeto principal, a raiz do Agregado. Uma relação entre um pedido e um restaurante deve ser feita pelo pedido, e não pela entrega ou o pagamento.
+Referências a objetos de fora desse Agregado devem ser feitas por meio do objeto principal, a raiz do Agregado. Uma relação entre um pedido e um restaurante deve ser feita pelo pedido, e não pela entrega ou pelo pagamento do pedido.
 
 Os dados de um Agregado são alterados em conjunto. Por isso, Banco de Dados Orientados a Documentos, como o MongoDB, em que um documento pode ter um grafo de outros objetos conectados, são interessantes para persistir Agregados.
 
@@ -128,13 +132,13 @@ Um `Restaurante` também possui um `User`, que representa seu dono. O `User` tam
 
 Uma `FormaDePagamento` existe independentemente de um `Restaurante` e os valores possíveis são mantidos pelo administrador. O mesmo ocorre para `TipoDeCozinha`.
 
-Há algumas classes interessantes como `MediaAvaliacoesDto` e `RestauranteComDistanciaDto`, que associam um restaurante à média das notas das avaliações e a uma distância a um dado CEP, respectivamente.
+Há algumas classes interessantes como `MediaAvaliacoesDto` e `RestauranteComDistanciaDto`, que associam um restaurante à média das notas das avaliações e uma distância a um dado CEP, respectivamente.
 
 ![Agrupando agregados no Caelum Eats](imagens/02-decompondo-o-monolito/agregados-do-caelum-eats.png)
 
 Poderíamos alinhar o código do Caelum Eats com o domínio, utilizando os agregados identificados anteriormente.
 
-## A Lei de Conway
+## Das estruturas de comunicação para o código
 
 No artigo [How Do Committees Invent?](http://www.melconway.com/Home/Committees_Paper.html) (CONWAY, 1968), Melvin Conway descreve como sistemas tendem a reproduzir as estruturas de comunicação das empresas/orgãos/corporações que os produziram:
 
@@ -142,35 +146,31 @@ No artigo [How Do Committees Invent?](http://www.melconway.com/Home/Committees_P
 >
 > _Qualquer organização que faz design de sistemas vai inevitavelmente produzir um design cuja estrutura é uma cópia das estruturas de comunicação dessa organização._
 
-No estudo preliminar _Exploring the Duality between Product and Organizational Architectures_ (2008, MACCORMACK et al.) da Harvard Business School, os autores testam o que chamam de Hipótese do Espelho (em inglês, _Mirroring Hypothesis_): a estrutura dos times influencia na modularidade dos softwares produzidos. Os autores dividem as organizações entre as _altamente acopladas_, em que as visões e os objetivos estão altamente alinhados, e as _baixamente acopladas_, organizadas como comunidades open-source distribuídas geograficamente. Para produtos similares, organizações altamente acopladas tendem a produzir softwares menos modulares.
+No estudo preliminar _Exploring the Duality between Product and Organizational Architectures_ (2008, MACCORMACK et al.) da Harvard Business School, os autores testaram o que chamam de Hipótese do Espelho (em inglês, _Mirroring Hypothesis_): a estrutura dos times influencia na modularidade dos softwares produzidos. Os autores dividem as organizações entre as _altamente acopladas_, em que as visões e os objetivos estão altamente alinhados, e as _baixamente acopladas_, organizadas como comunidades open-source distribuídas geograficamente. Para produtos similares, organizações altamente acopladas tendem a produzir softwares menos modulares.
 
-Um exemplo da Lei de Conway aplicada pode ser encontrada no caso da Amazon, que tem uma regra conhecida como _two pizza team_: um time tem que poder ser alimentado por duas pizzas. Um tanto subjetivo, mas traz a ideia de que os times na Amazon são pequenos. Na Amazon, os times são independentes e autônomos, cuidando de todo o ciclo de vida do software, da concepção à operação. E isso influencia na arquitetura do software.
+Um exemplo da Lei de Conway aplicada pode ser encontrada no caso da Amazon, que tem uma regra conhecida como _two pizza team_: um time tem que poder ser alimentado por duas pizzas. Um tanto subjetivo, mas traz a ideia de que os times na Amazon são pequenos, independentes e autônomos, cuidando de todo o ciclo de vida do software, da concepção à operação. E isso influencia na arquitetura do software.
 
-No artigo [Contending with Creaky Platforms CIO](http://jonnyleroy.com/2011/02/03/dealing-with-creaky-legacy-platforms/) (SIMONS; LEROY, 2010), Matthew Simons e Jonny Leroy, argumentam que a Lei de Conway pode ser descrita como: organizações disfuncionais criam aplicações disfuncionais. Por isso, refazer uma aplicação mantendo a mesma estrutura organizacional levaria às mesmas disfunções do software original. Para obter um software mais modular e organizado, poderíamos começar quebrando silos que restringem a habilidades dos times colaborarem de maneira efetiva. Os autores chamam essa ideia de Manobra Inversa de Conway (em inglês, _Inverse Conway's Maneuver_).
+No artigo [Contending with Creaky Platforms CIO](http://jonnyleroy.com/2011/02/03/dealing-with-creaky-legacy-platforms/) (SIMONS; LEROY, 2010), Matthew Simons e Jonny Leroy, argumentam que a Lei de Conway pode ser descrita como: organizações disfuncionais criam aplicações disfuncionais. Por isso, refazer uma aplicação mantendo a mesma estrutura organizacional levaria às mesmas disfunções do software original. Para obter um software mais modular e organizado, poderíamos começar quebrando silos que restringem a habilidade dos times colaborarem de maneira efetiva. Os autores chamam essa ideia de **Manobra Inversa de Conway** (em inglês, _Inverse Conway's Maneuver_).
 
-Pesquisadores da UFMG analisaram se a Lei de Conway se aplica ao kernel do Linux. Para isso, criaram uma métrica que chamaram de DOA (Degree of Authorship), que indica o quanto um determinado desenvolvedor é "autor" de um arquivo do código fonte. O DOA foi estimado por meio da verificação do histórico de uma década dos arquivos no controle de versões. A métrica é relaciona um autor a um arquivo e é proporcional a quem criou o arquivo, ao número de mudanças feitas por um determinado autor e é inversamente proporcional ao número de mudanças feitas por outros desenvolvedores. No artigo de divulgação [Does Conway’s Law apply to Linux?](https://medium.com/@aserg.ufmg/does-conways-law-apply-to-linux-6acf23c1ef15) (ASERG-UFMG, 2017), é descrita a conclusão de que o kernel do Linux segue uma forma inversa da Lei de Conway, já que a arquitetura definida ao longo dos anos é que influenciou na organização e nas especializações do time de desenvolvimento.
+Pesquisadores da UFMG analisaram se a Lei de Conway se aplica ao kernel do Linux. Para isso, criaram uma métrica que chamaram de DOA (Degree of Authorship), que indica o quanto um determinado desenvolvedor é "autor" de um arquivo do código fonte. O DOA foi estimado por meio da verificação do histórico de uma década dos arquivos no controle de versões. A métrica relaciona um autor a um arquivo e é proporcional a quem criou o arquivo, ao número de mudanças feitas por um determinado autor e é inversamente proporcional ao número de mudanças feitas por outros desenvolvedores. No artigo de divulgação [Does Conway’s Law apply to Linux?](https://medium.com/@aserg.ufmg/does-conways-law-apply-to-linux-6acf23c1ef15) (ASERG-UFMG, 2017), é descrita a conclusão de que o kernel do Linux segue uma forma inversa da Lei de Conway, já que a arquitetura definida ao longo dos anos é que influenciou na organização e nas especializações do time de desenvolvimento.
 
 <!--@note
 
   Não há prova científica da Lei de Conway, mas apenas a forte impressão de que ela vale por desenvolvedores experientes.
   Há muitos artigos tentando quantificar a Lei de Conway. Alguns dizem comprová-la e outros refutá-la.
   Mas é algo sempre presente nas discussões sobre decomposição de microservices.
-
-  Um artigo clássico sobre decomposição em módulos, de 1972, é On the Criteria To Be Used in Decomposing Systems into Modules, do David Parnas.
-  A conclusão é que módulos devem ser modelados de maneira que escondam decisões prováveis de serem alteradas.
-  https://www.win.tue.nl/~wstomv/edu/2ip30/references/criteria_for_modularization.pdf
 -->
 
-## Contextos Delimitados (Bounded Contexts)
+## A Linguagem depende de um Contexto
 
 Um foco importante do DDD é na linguagem. Os **especialistas de domínio** usam certos termos que devem ser representados nos requisitos, nos testes e, claro, no código de produção. A linguagem do negócio deve estar representada em código, no que chamamos de **Modelo de Domínio** (em inglês, _Domain Model_). Essa linguagem estruturada em torno do domínio e usada por todos os envolvidos no desenvolvimento do software é chamada pelo DDD de **Linguagem Onipresente** (em inglês, _Ubiquitous Language_).
 
-Porém, para uma aplicação de grande porte as coisas não são tão simples. Por exemplo, em uma aplicação de e-commerce, o que é um Produto? Para diferentes especialistas de domínio e desenvolvedores, um Produto tem diferentes significados.
+Porém, para uma aplicação de grande porte as coisas não são tão simples. Por exemplo, em uma aplicação de e-commerce, o que é um Produto? Para diferentes especialistas de domínio, um Produto tem diferentes significados:
 
-Para os da Loja Online, um Produto é algo que tem preço, altura, largura e peso.
-Para os do Estoque, um Produto é algo que tem uma quantidade em um inventário.
-Para os do Financeiro, um Produto é algo que tem um preço e descontos.
-Para os de Entrega, um Produto é algo que tem uma altura, largura e peso.
+- para os da Loja Online, um Produto é algo que tem preço, altura, largura e peso.
+- para os do Estoque, um Produto é algo que tem uma quantidade em um inventário.
+- para os do Financeiro, um Produto é algo que tem um preço e descontos.
+- para os de Entrega, um Produto é algo que tem uma altura, largura e peso.
 
 Até atributos de um Produto tem diferentes significados, dependendo do contexto. Para a Loja Online, o que interessa é a altura, largura e peso de um produto fora da caixa, que servem para um cliente saber se o item caberá na pia da sua cozinha ou em seu armário. Já para a Entrega, esses atributos devem incluir a caixa e vão influenciar nos custos de transporte.
 
@@ -185,6 +185,8 @@ A linguagem utilizada pelos especialistas de domínio está atrelada a uma área
 > [Domain Driven Design](https://www.amazon.com/Domain-Driven-Design-Tackling-Complexity-Software/dp/0321125215) (EVANS, 2003)
 
 No fim das contas, ao alinhar as linguagens utilizadas nas áreas de negócio aos modelos representados em código, estamos caminhando na direção de uma velha promessa: _alinhar TI com o Negócio_.
+
+## Contextos Delimitados no Caelum Eats
 
 No Caelum Eats, podemos verificar como a empresa é organizada para encontrar os Contextos Delimitados e influenciar na organização do nosso código.
 
@@ -227,12 +229,16 @@ eats
 
 <!--@note
 
-Costumo a desenhar a arquietura em 3 camadas (layers) como uma maneira horizontal de "fatiar" o código.
+Costumo a desenhar a arquitetura em 3 camadas (layers) como uma maneira horizontal de "fatiar" o código.
 
 Já agrupar por contextos delimitados seria uma maneira vertical.
 
 Martin Fowler fala sobre isso no texto PresentationDomainDataLayering e descreve que a maneira vertical seria mais interessante pra aplicações maiores:
 https://martinfowler.com/bliki/PresentationDomainDataLayering.html
+
+Um artigo clássico sobre decomposição em módulos, de 1972, é On the Criteria To Be Used in Decomposing Systems into Modules, do David Parnas.
+A conclusão é que módulos devem ser modelados de maneira que escondam decisões prováveis de serem alteradas.
+https://www.win.tue.nl/~wstomv/edu/2ip30/references/criteria_for_modularization.pdf
 
 -->
 
@@ -244,7 +250,7 @@ Uma classe `public` pode ser acessada por classes de qualquer outro pacote.
 
 Já no caso de classes com modificador de acesso padrão, só podem ser acessadas por outras classes do mesmo pacote. É o que alguns chamam de _package-private_.
 
-No caso de atributos, métodos e construtores, além de `public` e _default_, há os modificadores `private`, que restringe acesso a própria classe, e `protected`, que restringe ao mesmo pacote ou classes filhas mesmo se estiverem em outros pacotes.
+No caso de atributos, métodos e construtores, além de `public` e _default_, há o modificador `private`, que restringe acesso a própria classe, e `protected`, que restringe ao mesmo pacote ou classes filhas mesmo se estiverem em outros pacotes.
 
 Pense nos projetos Java em que você trabalhou: quantas vezes você criou uma classe que não é pública?
 
@@ -332,7 +338,7 @@ Devemos definir um módulo pai, ou supermódulo, que contém um ou mais módulos
 
 No caso do Caelum Eats, teríamos um supermódulo `eats` e submódulos para cada contexto delimitado identificado anteriormente.
 
-Além disso, precisaríamos de um submódulo que depende de todos os outros submódulos e conteria a classe principal, que possui o `main` e está anotada com `@SpringBootApplication`. Dentro desse submódulo, que chamaremos de `eats-application`, teríamos em `src/main/resources` o arquivo `eats-application` e as migrations do Flyway.
+Além disso, precisaríamos de um submódulo que depende de todos os outros submódulos e conteria a classe principal `EatsApplication`, que possui o `main` e está anotada com `@SpringBootApplication`. Dentro desse submódulo, que chamaremos de `eats-application`, teríamos em `src/main/resources` o arquivo `application.properties` e as migrations do Flyway.
 
 A estrutura de diretórios seria a seguinte:
 
@@ -430,9 +436,9 @@ Porém, criar um módulo `common` seria inserir mais uma dependência à maioria
 
 Uma eventual extração de um módulo para outro projeto levaria à necessidade de carregar junto o conteúdo do módulo `common`.
 
-E, possivelmente, o módulo `common` ficaria com código necessário apenas alguns módulos específicos.
+E, possivelmente, o módulo `common` acabaria com código útil para apenas alguns módulos específicos e não para outros.
 
-Talvez fosse mais interessante extrair esse código para bibliotecas externas (JARs), bem focadas: uma para gráficos, outra para relatórios.
+Talvez fosse mais interessante extrair esse código para bibliotecas externas (JARs), bem focadas em necessidades específicas: uma para gráficos, outra para relatórios.
 
 Uma ideia, visando tornar os módulos o mais independentes o possível, é aceitar um pouco de duplicação. Trocaríamos o purismo da qualidade de código por pragmatismo, pensando nos próximos passos do projeto.
 
