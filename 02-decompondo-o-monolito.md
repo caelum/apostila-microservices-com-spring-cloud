@@ -161,7 +161,7 @@ Pesquisadores da UFMG analisaram se a Lei de Conway se aplica ao kernel do Linux
   Mas é algo sempre presente nas discussões sobre decomposição de microservices.
 -->
 
-## A Linguagem depende de um Contexto
+## A linguagem do negócio depende do Contexto
 
 Um foco importante do DDD é na linguagem. Os **especialistas de domínio** usam certos termos que devem ser representados nos requisitos, nos testes e, claro, no código de produção. A linguagem do negócio deve estar representada em código, no que chamamos de **Modelo de Domínio** (em inglês, _Domain Model_). Essa linguagem estruturada em torno do domínio e usada por todos os envolvidos no desenvolvimento do software é chamada pelo DDD de **Linguagem Onipresente** (em inglês, _Ubiquitous Language_).
 
@@ -306,9 +306,9 @@ No livro [Java Application Architecture: Modularity Patterns](https://www.amazon
 - **Implantáveis**: são entregáveis que podem ser executados em _runtime_
 - **Reusáveis**: são nativamente reusáveis por diferentes aplicações, sem a necessidade de comunicação pela rede. As funcionalidade de um módulo são invocadas diretamente, dentro da mesma JVM e, portanto, do mesmo processo (no Windows, o mesmo `java.exe`).
 - **Testáveis**: podem ser testados independentemente, com testes de unidade.
-- **Gerenciáveis**: em um sistema de módulos mais elaborado, como OSGi, podem ser instalados, reinstalados e desinstalados.
-- **Sem estado**: módulos não mantém estado, apenas suas classes.
+- **Sem Estado**: módulos não mantém estado, apenas suas classes.
 - **Unidades de Composição**: podem se unir a outros módulos para compor uma aplicação.
+- **Gerenciáveis**: em um sistema de módulos mais elaborado, como OSGi, podem ser instalados, reinstalados e desinstalados.
 
 ![Características de módulos {w=47}](imagens/02-decompondo-o-monolito/caracteristicas-de-modulos.png)
 
@@ -319,16 +319,6 @@ Qual será o artefato Java que contém todas essas características?
 JARs são arquivos compactados no padrão ZIP que contém pacotes que, por sua vez, contém os `.class` compilados a partir do código fonte das classes.
 
 Um JAR é implantável, reusável, testável, gerenciável, sem estado e é possível compô-lo com outros JARs para formar uma aplicação.  
-
-### Porque modularizar?
-
-No livro [Modular Java](https://pragprog.com/book/cwosg/modular-java) (WALLS, 2009), Craig Walls cita algumas vantagens de modularizar uma aplicação:
-
-- capacidade de trocar um módulo por outro, com uma implementação diferente, desde que a interface pública seja mantida
-- facilidade de compreensão de cada módulo individualmente
-- possibilidade de desenvolvimento em paralelo, permitindo que tarefas sejam divididas entre diferentes times
-- testabilidade melhorada, permitindo um outro nível de testes, que trata um módulo como uma unidade
-- flexibilidade, permitindo o reuso de módulos em outras aplicações
 
 ## Módulos Maven
 
@@ -442,7 +432,7 @@ Talvez fosse mais interessante extrair esse código para bibliotecas externas (J
 
 Uma ideia, visando tornar os módulos o mais independentes o possível, é aceitar um pouco de duplicação. Trocaríamos o purismo da qualidade de código por pragmatismo, pensando nos próximos passos do projeto.
 
-## Exercício: o monólito modular
+## Exercício: o monólito decomposto em módulos Maven
 
 1. Clone o projeto com a decomposição do monólito em módulos Maven:
 
@@ -457,3 +447,169 @@ Uma ideia, visando tornar os módulos o mais independentes o possível, é aceit
 5. Com o projeto `fj33-eats-ui` no ar, teste as funcionalidades por meio de `http://localhost:4200`. Deve funcionar!
 6. Observe os diferentes módulos Maven. Note as dependências entre esses módulos, declaradas nos `pom.xml` de cada módulo.
   Note se há alguma duplicação entre os módulos.
+
+## O Monólito Modular
+
+Simon Brown, na sua palestra [Modular monoliths](http://www.codingthearchitecture.com/presentations/sa2015-modular-monoliths) (BROWN, 2015), diz que há uma premissa comum, mas não explícita, no mercado de que todo monólito é um spaghetti e que o único caminho para um código organizado seria a migração para uma arquitetura de microservices. Só que a engenharia de software tem uma bagagem enorme de conhecimento sobre como componentizar e melhorar a manutenibilidade de um monólito. Estudamos algumas dessas ideias nesse capítulo.
+
+Um monólito modular poderia ter diversas das características desejáveis em um código:
+
+- alta coesão
+- baixo acoplamento
+- com dados encapsulados
+- substituíveis e passíveis de composição
+- foco no negócio, inspirados por agregados ou contextos delimitados
+
+Além disso, um monólito modular seria um passo na direção de uma arquitetura de microservices, mas sem as complexidades de um sistema distribuído.
+
+![O monólito modular como um meio-termo {w=72}](imagens/02-decompondo-o-monolito/monolito-modular.png)
+
+No final da palestra, Simon Brown faz uma provocação: _"Se você não consegue construir um monólito modular, porque você acha que microservices são a resposta"_?
+
+### Porque modularizar?
+
+No livro [Modular Java](https://pragprog.com/book/cwosg/modular-java) (WALLS, 2009), Craig Walls cita algumas vantagens de modularizar uma aplicação:
+
+- capacidade de trocar um módulo por outro, com uma implementação diferente, desde que a interface pública seja mantida
+- facilidade de compreensão de cada módulo individualmente
+- possibilidade de desenvolvimento em paralelo, permitindo que tarefas sejam divididas entre diferentes times
+- testabilidade melhorada, permitindo um outro nível de testes, que trata um módulo como uma unidade
+- flexibilidade, permitindo o reuso de módulos em outras aplicações
+
+Talvez essas vantagens não sejam oferecidas pelo uso de módulos Maven. Nos textos complementares a seguir, discutiremos tecnologias que auxiliariam a atingir essas características.
+
+## Para saber mais: Limitações dos Módulos Maven e JARs
+
+Os módulos Maven ajudam a organizar o código de aplicações maiores porque fornecem uma maneira de representar a decomposição modular do domínio. Além disso, as dependências ficam materializadas nas declarações dos `pom.xml` de cada módulo.
+
+Uma desvantagem dos módulos Maven como utilizamos no exemplo do exercício anterior é que **a base de código é uma só**. Diferentes times poderiam estar focados em módulos diferentes mas teriam acesso ao código dos outros módulos. A tentação de alterar algo de um módulo de outro time é muito forte! Para resolver isso, poderíamos implementar os módulos como bibliotecas completamente separadas. Um problema que iria surgir é como controlar a versão de cada módulo.
+
+Outra desvantagem é que, em _runtime_, **a JVM não possui uma maneira de atualizar módulos** (JARs). Para atualizá-los, teríamos que parar a JVM e iniciá-la novamente, o que tornaria a aplicação indisponível. Num ambiente com diversos times entregando software em taxas diferentes múltiplas vezes por dia/semana, a disponibilidade da aplicação seria terrivelmente afetada.
+
+Ainda outra desvantagem dos módulos Maven é que **um módulo tem acesso às suas dependências transitivas**, ou seja, às dependências de suas dependências. Por exemplo, o módulo `eats-distancia` depende de `eats-restaurante` que, por sua vez, depende de `eats-administrativo`. Portanto, o módulo `eats-distancia` tem como dependência transitiva o módulo `eats-administrativo` e tem acesso a qualquer uma de suas classes públicas, como `FormaDePagamento` e `TipoDeCozinha`. Além disso, em `eats-distancia`, temos acesso a qualquer biblioteca declarada como dependência nos módulos `eats-restaurante` e `eats-administrativo`.
+
+Essa fronteira fraca entre os módulos Maven pode ser problemática, já que leva a dependências indesejadas e não previstas. Se somarmos a isso o fato de que quase sempre definimos classes como públicas, módulos com muitas dependências transitivas terão acesso a boa parte das classes de outros módulos e às bibliotecas utilizadas por esses módulos. O código pode sair do controle.
+
+Uma solução é limitar as classes públicas ao mínimo possível, tornando as classes acessíveis apenas ao pacote em que estão definidas. Mas para módulos mais complexos, teríamos dezenas ou centenas de classes no mesmo pacote! Observe, por exemplo, o módulo `eats-restaurante`: são 26 classes no mesmo pacote. Passa a ficar difícil de entender o código.
+
+### Os problemas do Classpath
+
+Na verdade, há uma limitação nos JARs, que são apenas ZIPs com arquivos `.class` e de configuração organizados em diretórios (pacotes).
+
+Uma vez que os JARs disponíveis são vasculhados e uma classe é carregada por um `ClassLoader` na JVM, perde-se o conceito de módulo.
+
+O Classpath da JVM é apenas uma lista de classes, sem qualquer referência a seu JAR de origem ou de quais outros JARs dependem.
+
+A ausência de algo que represente JAR de origem e suas dependências no Classpath enfraquece o encapsulamento em uma aplicação Java modularizada.
+
+Nicolai Parlog, no livro [The Java Module System](https://www.manning.com/books/the-java-module-system) (PARLOG, 2018), elenca os seguintes problemas no Classpath:
+
+- _Encapsulamento fraco entre JARs_: conforme estudamos, o Classpath é uma grande lista de classes. As classes públicas são visíveis por quaisquer outras. Não é possível criar uma funcionalidade visível dentro de todos os pacotes de um JAR, mas não fora dele.
+- _Ausência de representação das dependências entre JARs_: não há como um JAR declarar de quais outros JARs ele depende apenas com o Classpath.
+- _Ausência de checagens automáticas de segurança_: o encapsulamento fraco dos JARs permite que código malicioso acesse e manipule funcionalidade crítica. Porém, é possível implementar manualmente checagens de segurança.
+- _Sombreamento de classes com o mesmo nome_: no caso de JARs que definem duas classes com o mesmo nome, apenas uma delas é tornada disponível. E não é possível saber qual.
+- _Conflitos entre versões diferentes do mesmo JAR_: duas versões do mesmo JAR no Classpath levam a comportamentos imprevisíveis.
+- _JRE é rígida_: não é possível disponibilizar no Classpath um subconjunto das bibliotecas padrão do Java. Muitas classes não utilizadas ficam acessíveis.
+- _Performance ruim no startup_: apesar dos class loaders serem _lazy_, carregando classes só no seu primeiro uso, muitas classes já são carregadas ao iniciar uma aplicação.
+- _Class loading complexo_
+
+## Para saber mais: JPMS, um sistema de módulos para o Java
+
+A partir do Java 9, o Java inclui um sistema de módulos bastante poderoso: o Java Platform Module System (JPMS).
+
+Um módulo JPMS é um JAR que define:
+
+- um nome único para o módulo
+- dependências a outros módulos
+- pacotes exportados, cujos tipos são acessíveis por outros módulos
+
+Com um módulo JPMS, conseguimos definir **encapsulamento no nível de pacotes**, escolhendo quais pacotes são ou não exportados e, em consequência, acessíveis por outros módulos.
+
+### A JDK modularizada
+
+Um dos grandes avanços do JPMS, disponível a partir da JDK 9, foi a modularização da própria plataforma Java.
+
+O JPMS é resultado do projeto _Jigsaw_, criado em 2009, no início do desenvolvimento da JDK 7.
+
+Antes do Java 9, todo o código das bibliotecas padrão da JDK ficava em apenas no módulo de _runtime_: o `rt.jar`.
+
+O estudo inicial do projeto _Jigsaw_ agrupou o código já existente da JDK em diferentes módulos. Por exemplo, foi identificado um módulo base, que conteria pacotes fundamentais como o `java.lang` e `java.io`; um módulo desktop, com as bibliotecas Swing, AWT; além de módulos para APIs como Java Logging, JMX, JNDI.
+
+A análise das dependências entre os módulos identificados na JDK 7 levou à descoberta de ciclos como: o módulo base depende de Logging que depende de JMX que depende de JNDI que depende de desktop que, por sua vez, depende do base.
+
+O código da JDK 8 foi reorganizado para que não houvessem ciclos e dependências indevidas, mesmo que ainda sem um sistema de módulos propriamente dito. Os pacotes que pertenceriam ao módulo base não teriam mais dependências a nenhum outro módulo.
+
+Na JDK 9, foram definidos módulos JPMS para cada parte do código da JDK:
+
+- `java.base`, contendo código de pacotes como `java.lang`, `java.math`, `java.text`, `java.io`, `java.net` e `java.nio`.
+- `java.logging`, com a Java Logging API.
+- `java.management`, com a Java Managing Extensions (JMX) API.
+- `java.naming`, com a Java Naming and Directory Interface (JNDI) API.
+- `java.desktop`, contendo código de bibliotecas como Swing, AWT, 2D.
+
+As dependências entre os módulos JPMS da JDK foram organizadas de maneira bem cuidadosa.
+
+Antes da JDK 9, toda aplicação teria disponível todos os pacotes de todas as bibliotecas do Java. Não era possível depender de menos que a totalidade da JDK.
+
+A partir da JDK 9, aplicações modularizadas com JPMS podem escolher, no arquivo `module-info.java`, de quais módulos da JDK dependerão.
+
+## Para saber mais: Módulos plugáveis
+
+Antigamente, antes do Java SE 6, para ligar um plugin de uma aplicação a uma implementação era necessário:
+
+- criar uma solução caseira usando a Reflection API
+- usar bibliotecas como [JPF](http://jpf.sourceforge.net/index.html) ou [PF4J](https://github.com/pf4j/pf4j)
+- usar uma especificação robusta, mas complexa, como [OSGi](https://www.osgi.org/)
+
+Porém, a partir do Java SE 6, a própria JRE contém uma solução: a **Service Loader API**.
+
+Na _Service Loader API_, um ponto de extensão é chamado de _service_.
+
+Para provermos um service precisamos de:
+
+- **Service Provider Interface (SPI)**: interfaces ou classes abstratas que definem a assinatura do ponto de extensão.
+- **Service Provider**: uma implementação da SPI.
+
+Para ligar a SPI com seu _service provider_, o JAR do provider precisa definir o _provider configuration file_: um arquivo com o nome da SPI dentro da pasta `META-INF/services`. O conteúdo desse arquivo deve ser o _fully qualified name_ da classe de implementação.
+
+No projeto que define a SPI, carregamos as implementações usando a classe `java.util.ServiceLoader`.
+
+A classe `ServiceLoader` possui o método estático `load` que recebe uma SPI como parâmetro e, depois de vasculhar os diretórios `META-INF/services` dos JARs disponíveis no Classpath, retorna uma instância de `ServiceLoader` que contém todas as implementações.
+
+O `ServiceLoader` é um `Iterable` e, por isso, pode ser percorrido com um _for-each_. Caso não haja nenhum service provider para a SPI, o `ServiceLoader` se comporta como uma lista vazia.
+
+Perceba que uma mesma SPI pode ter vários service providers, o que traz bastante flexibilidade.
+
+### Uma Arquitetura de plugins
+
+Com o uso de SPIs e Service Providers, é possível criar uma arquitetura de plugins com a plataforma Java.
+
+Com a Service Loader API, a simples presença de um `.jar` que a implemente a abstração do plugin (ou SPI) fará com que o comportamento da aplicação seja estendido, sem precisarmos modificar nenhuma linha de código.
+
+Várias bibliotecas das mais usadas por desenvolvedores Java usam SPIs.
+
+Por meio da SPI `javax.persistence.spi.PersistenceProvider`, bibliotecas como o Hibernate e o EclipseLink fornecem implementações para as interfaces do pacote `javax.persistence`.
+
+Do Java SE 6 em diante, a classe [`DriverManager`](https://docs.oracle.com/javase/6/docs/api/java/sql/DriverManager.html) carrega automaticamente todas as implementações da SPI `java.sql.Driver`.  Por exemplo, o `mysql-connector-java.jar` do MySQL fornece um Service Provider para essa SPI.
+
+O Spring tem a sua própria implementação de algo semelhante a Service Loader API: a classe [SpringFactoriesLoader](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/core/io/support/SpringFactoriesLoader.html). Essa classe é usada pelas Auto-Configurations do Spring Boot, fazendo com que a simples presença dos `.jar` dos starters adicionem comportamento à aplicação. Ou seja, o próprio Spring Boot é uma arquitetura de plugins.
+
+## Para saber mais: OSGi
+
+O Java Module System foi disponibilizado a partir de 2017, com o lançamento do Java 9.
+
+Porém, a plataforma Java já tinha uma solução mais robusta e poderosa desde 1999: a especificação OSGi (Open Services Gateway Initiative). Essa especificação é implementada por frameworks como Apache Felix, Eclipse Equinox, entre outros. IDEs como Eclipse e NetBeans, servidores de aplicação como GlassFish e WebSphere, são implementadas usando frameworks OSGi.
+
+Por meio de diferentes Class Loaders, um framework OSGi traz a ideia de módulos para o _runtime_ da JVM, corrigindo falhas do Classpath. Dessa maneira, provê um nível de encapsulamento além dos pacotes.
+
+Um módulo, no OSGi, é chamado de _bundle_. Bundles são JARs, só que com metadados adicionais no `META-INF/MANIFEST.MF` como o nome do bundle, a versão, de quais outros bundles depende, entre outros detalhes.
+
+Um framework OSGi controla o ciclo de vida de um bundle, fazendo com que seja instalado, iniciado, atualizado, parado e desinstalado. Múltiplas versões de um bundle podem coexistir em runtime e um bundle pode ser trocado sem parar toda a JVM.
+
+O OSGi também especifica o conceito de _service_, análogo à Service Loader API do Java: um bundle define interface pública e outros bundles, uma ou mais implementações. Para ligar as implementações à interface, um framework OSGi provê um _service registry_. Novas implementações podem ter seu registro feito ou cancelado dinamicamente, sem parar a JVM. Os consumidores de um service dependeriam apenas da interface e do service registry, sem ter acesso a detalhes de implementação.
+
+O nível de encapsulamento de um bundle e a possibilidade de **atualizar e registrar implementações dinamicamente** permitiria que diferentes times cuidassem de diferentes bundles alinhados com os contextos delimitados (e as áreas de negócio) da organização. A implantação de novas versões de um bundle poderia ser feita sem derrubar a aplicação como um todo.
+
+> Um detalhe interessante é que Craig Walls, no livro [Modular Java](https://pragprog.com/book/cwosg/modular-java) (WALLS, 2009), cita o termo _SOA in a JVM_ como uma maneira usada para descrever os services do OSGi.
+> Um post sobre services OSGi de 2010, no blog da OSGi Alliance, usou pela primeira vez o termo [µServices](https://blog.osgi.org/2010/03/services.html) (KRIENS, 2010), com a letra grega mu (µ) que é usada como símbolo do prefixo _micro_ pelo Sistema Internacional de Unidades.
+> No livro de 2012 [Java Application Architecture: Modularity Patterns](https://www.amazon.com.br/Java-Application-Architecture-Modularity-Patterns/dp/0321247132) (KNOERNSCHILD, 2012), Kirk Knoernschild usa repetidamente o termo µServices para se referir aos services OSGi.
