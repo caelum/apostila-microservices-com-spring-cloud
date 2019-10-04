@@ -464,7 +464,9 @@ Além disso, um monólito modular seria um passo na direção de uma arquitetura
 
 ![O monólito modular como um meio-termo {w=72}](imagens/02-decompondo-o-monolito/monolito-modular.png)
 
-No final da palestra, Simon Brown faz uma provocação: _"Se você não consegue construir um monólito modular, porque você acha que microservices são a resposta"_?
+No final da palestra [Modular monoliths](http://www.codingthearchitecture.com/presentations/sa2015-modular-monoliths) (BROWN, 2015), Simon Brown faz uma provocação:
+
+_"Se você não consegue construir um monólito modular, porque você acha que microservices são a resposta"_?
 
 ### Porque modularizar?
 
@@ -476,7 +478,7 @@ No livro [Modular Java](https://pragprog.com/book/cwosg/modular-java) (WALLS, 20
 - testabilidade melhorada, permitindo um outro nível de testes, que trata um módulo como uma unidade
 - flexibilidade, permitindo o reuso de módulos em outras aplicações
 
-Talvez essas vantagens não sejam oferecidas pelo uso de módulos Maven. Nos textos complementares a seguir, discutiremos tecnologias que auxiliariam a atingir essas características.
+Talvez essas vantagens não sejam oferecidas pelo uso de módulos Maven. Nos textos complementares a seguir, discutiremos tecnologias que auxiliariam a atingir essas características. Cada uma dessas tecnologias, porém, traz novas dificuldades de aprendizado, de configurações e de operação.
 
 ## Para saber mais: Limitações dos Módulos Maven e JARs
 
@@ -531,7 +533,7 @@ Um dos grandes avanços do JPMS, disponível a partir da JDK 9, foi a modulariza
 
 O JPMS é resultado do projeto _Jigsaw_, criado em 2009, no início do desenvolvimento da JDK 7.
 
-Antes do Java 9, todo o código das bibliotecas padrão da JDK ficava em apenas no módulo de _runtime_: o `rt.jar`.
+Antes do Java 9, todo o código das bibliotecas padrão da JDK ficava apenas no módulo de _runtime_: o `rt.jar`.
 
 O estudo inicial do projeto _Jigsaw_ agrupou o código já existente da JDK em diferentes módulos. Por exemplo, foi identificado um módulo base, que conteria pacotes fundamentais como o `java.lang` e `java.io`; um módulo desktop, com as bibliotecas Swing, AWT; além de módulos para APIs como Java Logging, JMX, JNDI.
 
@@ -586,6 +588,10 @@ Com o uso de SPIs e Service Providers, é possível criar uma arquitetura de plu
 
 Com a Service Loader API, a simples presença de um `.jar` que a implemente a abstração do plugin (ou SPI) fará com que o comportamento da aplicação seja estendido, sem precisarmos modificar nenhuma linha de código.
 
+Em seu artigo [Microservices and Jars](https://blog.cleancoder.com/uncle-bob/2014/09/19/MicroServicesAndJars.html) (MARTIN, 2014), Uncle Bob escreve:
+
+_Não pule para Microservices só porque parece legal. Antes, segregue o sistema em JARs usando uma arquitetura de plugins. Se isso não for suficiente, considere a introdução de fronteiras entre serviços (service boundaries) em pontos estratégicos._
+
 Várias bibliotecas das mais usadas por desenvolvedores Java usam SPIs.
 
 Por meio da SPI `javax.persistence.spi.PersistenceProvider`, bibliotecas como o Hibernate e o EclipseLink fornecem implementações para as interfaces do pacote `javax.persistence`.
@@ -609,6 +615,10 @@ Um framework OSGi controla o ciclo de vida de um bundle, fazendo com que seja in
 O OSGi também especifica o conceito de _service_, análogo à Service Loader API do Java: um bundle define interface pública e outros bundles, uma ou mais implementações. Para ligar as implementações à interface, um framework OSGi provê um _service registry_. Novas implementações podem ter seu registro feito ou cancelado dinamicamente, sem parar a JVM. Os consumidores de um service dependeriam apenas da interface e do service registry, sem ter acesso a detalhes de implementação.
 
 O nível de encapsulamento de um bundle e a possibilidade de **atualizar e registrar implementações dinamicamente** permitiria que diferentes times cuidassem de diferentes bundles alinhados com os contextos delimitados (e as áreas de negócio) da organização. A implantação de novas versões de um bundle poderia ser feita sem derrubar a aplicação como um todo.
+
+<!--
+Alexandre: ouvi relatos de um desenvolvedor do Liferay de que o uso de OSGi quadruplicou o uso de memória. Apesar disso, OSGi é usado em software embarcado e na indústria de automóveis. Fica claro que a tecnologia traz dificuldades.
+-->
 
 > Um detalhe interessante é que Craig Walls, no livro [Modular Java](https://pragprog.com/book/cwosg/modular-java) (WALLS, 2009), cita o termo _SOA in a JVM_ como uma maneira usada para descrever os services do OSGi.
 > Um post sobre services OSGi de 2010, no blog da OSGi Alliance, usou pela primeira vez o termo [µServices](https://blog.osgi.org/2010/03/services.html) (KRIENS, 2010), com a letra grega mu (µ) que é usada como símbolo do prefixo _micro_ pelo Sistema Internacional de Unidades.

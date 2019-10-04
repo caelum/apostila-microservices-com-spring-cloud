@@ -20,6 +20,8 @@ MACCORMACK, Alan et al. _Exploring the Duality between Product and Organizationa
 
 MARTIN, Robert Cecil. _Screaming Architecture._ 2011. Em: https://blog.cleancoder.com/uncle-bob/2011/09/30/Screaming-Architecture.html
 
+MARTIN, Robert Cecil. _Microservices and Jars._ 2014. Em: <https://blog.cleancoder.com/uncle-bob/2014/09/19/MicroServicesAndJars.html>.
+
 MARTIN, Robert Cecil. _Clean Architecture: A Craftsman's Guide to Software Structure and Design._ Prentice Hall, 2017. 432 p. Em: https://www.amazon.com/Clean-Architecture-Craftsmans-Software-Structure/dp/0134494164.
 
 PARLOG, Nicolai. _The Java Module System._ Manning Publications, 2018. Manning Early Access Program, version 10. 503p. Em: <https://www.manning.com/books/the-java-module-system>
