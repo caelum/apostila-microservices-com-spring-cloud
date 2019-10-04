@@ -17,7 +17,9 @@ Usualmente, o código de uma aplicação é estruturado em 3 camadas:
 Uma maneira de representar essas camadas em um código Java é utilizar pacotes, o que é conhecido como _Package by Layer_.
 
 > Na verdade, é preciso distinguir dois tipos de camadas que influenciam a arquitetura do software: as camadas físicas e as camadas lógicas.
+>
 > Uma camada física, ou _tier_ em inglês, descreve a estrutura de implantação do software, ou seja, as máquinas utilizadas.
+>
 > O que descrevemos no texto anterior é o conceito de camada lógica. Em inglês, a camada lógica é chamada de _layer_. Trata de agrupar o código que corresponde às camadas descritas anteriormente.
 
 ### Camadas no Caelum Eats
@@ -70,7 +72,7 @@ No post [Screaming Architecture](https://blog.cleancoder.com/uncle-bob/2011/09/3
 
 > Na realidade, a construção civil tem diferentes plantas: a elétrica, a hidráulica, a estrutural, etc.
 > Uncle Bob parece referir-se a um tipo específico de planta: a **planta baixa**. É feita por um arquiteto e é mais próxima do cliente. A partir dela são projetadas outras plantas mais técnicas e específicas.
-> É aquele tipo de planta que encontramos em lançamentos de imóveis.
+> É o tipo de planta que encontramos em lançamentos de imóveis.
 
 Para projetos de software, entretanto, é usual que a estrutura básica de diretórios indique qual o framework ou qual a ferramenta de build utilizados. Porém, para Uncle Bob, o framework é um detalhe; o Banco de Dados é um detalhe; a Web é um mecanismo de entrega da UI, um detalhe.
 
@@ -412,6 +414,10 @@ Se houver uma dependência a outros submódulos, é possível usar `${project.ve
 
 ![Dependências entre módulos do Caelum Eats](imagens/02-decompondo-o-monolito/dependencias-dentre-modulos-do-caelum-eats.png)
 
+<!--
+  Detalhe: na imagem anterior, que mostra as dependências entre módulos do Caelum Eats, as caixinhas são a notação para componentes do UML.
+-->
+
 O submódulo `eats-application` depende de todos os outros e contém a classe principal, que contém o `main`. Ao executarmos o build, com o comando `mvn clean package` no diretório do supermódulo `eats`, o _Fat JAR_ do Spring Boot é gerado no diretório _target_ do `eats-application`, contendo o código compilado da aplicação e de todas as bibliotecas utilizadas.
 
 ## Pragmatismo e (um pouco de) Duplicação
@@ -450,9 +456,9 @@ Uma ideia, visando tornar os módulos o mais independentes o possível, é aceit
 
 ## O Monólito Modular
 
-Simon Brown, na sua palestra [Modular monoliths](http://www.codingthearchitecture.com/presentations/sa2015-modular-monoliths) (BROWN, 2015), diz que há uma premissa comum, mas não explícita, no mercado de que todo monólito é um spaghetti e que o único caminho para um código organizado seria a migração para uma arquitetura de microservices. Só que a engenharia de software tem uma bagagem enorme de conhecimento sobre como componentizar e melhorar a manutenibilidade de um monólito. Estudamos algumas dessas ideias nesse capítulo.
+Simon Brown, na sua palestra [Modular monoliths](http://www.codingthearchitecture.com/presentations/sa2015-modular-monoliths) (BROWN, 2015), diz que há uma premissa comum, mas não explícita, no mercado de que todo monólito é um spaghetti e que o único caminho para um código organizado seria a migração para uma arquitetura de microservices. Só que há uma bagagem enorme de conhecimento sobre como componentizar e melhorar a manutenibilidade de um monólito. Estudamos algumas dessas ideias nesse capítulo.
 
-Um monólito modular poderia ter diversas das características desejáveis em um código:
+Um **Monólito Modular** poderia ter diversas das características desejáveis em um código:
 
 - alta coesão
 - baixo acoplamento
@@ -460,13 +466,13 @@ Um monólito modular poderia ter diversas das características desejáveis em um
 - substituíveis e passíveis de composição
 - foco no negócio, inspirados por agregados ou contextos delimitados
 
-Além disso, um monólito modular seria _um passo na direção de uma arquitetura de microservices_, mas sem as complexidades de um sistema distribuído.
+Além disso, um Monólito Modular seria **um passo na direção de uma Arquitetura de Microservices**, mas sem as complexidades de um sistema distribuído.
 
-![O monólito modular como um meio-termo {w=72}](imagens/02-decompondo-o-monolito/monolito-modular.png)
+![O Monólito Modular como um meio-termo {w=72}](imagens/02-decompondo-o-monolito/monolito-modular.png)
 
 No final da palestra [Modular monoliths](http://www.codingthearchitecture.com/presentations/sa2015-modular-monoliths) (BROWN, 2015), Simon Brown faz uma provocação:
 
-_"Se você não consegue construir um monólito modular, porque você acha que microservices são a resposta"_?
+_"Se você não consegue construir um Monólito Modular, porque você acha que microservices são a resposta"_?
 
 ### Porque modularizar?
 
@@ -478,7 +484,63 @@ No livro [Modular Java](https://pragprog.com/book/cwosg/modular-java) (WALLS, 20
 - testabilidade melhorada, permitindo um outro nível de testes, que trata um módulo como uma unidade
 - flexibilidade, permitindo o reuso de módulos em outras aplicações
 
-Talvez essas vantagens não sejam oferecidas pelo uso de módulos Maven. Nos textos complementares a seguir, discutiremos tecnologias que auxiliariam a atingir essas características. Cada uma dessas tecnologias, porém, traz novas dificuldades de aprendizado, de configurações e de operação.
+Talvez essas vantagens não sejam oferecidas pelo uso de módulos Maven. Nos textos complementares a seguir, discutiremos tecnologias como o Java Module System, a Service Loader API e OSGi, que auxiliariam a atingir essas características. Cada uma dessas tecnologias, porém, traz novas dificuldades de aprendizado, de configurações e de operação.
+
+## O que é um monólito, afinal?
+
+Muitas vezes o termo "monólito" é usado como um _antagonista terrível_.
+
+Mas, para uma aplicação pequena, mesmo um monólito clássico organizado em camadas não é um problema. Há diversas vantagens:
+
+- Os desenvolvedores estão acostumados com monólitos.
+- As IDEs, frameworks e demais ferramentas são otimizadas para o desenvolvimento de monólitos.
+- Por termos apenas uma base de código, a refatoração do monólito é facilitada e, muitas vezes, auxiliada por IDEs.
+- Implantar o monólito nos diferentes ambientes é uma tarefa muito tranquila: basta copiar um artefato para o(s) servidor(es) e pronto!
+- O monitoramento é muito simples: ou está ou não está no ar.
+
+Porém, quando o tamanho da aplicação começa a crescer, começam a surgir várias **complicações**.
+
+Algumas são complicações no desenvolvimento:
+
+- muitas funcionalidades requerem um **time grande**. E a **comunicação** entre as pessoas em um time torna-se **mais custosa** quanto maior for o time.
+- quanto maior a **base de código**, mais **complexa** e **difícil de entender**. A tentação de criar dependências indevidas passa a ser grande. Se não houver um constante cuidado com o código, será inevitável o acúmulo de dívida técnica até termos um spaghetti. 
+- a **produtividade do desenvolvedor** é **diminuída**. As IDEs travam devido à massiva quantidade de código. A aplicação demora a iniciar, dificultando o ciclo de código-compilação-execução-teste de cada desenvolvedor.
+- os **testes**, manuais ou automatizados, passam a ser muito **demorados**. Uma estratégia de Continuous Integration/Deployment demora demais, atrasando o feedback e diminuindo a confiança.
+- é **difícil de atualizar as tecnologias** ou de usar diferentes tecnologias para diferentes partes dos problemas. O código pode até ser “poliglota” (usar diferentes linguagens), desde que compatíveis com mesma plataforma (p. ex., JVM).
+
+Há também complicações na operação:
+
+- a **implantação**, apesar de ainda fácil, é **dificultada**. Um time grande produz várias funcionalidades em cadências diferentes. É preciso haver uma grande coordenação para que não haja implantação de funcionalidades ainda em desenvolvimento. O uso de feature branches pode ajudar, mas pode levar a merges complicadíssimos. A ideia de Continuous Deployment/Delivery, de publicar código em produção várias vezes ao dia, parece muito distante.
+- há um **ponto único de falha**. Não há isolamento de falhas. Se algo derrubar a aplicação (por exemplo, por vazamento de memória), tudo fica indisponível.
+- há **ineficiência na escalabilidade**. É possível escalar, pois podemos replicar o entregável em várias instâncias, usando um Load Balancer para alternar entre elas. Porém, toda a aplicação será replicada e não apenas as partes que sofrem maior carga em termos de CPU ou memória. Isso leva a subutilização de recursos.
+
+É possível resolver parte dos problemas através de técnicas de modularização, implementando um Monólito Modular.
+
+Um **Monólito Modular** seria composto por **componentes independentes**, que colaboram entre si através de contratos idealmente definidos em abstrações (em Java, interfaces ou classes abstratas). Com um **sistema de módulos** como o Java Module System (Java 9+) ou OSGi, é possível **reforçar as barreiras arquiteturais** mesmo com classes públicas, explicitando e limitando as dependências entre os módulos. Isso levaria a um **melhor gerenciamento das dependências** entre os módulos. 
+
+Já através de uma **Arquitetura de Plugins**, a base de código seria “fatiada” em módulos menores. Poderíamos ter **equipes mais enxutas**, focadas em cada módulo, trabalhando em várias **bases de código distintas**. A aplicação seria composta a partir de diferentes módulos em runtime. Cada desenvolvedor passaria a trabalhar com apenas uma parte do código, suavizando a IDE. Porém, subir a aplicação como um todo ainda seria algo relativamente demorado, já que seria preciso colocar todos os módulos no ar. Os testes poderiam ser agilizados, concentrando-se em cada módulo separadamente, mas teria que ser feito um teste de sistema, que avaliaria a integração entre todos os módulos na aplicação.
+
+Por meio de uma solução como **OSGi**, até seria possível **atualizar um módulo sem parar a aplicação** como um todo.
+
+> **Monólitos Poliglotas**
+>
+> Um monólito não está restrito a apenas uma tecnologia de persistência, já que pode ter diferentes _data sources_ para diferentes paradigmas: BDs relacionais, BDs orientados a documentos, BDs orientados a grafos, etc.
+>
+> Com tecnologias como a [Graal VM](https://www.graalvm.org/docs/reference-manual/polyglot/), é possível criar monólitos desenvolvidos em múltiplas linguagens de diferentes plataformas: linguagens da JVM como Java, Scala, Kotlin, Groovy e Clojure; linguagens baseadas em LLVM como C e C++; e linguagens como JavaScript, Ruby, Python e R.
+
+### Uma definição de monólito
+
+Como estudamos nesse capítulo, um monólito não é sinônimo de código mal feito. É possível implementar um monólito com código organizado, fatiado em pequenos pedaços independentes e alinhados com o negócio. Podemos até compor esses pedaços de diferentes maneiras e implementá-los de maneira poliglotas. Dependendo da tecnologia utilizada, podem ser atualizados parcialmente sem derrubar toda a aplicação. E podemos escalar um monólito, executando múltiplas instâncias por trás de um Load Balancer. Então o que define um monólito?
+
+Para responser, precisamos pensar em qual é o “entregável” de uma aplicação: qual é o artefato que implantamos no ambiente de produção?
+
+Na plataforma Java, há algum tempo, o artefato mais comum era um WAR implantado em um servlet container como Tomcat ou Jetty. Já com frameworks como o Spring Boot, temos um JAR com as dependências embutidas, um _fat JAR_. Em uma Arquitetura de Plugins, seja com Service Loader API ou com OSGi, temos uma coleção de JARs.
+
+Em qualquer uma das maneiras de implantar um monólito, a comunicação entre as "fatias" do código é feita por chamadas de métodos, _in-memory_. E isso só é possível porque cada instância é executada em um mesmo processo.
+
+> **MONÓLITO**
+>
+> Um monólito, modular ou não, é um sistema em que uma instância do back-end de toda a aplicação é executada em um mesmo processo do sistema operacional.
 
 ## Para saber mais: Limitações dos Módulos Maven e JARs
 
@@ -582,15 +644,15 @@ O `ServiceLoader` é um `Iterable` e, por isso, pode ser percorrido com um _for-
 
 Perceba que uma mesma SPI pode ter vários service providers, o que traz bastante flexibilidade.
 
-### Uma Arquitetura de plugins
+### Uma Arquitetura de Plugins
 
-Com o uso de SPIs e Service Providers, é possível criar uma arquitetura de plugins com a plataforma Java.
+Com o uso de SPIs e Service Providers, é possível criar uma Arquitetura de Plugins com a plataforma Java.
 
 Com a Service Loader API, a simples presença de um `.jar` que a implemente a abstração do plugin (ou SPI) fará com que o comportamento da aplicação seja estendido, sem precisarmos modificar nenhuma linha de código.
 
 Em seu artigo [Microservices and Jars](https://blog.cleancoder.com/uncle-bob/2014/09/19/MicroServicesAndJars.html) (MARTIN, 2014), Uncle Bob escreve:
 
-_Não pule para Microservices só porque parece legal. Antes, segregue o sistema em JARs usando uma arquitetura de plugins. Se isso não for suficiente, considere a introdução de fronteiras entre serviços (service boundaries) em pontos estratégicos._
+_Não pule para Microservices só porque parece legal. Antes, segregue o sistema em JARs usando uma Arquitetura de Plugins. Se isso não for suficiente, considere a introdução de fronteiras entre serviços (service boundaries) em pontos estratégicos._
 
 Várias bibliotecas das mais usadas por desenvolvedores Java usam SPIs.
 
@@ -598,13 +660,11 @@ Por meio da SPI `javax.persistence.spi.PersistenceProvider`, bibliotecas como o 
 
 Do Java SE 6 em diante, a classe [`DriverManager`](https://docs.oracle.com/javase/6/docs/api/java/sql/DriverManager.html) carrega automaticamente todas as implementações da SPI `java.sql.Driver`.  Por exemplo, o `mysql-connector-java.jar` do MySQL fornece um Service Provider para essa SPI.
 
-O Spring tem a sua própria implementação de algo semelhante a Service Loader API: a classe [SpringFactoriesLoader](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/core/io/support/SpringFactoriesLoader.html). Essa classe é usada pelas Auto-Configurations do Spring Boot, fazendo com que a simples presença dos `.jar` dos starters adicionem comportamento à aplicação. Ou seja, o próprio Spring Boot é uma arquitetura de plugins.
+O Spring tem a sua própria implementação de algo semelhante a Service Loader API: a classe [SpringFactoriesLoader](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/core/io/support/SpringFactoriesLoader.html). Essa classe é usada pelas Auto-Configurations do Spring Boot, fazendo com que a simples presença dos `.jar` dos starters adicionem comportamento à aplicação. Ou seja, o próprio Spring Boot é uma Arquitetura de Plugins.
 
 ## Para saber mais: OSGi
 
-O Java Module System foi disponibilizado a partir de 2017, com o lançamento do Java 9.
-
-Porém, a plataforma Java já tinha uma solução mais robusta e poderosa desde 1999: a especificação OSGi (Open Services Gateway Initiative). Essa especificação é implementada por frameworks como Apache Felix, Eclipse Equinox, entre outros. IDEs como Eclipse e NetBeans, servidores de aplicação como GlassFish e WebSphere, são implementadas usando frameworks OSGi.
+O Java Module System foi disponibilizado a partir de 2017, com o lançamento do Java 9. Porém, a plataforma Java já tinha uma solução mais poderosa desde 1999: a especificação OSGi (Open Services Gateway Initiative). Essa especificação é implementada por frameworks como Apache Felix, Eclipse Equinox, entre outros. IDEs como Eclipse e NetBeans, servidores de aplicação como GlassFish e WebSphere, são implementadas usando frameworks OSGi.
 
 Por meio de diferentes Class Loaders, um framework OSGi traz a ideia de módulos para o _runtime_ da JVM, corrigindo falhas do Classpath. Dessa maneira, provê um nível de encapsulamento além dos pacotes.
 
@@ -621,5 +681,7 @@ Alexandre: ouvi relatos de um desenvolvedor do Liferay de que o uso de OSGi quad
 -->
 
 > Um detalhe interessante é que Craig Walls, no livro [Modular Java](https://pragprog.com/book/cwosg/modular-java) (WALLS, 2009), cita o termo _SOA in a JVM_ como uma maneira usada para descrever os services do OSGi.
+>
 > Um post sobre services OSGi de 2010, no blog da OSGi Alliance, usou pela primeira vez o termo [µServices](https://blog.osgi.org/2010/03/services.html) (KRIENS, 2010), com a letra grega mu (µ) que é usada como símbolo do prefixo _micro_ pelo Sistema Internacional de Unidades.
+>
 > No livro de 2012 [Java Application Architecture: Modularity Patterns](https://www.amazon.com.br/Java-Application-Architecture-Modularity-Patterns/dp/0321247132) (KNOERNSCHILD, 2012), Kirk Knoernschild usa repetidamente o termo µServices para se referir aos services OSGi.
