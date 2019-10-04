@@ -456,11 +456,11 @@ Um monólito modular poderia ter diversas das características desejáveis em um
 
 - alta coesão
 - baixo acoplamento
-- com dados encapsulados
+- dados encapsulados
 - substituíveis e passíveis de composição
 - foco no negócio, inspirados por agregados ou contextos delimitados
 
-Além disso, um monólito modular seria um passo na direção de uma arquitetura de microservices, mas sem as complexidades de um sistema distribuído.
+Além disso, um monólito modular seria _um passo na direção de uma arquitetura de microservices_, mas sem as complexidades de um sistema distribuído.
 
 ![O monólito modular como um meio-termo {w=72}](imagens/02-decompondo-o-monolito/monolito-modular.png)
 
