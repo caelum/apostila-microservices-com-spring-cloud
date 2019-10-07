@@ -4,11 +4,17 @@ ASERG-UFMG, Applied Software Engineering Research Group. _Does Conway’s Law ap
 
 BROWN, Simon. _Modular monoliths_. 2015. Em: http://www.codingthearchitecture.com/presentations/sa2015-modular-monoliths
 
+CALÇADO, Phil. _Evoluindo uma Arquitetura inteiramente sobre APIs: o caso da SoundCloud_ 2013. Em: https://www.infoq.com/br/presentations/evoluindo-uma-arquitetura-soundcloud/
+
+CALÇADO, Phil. 2018. Em: https://twitter.com/pcalcado/status/963183090339385345
+
 CONWAY, Melvin. _How Do Committees Invent?_ Datamation, Abr. 1968. Em: http://www.melconway.com/Home/Committees_Paper.html
 
 EVANS, Eric. _Domain-Driven Design: Tackling Complexity in the Heart of Software._ Addison-Wesley Professional. 2003. 560 p. Em: https://www.amazon.com/Domain-Driven-Design-Tackling-Complexity-Software/dp/0321125215
 
 FOOTE, Brian; YODER, Joseph. _Big Ball Of Mud._ 1999. Em: http://www.laputan.org/mud/mud.html
+
+FOWLER, Martin; LEWIS, James. _Microservices: a definition of this new technical term._. 2014. Em: https://martinfowler.com/articles/microservices.html
 
 JACOBSON, Ivar. _Object Oriented Software Engineering: A Use-Case Driven Approach._ Addison-Wesley Professional. 1992. 552 p. Em: https://www.amazon.com/Object-Oriented-Software-Engineering-Approach/dp/0201544350
 
@@ -23,6 +29,8 @@ MARTIN, Robert Cecil. _Screaming Architecture._ 2011. Em: https://blog.cleancode
 MARTIN, Robert Cecil. _Microservices and Jars._ 2014. Em: <https://blog.cleancoder.com/uncle-bob/2014/09/19/MicroServicesAndJars.html>.
 
 MARTIN, Robert Cecil. _Clean Architecture: A Craftsman's Guide to Software Structure and Design._ Prentice Hall, 2017. 432 p. Em: https://www.amazon.com/Clean-Architecture-Craftsmans-Software-Structure/dp/0134494164.
+
+NEWMAN, Sam. _Building Microservices: Designing Fine-Grained Systems._ O'Reilly. 2015. 280 p. Em: https://www.oreilly.com/library/view/building-microservices/9781491950340/
 
 PARLOG, Nicolai. _The Java Module System._ Manning Publications, 2018. Manning Early Access Program, version 10. 503p. Em: <https://www.manning.com/books/the-java-module-system>
 

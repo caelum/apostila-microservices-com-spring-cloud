@@ -1,5 +1,225 @@
 # Extraindo serviços
 
+## O contexto que levou aos Microservices
+
+Na década de 90, aplicações Desktop deram lugar à Web. A arquitetura Web, do estilo Cliente/Servidor com “telas” geradas pelo Servidor (_thin clients_), influenciou na maneira como o código é implantado. Com controle total dos servidores, publicações de novas versões da aplicação foram facilitadas.
+
+Em 2001, vários metodologistas publicaram o **Manifesto Ágil** em que definem os valores e princípios de metodologias leves, que serviram como uma resposta às maneiras burocráticas que levaram vários projetos ao fracasso durante a década de 90. Uma maneira mais adequada seria a entrega frequente de software funcionando através ciclos curtos de colaboração com os clientes, permitindo resposta às mudanças do negócio. Tudo feito por **times autônomos** e pequenos, de 9 pessoas, no máximo.
+
+Em 2003, Eric Evans documentou sua abordagem de design no livro **Domain-Driven Design (DDD)**, em que divide um problema complexo em sub-domínios alinhados com áreas de expertise do negócio. Cada sub-domínio define um contexto delimitado (bounded context) em que há uma linguagem (ubiquitous language). Um modelo dessa linguagem é representado no código: o modelo do domínio (domain model).
+
+Entre 2005 e 2006, a Intel e a AMD criaram extensões em seus processadores para permitir a criação eficiente de **virtual machines** (máquinas virtuais). Já havia tecnologia semelhante em mainframes desde a década de 1960. Porém, com essas novas capacidades em hardwares mais baratos, surgiram uma profusão de soluções como VMWare, VirtualBox, Hyper-V, entre outras.
+
+As tecnologias de criação de máquinas virtuais permitiram o provisionamento (configuração) de máquinas virtuais por meio de scripts, o que ficou conhecido como **infrastructure as code**. A partir de 2005, surgiram várias soluções do tipo como Puppet, Chef, Vagrant, Salt e Ansible.
+
+Em 2006, foi inaugurada a Amazon Web Services (AWS) que, por meio do Elastic Compute Cloud (EC2), cunhou o termo **Cloud Computing**. A ideia é que o código de uma aplicação seria executado na “nuvem”, sem a necessidade de compra, manutenção e configuração de máquina físicas. O poder computacional poderia ser consumido sob-demanda, como luz ou água, permitindo que a infraestrutura de TI seja ajustada às reais necessidades, minimizando máquinas ociosas. 
+
+Em 2009, foi organizada a primeira conferência devopsdays, que unia tópicos de desenvolvimento de software e operações de TI, cunhando o termo **DevOps**.
+
+Em 2010, Jez Humble e David Farley publicaram o livro **Continuous Delivery**, em que descrevem como algumas grandes empresas conseguem publicar software várias vezes ao dia, com poucos defeitos e alta disponibilidade (_zero downtime_). Partindo de técnicas ágeis como _continuous integration_, há um grande foco em automação, inclusive de testes.
+
+Todo esse contexto é resumido por Sam Newman no início do livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015):
+
+_Domain-driven design. Continuous delivery. On-demand virtualization. Infrastructure automation. Small autonomous teams. Systems at scale. Microservices have emerged from this world._
+
+## Do monólito (modular) aos Microservices
+
+Um monólito comum, organizado com Package by Layer, pode trazer problemas para aplicações maiores: código progressivamente mais complexo, dependências indevidas, times cada vez maiores, impossibilidade de deploys sem parar a aplicação, entre outros.
+
+Com uma estratégia de componentização baseada em módulos, a manutenção e evolução podem ser melhoradas. Com uma Arquitetura de Plugins, podemos ter pequenos times autônomos. Com runtimes como OSGi, podemos até fazer hot-deploy, atualizando módulos com a aplicação no ar. Com diferentes datasources, podemos explorar diferentes tecnologias de persistência. Com plataformas como a JVM, é possível o uso de linguagens de diversos paradigmas diferentes.
+
+Mas, ainda assim, o monólito é executado como um único processo. Se houver alguma falha na memória ou bug que cause uso massivo de CPU ou um loop infinito, a aplicação toda sairá do ar.
+
+Se houver um aumento na carga, é possível sim escalar um monólito: basta colocarmos um cluster de instâncias, com requests alternados por um Load Balancer. Porém, pode haver uma subutilização de recursos, já que a replicação será de toda a aplicação e não daquelas partes em que há mais necessidade de CPU ou memória. E, como o código será o mesmo, bugs que derrubam a aplicação poderão ser replicados por todos os nós do cluster.
+
+Na palestra [Evoluindo uma Arquitetura inteiramente sobre APIs](https://www.infoq.com/br/presentations/evoluindo-uma-arquitetura-soundcloud/) (CALÇADO, 2013), Phil Calçado diz de maneira bem clara o grande problema de um monólito:
+
+_Quando você tem uma base de código só, você é tão estável quanto a sua parte menos estável._
+
+<!--@note
+  O interessante é que o Phil Calçado não usa o termo Microservices nessa palestra, mas APIs. Só que a abordagem é a mesma e ele já dá um hint sobre os BFFs.
+-->
+
+E, convenhamos, um monólito modular é algo raríssimo no mercado. Então, para a maioria dos monólitos há problemas com times grandes, deploys e complexidade do código.
+
+### Componentização em serviços
+
+Uma **Arquitetura de Microservices** traz uma abordagem diferente de componentização: a aplicação é decomposta em diversos **serviços**.
+
+Um serviço é um componente de software que provê alguma funcionalidade e pode ser implantado independentemente. Cada serviço provê uma **API** que pode ser “consumida” por seus clientes. Uma chamada a um serviço é feita por meio de **comunicação interprocessos** que, no fim das contas, é comunicação pela rede. Isso faz com que uma Arquitetura de Microservices seja um **Sistema Distribuído**.
+
+Então, microservices:
+
+- são executados em diferentes processos em máquinas (ou containers) distintos
+- a comunicação é interprocessos, pela rede
+- o deploy é independente, por definição
+- podem usar múltiplos mecanismos de persistência em paradigmas diversos (Relacional, NoSQL, etc), desde que não compartilhados com outros serviços
+- há diversidade tecnológica, sendo a única restrição a possibilidade de prover uma API em um protocolo padrão (HTTP, AMQP, etc)
+- há uma fronteira fortíssima entre as bases de código
+
+## Prós e contras de uma Arquitetura de Microservices
+
+<!-- 
+
+### PRÓS
+
+Deploy independente
+Maior isolamento de falhas
+Times autônomos
+Diversidade tecnológica e experimentação
+
+Entrega contínua de aplicações complexas
+  Com microsserviços, só um pedaço do sistema fica fora do ar ao implantarmos novas versões. Isso minimiza o risco e impacto na disponibilidade. A consequência é que podemos passar a fazer mais deploys em produção, talvez várias vezes por dia.
+Times pequenos
+  Um microsserviço permite times menores, com uma possibilidade de melhor comunicação e mais focados em uma área de negócio.
+Escalabilidade independente
+  Necessidades diferentes em termos computacionais, como processamentos intensivos em termos de memória e/ou CPU, podem ter recursos específicos. Isso minimiza o impacto em outras partes da aplicação, otimiza recursos e diminui custos de operação.
+Resiliência e isolamento de falhas
+  Quando há uma falha ou indisponibilidade em um serviço, os outros serviços continuam no ar e, portanto, parte da aplicação ainda permanece disponível e utilizável.
+“Trocabilidade”
+  Com microsserviços mais focados, independentes e pequenos, é menos provável acabar com uma parte do sistema que ninguém toca. Caso surja uma nova ideia de implementação melhor e mais eficiente, será mais fácil de trocar a antiga. Caso não haja mais necessidade de um determinado microsserviço, podemos removê-lo.
+Heterogeneidade das tecnologias e experimentação
+  Partes do sistema podem ser implementadas em tecnologias que estejam mais de acordo com o problema.
+Reuso e composibilidade
+  Diferentes microsserviços podem ser compostos em novos microsserviços, atendendo com agilidade às demandas do negócio.
+
+Referências
+Building Microservices - Cap 1 - Key Benefits
+Microservice Patterns - Cap 1 - Benefits of the microservice architecture
+
+
+### CONTRAS
+
+Complexidade ao operar e monitorar
+Complexidades de sistemas distribuídos
+Perda da consistência dos dados e transações
+
+Complexidade de encontrar os microsserviços certos
+  Definir de quais microsserviços devem ser consistido um sistema é algo complexo e subjetivo. Temos que tomar cuidado com os monólitos distribuídos, em que uma série de mudanças sempre acaba afetando um conjunto de microsserviços, que acabam tendo que ser implantados ao mesmo tempo.
+Dificuldades inerentes a um sistema distribuído
+  "Scale breaks hardware.
+  Speed breaks software.
+  Speed at scale breaks everything."
+  Adrian Cockcroft, na palestra da Flowcon 2013 Velocity and Volume (or Speed Wins)
+
+  “Law of conservation of complexity in software: when we break up big things into small pieces we invariably push the complexity to their interaction."
+  Michael Feathers, no post Microservices Until Macro Complexity
+
+  “We are shifting the accidental complexity [...] from inside our application [...] out into our infrastructure [...]
+  NOW is a good time for this because we’ve got many more ways to manage that complexity [...]
+  Programmable infrastructure, infrastructure automation, the movement to the cloud [...]
+  We’ve got better tools to address these things NOW.”
+  James Lewis, no podcast SE Radio
+
+  Por ser um sistema distribuído, uma chamada de um microsserviço a outro envolve a rede. A performance é afetada negativamente. É preciso tomar cuidado com latência, banda disponível, falhas na rede, entre outros problemas. Além disso, transações distribuídas são um problema muito complexo.
+Coordenação de funcionalidades que envolvem muitos microsserviços
+  Mesmo com microsserviços bem projetados, às vezes uma mudança envolve vários deles e, consequentemente, vários times. Nesses casos, é preciso uma coordenação e governança cuidadosa, um controle dos contratos entre os serviços. 
+Saber o momento correto de adoção é difícil
+  Fatiar o sistema, criando barreiras arquiteturais e separando os microsserviços independentes pode ser obscuro no começo de um projeto, quando não se conhece claramente o negócio ou as possíveis alterações. Isso é especialmente difícil para startups, que ainda estão validando o modelo de negócios e fazem mudanças drásticas com frequência.
+Monitoramento complicado
+  Monitorar um monólito é fácil: o sistema está ou não fora do ar, os logs ficam apenas em uma máquina, sabemos claramente por onde uma requisição passou. Com uma arquitetura de microsserviços, precisamos saber da “saúde” de cada um deles, além de agregar logs e rastrear por onde passa uma requisição.
+
+Referências
+Microservice Patterns - Cap 1 - Drawbacks of the microservice architecture
+
+
+https://docs.google.com/document/d/19GYmQG1WpL54vmfCc2vkCjf96NPyRz_iIZwmC-wzfLU/edit#heading=h.bbevrrhd8e4g
+
+Mais referências:
+
+https://martinfowler.com/articles/microservice-trade-offs.html
+https://martinfowler.com/bliki/MicroservicePremium.html
+https://martinfowler.com/bliki/MicroservicePrerequisites.html
+
+
+http://faculty.salisbury.edu/~xswang/Research/Papers/SERelated/no-silver-bullet.pdf
+
+ -->
+
+## Quão micro deve ser um microservice?
+
+Os serviços em uma Arquitetura de Microservices devem ser pequenos. Por isso, o “micro” no nome. Mas o que deve ser considerado “micro”? Algo menor que um miliservice ou maior que um nanoservice (termo infelizmente usado pelo mercado)? Não! O tamanho não é importante! O termo “micro” é enganoso.
+
+<!--@note
+  Alexandre: costumo a desenhar uma tabelinha com micro (10^-6), nano (10^-12) e mili (10^-3) e perguntar isso.
+-->
+
+O critério para decomposição deve ser, em geral, algo alinhado com o negócio da organização. No fim das contas, o objetivo principal é alinhar negócio à TI. Um serviço pequeno é um serviço que embarca uma capacidade de negócio.
+
+Os conceitos de Agregado e Contexto Delimitado do DDD, que vimos no capítulo anterior, vêm à nossa ajuda!
+
+Um Microservice pode ser modelado como um Agregado ou, preferencialmente, como um Contexto Delimitado (Bounded Context) em que a linguagem do especialista de domínio será representada no código (Domain Model) sem apresentar inconsistências.
+
+No livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), Sam Newman diz que devemos focar as fronteiras entre os serviços nas fronteiras do negócio. Dessa maneira, saberemos onde estará o código de uma determinada funcionalidade e evitaremos a tentação de deixar um determinado serviço crescer demais. Ao modelar de acordo com o negócio, as fronteiras ficam claras.
+
+Phil Calçado, em um tweet (CALÇADO, 2018),  diz que o critério de decomposição de uma Arquitetura de Microservices deve ser parecido com o de um monólito modular:
+
+_Eu sempre descrevo Microservices como a aplicação da mesma maneira de agrupar que você teria em uma aplicação maior, só que através de seus componentes distribuídos._
+
+## Microservices e SOA
+
+SOA (Service-Oriented Architecture) é uma abordagem arquitetural documentada pela Gartner em um artigo de 1996 que, no começo da década de 2000, passou a ser adotada por várias grandes corporações. A oportunidade de vender soluções de software e hardware foi aproveitada por empresas de TI como IBM, Oracle, HP, SAP e Sun durante essa década.
+
+Chris Richardson, em seu livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns), descreve SOA como sendo uma arquitetura que usa _smart pipes_ como ESB, protocolos pesados como SOAP e WS-*, Persistência centralizada em BDs corporativos e serviços de granularidade grossa. Talvez seja a versão mais comum de SOA que vemos implementada nas organizações.
+
+Martin Fowler e James Lewis dizem em seu artigo sobre [Microservices](https://martinfowler.com/articles/microservices.html) (FOWLER; LEWIS, 2014), que há uma grande ambiguidade sobre o que SOA realmente é e, dependendo da definição, uma Arquitetura de Microservices é SOA, mas pode não ser. Talvez seria “SOA do jeito certo”. Algumas características a distinguem do SOA implementado em grandes organizações: governança e gerenciamento de dados descentralizado; mais inteligência nos Microservices (_smart endpoints_) e menos nos canais de comunicação (_dumb pipes_). Um ESB seria um _smart pipe_, já que faz roteamento de mensagens, transformações, orquestração e até algumas regras de negócio. Ainda citam em um rodapé que a Netflix, uma das referências em Microservices, inicialmente chamava sua abordagem de _fine-grained SOA_.
+
+<!--@note
+  Alexandre: eu já trabalhei, nos idos de 2013, como analista de integração em uma grande empresa de seguros do Brasil. Haviam 5 diretorias: Seguros, Saúde, Previdência, Capitalização e Consórcios. Um serviço era basicamente uma diretoria. Portanto, tinhamos 5 serviços. Uma história interessante é que uma merge 5 empresas diferentes com sistemas feitos em COBOL, Oracle Forms + PL/SQL, SQL Server + T-SQL e até Web Services SOAP. E tudo isso tinha que ser vendido como uma coisa só, num front-end. Era usado um ESB de um desses grandes players do mercado de TI.
+-->
+
+Henrique Lobo mostra em seu artigo [Repensando micro serviços](https://www.itexto.com.br/devkico/?p=1768) que SOA como descrito pelo consórcio de padrões abertos [OASIS](https://en.wikipedia.org/wiki/OASIS_(organization) é muito parecido com o espírito dos microservices.
+
+Sam Newman, em seu livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), reconhece que SOA trouxe boas ideias, mas que houve uma falta de consenso em como fazer SOA bem e dificuldade em ter uma narrativa alternativa à dos vendedores. SOA passou a ser visto como uma coleção de ferramentas e não como uma abordagem arquitetural. Ainda fala que uma Arquitetura de Microservices está para SOA assim como XP e Scrum estão para Agile: uma abordagem específica que veio de projetos reais.
+
+Microservices são, então, uma abordagem para SOA.
+
+![Para diversos autores, Microservices são um sabor de SOA {w=30}](imagens/03-extraindo-servicos/microservices-vs-soa.png)
+
+<!--
+
+Microservices permitiriam:
+
+- alta coesão, baixo acomplamento, 
+
+Mas é possível desenvolver um monólito modular, composto por componentes independentes, que colaboram entre si através de chamadas de métodos, idealmente definidos em abstrações (em Java, interfaces ou classes abstratas).
+
+Com um sistema de módulos como o Java Module System (Java 9+) ou OSGi, é possível reforçar as barreiras arquiteturais mesmo com classes públicas, explicitando e limitando as dependências entre os módulos.
+
+Já através de uma arquitetura de plugins, podemos trabalhar em várias bases de código distintas e compor uma aplicação a partir de diferentes módulos.
+
+Por meio de uma solução como OSGi, é até possível atualizar um módulo sem parar toda a aplicação.
+-->
+
+<!-- 
+
+Simon Brown
+http://www.codingthearchitecture.com/presentations/sa2015-modular-monoliths
+
+Vantagens do Monólito Modular
+- alta coesão
+- baixo acoplamento
+- com dados encapsulados
+- substituíveis e passíveis de composição
+- foco no negócio, inspirados por agregados ou contextos delimitados
+
+Mais Vantagens do Microservices
+- deploy independente
+- escalabilidade independente
+- tecnologias hetergêneas
+
+Escolha serviços pelos benefícios não por que o monólito é uma bagunça
+
+ -->
+
+
+## Estrangulando o monólito
+
+> **Pattern: STRANGLER APPLICATION**
+>
+> 
+
+
 ## Criando um microservice de pagamentos
 
 Pelo navegador, abra `https://start.spring.io/`.
@@ -867,7 +1087,7 @@ Ufa! Mais um serviço extraído do monólito. Em um projeto real, isso seria fei
 
 3. Interrompa a UI, se estiver sendo executada.
 
-  No diretório da UI, altere a branch para `cap3-extrai-distancia-service`, que contém as mudançaspara chamar o novo serviço de distância:
+  No diretório da UI, altere a branch para `cap3-extrai-distancia-service`, que contém as mudanças para chamar o novo serviço de distância:
 
   ```sh
   cd ~/Desktop/fj33-eats-ui
