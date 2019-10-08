@@ -14,7 +14,9 @@ EVANS, Eric. _Domain-Driven Design: Tackling Complexity in the Heart of Software
 
 FOOTE, Brian; YODER, Joseph. _Big Ball Of Mud._ 1999. Em: http://www.laputan.org/mud/mud.html
 
-FOWLER, Martin; LEWIS, James. _Microservices: a definition of this new technical term._. 2014. Em: https://martinfowler.com/articles/microservices.html
+FOWLER, Martin; LEWIS, James. _Microservices: a definition of this new technical term._ 2014. Em: https://martinfowler.com/articles/microservices.html
+
+FOWLER, Martin. _Microservice Trade-Offs_. 2015. Em: https://martinfowler.com/articles/microservice-trade-offs.html
 
 JACOBSON, Ivar. _Object Oriented Software Engineering: A Use-Case Driven Approach._ Addison-Wesley Professional. 1992. 552 p. Em: https://www.amazon.com/Object-Oriented-Software-Engineering-Approach/dp/0201544350
 
@@ -33,6 +35,8 @@ MARTIN, Robert Cecil. _Clean Architecture: A Craftsman's Guide to Software Struc
 NEWMAN, Sam. _Building Microservices: Designing Fine-Grained Systems._ O'Reilly. 2015. 280 p. Em: https://www.oreilly.com/library/view/building-microservices/9781491950340/
 
 PARLOG, Nicolai. _The Java Module System._ Manning Publications, 2018. Manning Early Access Program, version 10. 503p. Em: <https://www.manning.com/books/the-java-module-system>
+
+RICHARDSON, Chris. _Microservice Patterns._ Manning Publications, 2018. 520 p. Em: https://www.manning.com/books/microservices-patterns
 
 SIMONS, Matthew; LEROY, Jonny. _Contending with Creaky Platforms CIO_. Cutter IT Journal, Dec. 2010. Em: http://jonnyleroy.com/2011/02/03/dealing-with-creaky-legacy-platforms/
 

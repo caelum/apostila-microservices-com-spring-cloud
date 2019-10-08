@@ -40,7 +40,7 @@ _Quando você tem uma base de código só, você é tão estável quanto a sua p
   O interessante é que o Phil Calçado não usa o termo Microservices nessa palestra, mas APIs. Só que a abordagem é a mesma e ele já dá um hint sobre os BFFs.
 -->
 
-E, convenhamos, um monólito modular é algo raríssimo no mercado. Então, para a maioria dos monólitos há problemas com times grandes, deploys e complexidade do código.
+E, convenhamos, um monólito modular é algo raríssimo no mercado. Então, para a maioria dos monólitos há problemas com times grandes, deploys e complexidade do código. Mas um monólito modular, com complexidade e dependências gerenciadas, facilitará uma possível migração para serviços.
 
 ### Componentização em serviços
 
@@ -59,34 +59,80 @@ Então, microservices:
 
 ## Prós e contras de uma Arquitetura de Microservices
 
-<!-- 
-
 ### PRÓS
 
-Deploy independente
-Maior isolamento de falhas
-Times autônomos
-Diversidade tecnológica e experimentação
+#### Times Pequenos e Autônomos
 
-Entrega contínua de aplicações complexas
-  Com microsserviços, só um pedaço do sistema fica fora do ar ao implantarmos novas versões. Isso minimiza o risco e impacto na disponibilidade. A consequência é que podemos passar a fazer mais deploys em produção, talvez várias vezes por dia.
-Times pequenos
-  Um microsserviço permite times menores, com uma possibilidade de melhor comunicação e mais focados em uma área de negócio.
-Escalabilidade independente
-  Necessidades diferentes em termos computacionais, como processamentos intensivos em termos de memória e/ou CPU, podem ter recursos específicos. Isso minimiza o impacto em outras partes da aplicação, otimiza recursos e diminui custos de operação.
-Resiliência e isolamento de falhas
-  Quando há uma falha ou indisponibilidade em um serviço, os outros serviços continuam no ar e, portanto, parte da aplicação ainda permanece disponível e utilizável.
-“Trocabilidade”
-  Com microsserviços mais focados, independentes e pequenos, é menos provável acabar com uma parte do sistema que ninguém toca. Caso surja uma nova ideia de implementação melhor e mais eficiente, será mais fácil de trocar a antiga. Caso não haja mais necessidade de um determinado microsserviço, podemos removê-lo.
-Heterogeneidade das tecnologias e experimentação
-  Partes do sistema podem ser implementadas em tecnologias que estejam mais de acordo com o problema.
-Reuso e composibilidade
-  Diferentes microsserviços podem ser compostos em novos microsserviços, atendendo com agilidade às demandas do negócio.
+Um Microservice permite times menores, com uma possibilidade de melhor comunicação e mais focados em uma área de negócio. E isso afeta positivamente a velocidade de desenvolvimento de novas funcionalidades.
 
+Uma monólito com uma Arquitetura de Plugins talvez permita o desenvolvimento de diferentes módulos por times diversos em torno de um núcleo comum. Porém, é uma raridade no mercado.
+
+#### “Trocabilidade”
+
+É comum termos aquele sistema legado em que ninguém toca e que ninguém sabe dar manutenção. E isso acontece porque qualquer mudança ficou muito arriscada.
+
+Com serviços mais focados, independentes e pequenos, é menos provável acabar com uma parte do sistema que ninguém toca. Caso surja uma nova ideia de implementação melhor e mais eficiente, será mais fácil de trocar a antiga. Caso não haja mais necessidade de um determinado Microservice, podemos removê-lo.
+
+É algo que um monólito modular também permitiria.
+
+#### Reuso e composibilidade
+
+Diferentes serviços podem ser compostos em novos serviços, atendendo com agilidade às demandas do negócio. É uma velha promessa do SOA (Service-Oriented Architecture).
+
+A Uber é um exemplo disso: provê um serviço de transporte urbano, mas lançou há algum tempo um serviço de fretes de caminhões e outro de entrega de comida. Provavelmente, reaproveitaram serviços de pagamentos, de geolocalização, entre outros. 
+
+Um monólito modular é uma outra maneira de atingir isso, sem termos um Sistema Distribuído.
+
+#### Diversidade tecnológica e experimentação
+
+Em uma aplicação monolítica, as escolhas tecnológicas inicias restringem as linguagens e frameworks que podem ser usados.
+
+Com Microservices, partes do sistema podem ser implementadas em tecnologias que estejam mais de acordo com o problema a ser resolvido. Os protocolos de integração entre os serviços passam a ser as partes mais importantes das escolhas tecnológicas.
+
+Essa heterogeneidade tecnológica permite que soluções performáticas e com mais funcionalidades sejam utilizadas.
+
+Em seu artigo [Microservice Trade-Offs](https://martinfowler.com/articles/microservice-trade-offs.html) (FOWLER, 2015), Martin Fowler diz que coisas prosaicas como atualizar a versão de uma biblioteca podem ser facilitadas. Em um monólito, temos que usar a mesma versão para todo a aplicação e os upgrades podem ser problemáticos. Ou tudo é atualizado, ou nada. Quanto maior a base de código, maior é o problema nas atualizações de bibliotecas.
+
+Sam Newman, no livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), argumenta: _Uma das grandes barreiras para testar e adotar novas tecnologias são os riscos associados. Em um monólito, qualquer mudança impactará uma quantia grande do sistema. Com um sistema que consiste de múltiplos serviços, há múltiplos lugares para testar novas tecnologias. Um serviço de baixo risco pode ser usado para minimizar os riscos e limitar os possíveis impactos negativos. A habilidade de absorver novas tecnologias traz vantagens competitivas para as organizações._
+
+Porém, é importante ressaltar o risco de adotar muitas stacks de tecnologias completamente distintas: é difícil de entender as características de performance, confiabilidade, operações e monitoramento.  Por isso, no livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), Sam Newman diz que empresas como a Netflix e Twitter focam boa parte dos seus esforços em usar a JVM como uma plataforma para diferentes linguagens e tecnologias. Para empresas menores, o risco de adotar tecnologias "esotéricas" é aumentado, já que pode ser difícil de contratar pessoas experientes e familiarizadas com algumas tecnologias.
+
+É possível implementar um monólito poliglota.  Mas é algo raro. No caso da JVM, podemos usar linguagens como Java, Kotlin, Scala e Clojure. Com a GraalVM, podemos até mesclar plataformas, usando algumas linguagens da JVM com algumas da LLVM, entre outras. E múltiplos datasources podem permitir o uso de mecanismos de persistências diferentes, como um BD orientado a Grafos, como o Neo4J,  junto a um BD relacional, como o PostgreSQL.
+
+#### Deploy independente
+
+A mudança de uma linha de código em uma aplicação monolítica de um milhão de linhas requer que toda a aplicação seja implantada para que seja feito o _release_ da pequena alteração. Isso leva a deploys de alto risco e alto impacto, o que leva a medo de que alguma coisa dê errado. E esse medo leva a diminuir a frequência dos deploys, o que leva ao acúmulo de mudanças em cada deploy. E quanto mais alterações em um mesmo deploy, maior o risco de que algo dê errado. Esse _ciclo vicioso dos deploys_ é demonstrado por Sam Newman, no livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015).
+
+Com Microservices, só um pedaço do sistema fica fora do ar ao implantarmos novas versões. Isso minimiza o risco e o impacto de cada deploy, já que uma falha de um serviço   e diminuiu a indisponibilidade da aplicação. A consequência é que podemos passar a fazer mais deploys em produção, talvez várias vezes por dia. Ou seja, serviços habilitam a entrega rápida, frequente, confiável de aplicações complexas.
+
+Essa Entrega Contínua (_Continuous Delivery_, em inglês) permite que os negócios da organização reajam rápido ao feedback do cliente, a novas oportunidades e a concorrentes. A mudança cultural e organizacional para permitir isso é um dos temas do DevOps.
+
+No artigo [Microservice Trade-Offs](https://martinfowler.com/articles/microservice-trade-offs.html) (FOWLER, 2015), Martin Fowler argumenta que a relação entre Microservices e Continuous Delivery/DevOps é de duas vias: para ter vários Microservices, provisionar máquinas e implantar aplicações rapidamente são pré-requisitos. Fowler ainda cita Neal Ford, que relaciona uma Arquitetura de Microservices e DevOps: _Microservices são a primeira arquitetura depois da revolução trazida pelo DevOps_.
+
+Atingir algo parecido com um monólito é até possível com algumas tecnologias como OSGi, mas incomum. Martin Fowler diz, ainda no artigo [Microservice Trade-Offs](https://martinfowler.com/articles/microservice-trade-offs.html) (FOWLER, 2015), que Facebook e Etsy são dois casos de empresas cujos monólitos têm Continuous Delivery. O autor ainda diz que entregas rápidas, confiáveis e frequentes são mais relacionadas com o uso prático de Modularidade do que necessariamente com Microservices.
+
+#### Maior isolamento de falhas
+
+Em em um monólito, se uma parte da aplicação apresentar um vazamento de memória, pode ser que o todo seja interrompido.
+
+Quando há uma falha ou indisponibilidade em um serviço, os outros serviços continuam no ar e, portanto, parte da aplicação ainda permanece disponível e utilizável, o que alguns chamam de _graceful degradation_.
+
+#### Escalabilidade independente
+
+Em um monólito, componentes que tem necessidades de recursos computacionais completamente diferentes devem ser implantados em conjunto, isso leva a um desperdício de recursos. Se uma pequena parte usa muita CPU, por exemplo, estamos restritos a escalar o todo para atender às demandas de processamento.
+
+Com Microservices, necessidades diferentes em termos computacionais, como processamentos intensivos em termos de memória e/ou CPU, podem ter recursos específicos. Isso minimiza o impacto em outras partes da aplicação, otimiza recursos e diminui custos de operação. Quando são usados provedores de Cloud como AWS, Azure ou Google Cloud, isso levará a um corte de custos quase imediato.
+
+Sam Newman, no livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), cita o caso da Gilt, uma loja online de roupas. Começaram com um monólito Rails em 2007 que, já em 2009, não estava suportando a carga. Ao quebrar partes do sistema, a Gilt conseguiu lidar melhor com picos de tráfego.
+
+
+<!--@note
 Referências
-Building Microservices - Cap 1 - Key Benefits
-Microservice Patterns - Cap 1 - Benefits of the microservice architecture
+  Building Microservices - Cap 1 - Key Benefits
+  Microservice Patterns - Cap 1 - Benefits of the microservice architecture
+-->
 
+<!--
 
 ### CONTRAS
 
@@ -96,6 +142,7 @@ Perda da consistência dos dados e transações
 
 Complexidade de encontrar os microsserviços certos
   Definir de quais microsserviços devem ser consistido um sistema é algo complexo e subjetivo. Temos que tomar cuidado com os monólitos distribuídos, em que uma série de mudanças sempre acaba afetando um conjunto de microsserviços, que acabam tendo que ser implantados ao mesmo tempo.
+
 Dificuldades inerentes a um sistema distribuído
   "Scale breaks hardware.
   Speed breaks software.
@@ -160,12 +207,12 @@ _Eu sempre descrevo Microservices como a aplicação da mesma maneira de agrupar
 
 SOA (Service-Oriented Architecture) é uma abordagem arquitetural documentada pela Gartner em um artigo de 1996 que, no começo da década de 2000, passou a ser adotada por várias grandes corporações. A oportunidade de vender soluções de software e hardware foi aproveitada por empresas de TI como IBM, Oracle, HP, SAP e Sun durante essa década.
 
-Chris Richardson, em seu livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns), descreve SOA como sendo uma arquitetura que usa _smart pipes_ como ESB, protocolos pesados como SOAP e WS-*, Persistência centralizada em BDs corporativos e serviços de granularidade grossa. Talvez seja a versão mais comum de SOA que vemos implementada nas organizações.
+Chris Richardson, em seu livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018), descreve SOA como sendo uma arquitetura que usa _smart pipes_ como ESB, protocolos pesados como SOAP e WS-*, Persistência centralizada em BDs corporativos e serviços de granularidade grossa. Talvez seja a versão mais comum de SOA que vemos implementada nas organizações.
 
 Martin Fowler e James Lewis dizem em seu artigo sobre [Microservices](https://martinfowler.com/articles/microservices.html) (FOWLER; LEWIS, 2014), que há uma grande ambiguidade sobre o que SOA realmente é e, dependendo da definição, uma Arquitetura de Microservices é SOA, mas pode não ser. Talvez seria “SOA do jeito certo”. Algumas características a distinguem do SOA implementado em grandes organizações: governança e gerenciamento de dados descentralizado; mais inteligência nos Microservices (_smart endpoints_) e menos nos canais de comunicação (_dumb pipes_). Um ESB seria um _smart pipe_, já que faz roteamento de mensagens, transformações, orquestração e até algumas regras de negócio. Ainda citam em um rodapé que a Netflix, uma das referências em Microservices, inicialmente chamava sua abordagem de _fine-grained SOA_.
 
 <!--@note
-  Alexandre: eu já trabalhei, nos idos de 2013, como analista de integração em uma grande empresa de seguros do Brasil. Haviam 5 diretorias: Seguros, Saúde, Previdência, Capitalização e Consórcios. Um serviço era basicamente uma diretoria. Portanto, tinhamos 5 serviços. Uma história interessante é que uma merge 5 empresas diferentes com sistemas feitos em COBOL, Oracle Forms + PL/SQL, SQL Server + T-SQL e até Web Services SOAP. E tudo isso tinha que ser vendido como uma coisa só, num front-end. Era usado um ESB de um desses grandes players do mercado de TI.
+  Alexandre: eu já trabalhei, nos idos de 2013, como analista de integração em uma grande empresa de seguros do Brasil. Haviam 5 diretorias: Seguros, Saúde, Previdência, Capitalização e Consórcios. Um serviço era basicamente uma diretoria. Portanto, tínhamos 5 serviços. Uma história interessante é que uma merge 5 empresas diferentes com sistemas feitos em COBOL, Oracle Forms + PL/SQL, SQL Server + T-SQL e até Web Services SOAP. E tudo isso tinha que ser vendido como uma coisa só, num front-end. Era usado um ESB de um desses grandes players do mercado de TI.
 -->
 
 Henrique Lobo mostra em seu artigo [Repensando micro serviços](https://www.itexto.com.br/devkico/?p=1768) que SOA como descrito pelo consórcio de padrões abertos [OASIS](https://en.wikipedia.org/wiki/OASIS_(organization) é muito parecido com o espírito dos microservices.
@@ -180,7 +227,7 @@ Microservices são, então, uma abordagem para SOA.
 
 Microservices permitiriam:
 
-- alta coesão, baixo acomplamento, 
+- alta coesão, baixo acoplamento, 
 
 Mas é possível desenvolver um monólito modular, composto por componentes independentes, que colaboram entre si através de chamadas de métodos, idealmente definidos em abstrações (em Java, interfaces ou classes abstratas).
 
@@ -206,7 +253,7 @@ Vantagens do Monólito Modular
 Mais Vantagens do Microservices
 - deploy independente
 - escalabilidade independente
-- tecnologias hetergêneas
+- tecnologias heterogêneas
 
 Escolha serviços pelos benefícios não por que o monólito é uma bagunça
 
@@ -482,7 +529,7 @@ export class PagamentoPedidoComponent implements OnInit {
 }
 ```
 
-Com o monólito e o serviço de pagamentos sendo executandos, podemos testar o pagamento de um novo pedido.
+Com o monólito e o serviço de pagamentos sendo executados, podemos testar o pagamento de um novo pedido.
 
 Deve ocorrer um _Erro no Servidor_. O Console do navegador, acessível com F12, deve ter um erro parecido com:
 
