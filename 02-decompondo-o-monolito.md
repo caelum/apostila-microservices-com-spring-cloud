@@ -180,7 +180,7 @@ Para aplicações maiores, manter apenas um Modelo de Domínio é inviável. A o
 
 A linguagem utilizada pelos especialistas de domínio está atrelada a uma área de negócio. Há um contexto em que um Modelo de Domínio é consistente, porque representa a linguagem de uma área de negócio. No DDD, é importante identificarmos esses **Contextos Delimitados** (em inglês, _Bounded Contexts_), para que não haja degradação dos _vários_ Modelos de Domínio.
 
-> **CONTEXTO DELIMITADO**
+> **CONTEXTO DELIMITADO (BOUNDED CONTEXT)**
 >
 > Aplicabilidade delimitada de um determinado modelo. CONTEXTOS DELIMITADOS dão aos membros de uma equipe um entendimento claro e compartilhado do que deve ser consistente e o que pode se desenvolver independentemente.
 >
@@ -188,9 +188,9 @@ A linguagem utilizada pelos especialistas de domínio está atrelada a uma área
 
 No fim das contas, ao alinhar as linguagens utilizadas nas áreas de negócio aos modelos representados em código, estamos caminhando na direção de uma velha promessa: _alinhar TI com o Negócio_.
 
-## Contextos Delimitados no Caelum Eats
+## Bounded Contexts no Caelum Eats
 
-No Caelum Eats, podemos verificar como a empresa é organizada para encontrar os Contextos Delimitados e influenciar na organização do nosso código.
+No Caelum Eats, podemos verificar como a empresa é organizada para encontrar os Bounded Contexts e influenciar na organização do nosso código.
 
 Digamos que a Caelum Eats tem, atualmente, as seguintes áreas de negócio:
 
@@ -200,7 +200,7 @@ Digamos que a Caelum Eats tem, atualmente, as seguintes áreas de negócio:
 - _Distância_, que contém especialistas em geoprocessamento
 - _Restaurante_, que lida com tudo que envolve os donos do restaurantes
 
-Esses seriam os Contextos Delimitados, que definem uma fronteira para um Modelo de Domínio consistente.
+Esses seriam os Bounded Contexts, que definem uma fronteira para um Modelo de Domínio consistente.
 
 Poderíamos reorganizar o código para que a estrutura básica de pacotes seja parecida com a seguinte:
 
@@ -213,7 +213,7 @@ eats
 └── restaurante
 ```
 
-![Reagrupando agregados inspirado por Contextos Delimitados](imagens/02-decompondo-o-monolito/reagrupando-agregados-do-caelum-eats-inspirado-por-contextos-delimitados.png)
+![Reagrupando agregados inspirado por Bounded Contexts](imagens/02-decompondo-o-monolito/reagrupando-agregados-do-caelum-eats-inspirado-por-contextos-delimitados.png)
 
 Há ainda o código de Segurança, um domínio bastante técnico que cuida de um requisito transversal (ou não-funcional), utilizado por todas as outras partes do sistema.
 
@@ -233,7 +233,7 @@ eats
 
 Costumo a desenhar a arquitetura em 3 camadas (layers) como uma maneira horizontal de "fatiar" o código.
 
-Já agrupar por contextos delimitados seria uma maneira vertical.
+Já agrupar por Bounded Contexts seria uma maneira vertical.
 
 Martin Fowler fala sobre isso no texto PresentationDomainDataLayering e descreve que a maneira vertical seria mais interessante pra aplicações maiores:
 https://martinfowler.com/bliki/PresentationDomainDataLayering.html
@@ -328,7 +328,7 @@ Com o Maven, é possível criarmos um **multi-module project**, que permite defi
 
 Devemos definir um módulo pai, ou supermódulo, que contém um ou mais módulos filhos, ou submódulos.
 
-No caso do Caelum Eats, teríamos um supermódulo `eats` e submódulos para cada contexto delimitado identificado anteriormente.
+No caso do Caelum Eats, teríamos um supermódulo `eats` e submódulos para cada Bounded Context identificado anteriormente.
 
 Além disso, precisaríamos de um submódulo que depende de todos os outros submódulos e conteria a classe principal `EatsApplication`, que possui o `main` e está anotada com `@SpringBootApplication`. Dentro desse submódulo, que chamaremos de `eats-application`, teríamos em `src/main/resources` o arquivo `application.properties` e as migrations do Flyway.
 
@@ -464,7 +464,7 @@ Um **Monólito Modular** poderia ter diversas das características desejáveis e
 - baixo acoplamento
 - dados encapsulados
 - substituíveis e passíveis de composição
-- foco no negócio, inspirados por agregados ou contextos delimitados
+- foco no negócio, inspirados por Agregados ou Bounded Contexts
 
 Além disso, um Monólito Modular seria **um passo na direção de uma Arquitetura de Microservices**, mas sem as complexidades de um sistema distribuído.
 
@@ -485,6 +485,14 @@ No livro [Modular Java](https://pragprog.com/book/cwosg/modular-java) (WALLS, 20
 - flexibilidade, permitindo o reuso de módulos em outras aplicações
 
 Talvez essas vantagens não sejam oferecidas pelo uso de módulos Maven. Nos textos complementares a seguir, discutiremos tecnologias como o Java Module System, a Service Loader API e OSGi, que auxiliariam a atingir essas características. Cada uma dessas tecnologias, porém, traz novas dificuldades de aprendizado, de configurações e de operação.
+
+### Software é massa!
+
+Raymond J. Rubey cita uma carta ao editor da revista CROSSTALK (RUBEY, 1992), em que é feita uma brincadeira que classifica qualidade de código como se fossem massas:
+
+- **Spaghetti**: complicado, difícil de entender e impossível de manter
+- **Lasagna**: simples, fácil de entender, estruturado em camadas, mas monolítico; na teoria, é fácil de mudar uma camada, mas não na prático
+- **Ravioli**: componentes pequenos e soltos, que contém "nutrientes" para o sistema; qualquer componente pode ser modificado ou trocado sem afetar significativamente os outros componentes
 
 ## O que é um monólito, afinal?
 
@@ -674,7 +682,7 @@ Um framework OSGi controla o ciclo de vida de um bundle, fazendo com que seja in
 
 O OSGi também especifica o conceito de _service_, análogo à Service Loader API do Java: um bundle define interface pública e outros bundles, uma ou mais implementações. Para ligar as implementações à interface, um framework OSGi provê um _service registry_. Novas implementações podem ter seu registro feito ou cancelado dinamicamente, sem parar a JVM. Os consumidores de um service dependeriam apenas da interface e do service registry, sem ter acesso a detalhes de implementação.
 
-O nível de encapsulamento de um bundle e a possibilidade de **atualizar e registrar implementações dinamicamente** permitiria que diferentes times cuidassem de diferentes bundles alinhados com os contextos delimitados (e as áreas de negócio) da organização. A implantação de novas versões de um bundle poderia ser feita sem derrubar a aplicação como um todo.
+O nível de encapsulamento de um bundle e a possibilidade de **atualizar e registrar implementações dinamicamente** permitiria que diferentes times cuidassem de diferentes bundles alinhados com os Bounded Contexts (e as áreas de negócio) da organização. A implantação de novas versões de um bundle poderia ser feita sem derrubar a aplicação como um todo.
 
 <!--
 Alexandre: ouvi relatos de um desenvolvedor do Liferay de que o uso de OSGi quadruplicou o uso de memória. Apesar disso, OSGi é usado em software embarcado e na indústria de automóveis. Fica claro que a tecnologia traz dificuldades.
