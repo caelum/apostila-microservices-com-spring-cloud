@@ -93,6 +93,16 @@ Uncle Bob ainda cita, no mesmo livro, outras arquiteturas semelhantes:
 - DCI (Data, Context and Interaction), descrita por James Coplien, pioneiro dos Design Patterns, e Trygve Reenskaug, criador do MVC.
 - BCE (Boundary-Control-Entity), introduzida por Ivar Jacobson no livro mencionado anteriormente.
 
+> O curso [Práticas de Design e Arquitetura de código para aplicações Java](https://www.caelum.com.br/curso-design-arquitetura-de-aplicacoes-java) (FJ-38) explora, a partir de um gerador de ebooks, tópicos como os princípios SOLID de Orientação a Objetos e alguns Design Patterns, até chegar progressivamente a uma Arquitetura Hexagonal.
+
+### Software é massa!
+
+Raymond J. Rubey cita uma carta ao editor da revista CROSSTALK (RUBEY, 1992), em que é feita uma brincadeira que classifica qualidade de código como se fossem massas:
+
+- **Spaghetti**: complicado, difícil de entender e impossível de manter
+- **Lasagna**: simples, fácil de entender, estruturado em camadas, mas monolítico; na teoria, é fácil de mudar uma camada, mas não na prático
+- **Ravioli**: componentes pequenos e soltos, que contém "nutrientes" para o sistema; qualquer componente pode ser modificado ou trocado sem afetar significativamente os outros componentes
+
 ## Explorando o domínio
 
 Até um certo tamanho, uma aplicação estruturada em camadas no estilo Package by Layer, é fácil de entender. Novos desenvolvedores entram no projeto sem muitas dificuldades para entender a organização do código, já que é há uma certa familiaridade.
@@ -485,14 +495,6 @@ No livro [Modular Java](https://pragprog.com/book/cwosg/modular-java) (WALLS, 20
 - flexibilidade, permitindo o reuso de módulos em outras aplicações
 
 Talvez essas vantagens não sejam oferecidas pelo uso de módulos Maven. Nos textos complementares a seguir, discutiremos tecnologias como o Java Module System, a Service Loader API e OSGi, que auxiliariam a atingir essas características. Cada uma dessas tecnologias, porém, traz novas dificuldades de aprendizado, de configurações e de operação.
-
-### Software é massa!
-
-Raymond J. Rubey cita uma carta ao editor da revista CROSSTALK (RUBEY, 1992), em que é feita uma brincadeira que classifica qualidade de código como se fossem massas:
-
-- **Spaghetti**: complicado, difícil de entender e impossível de manter
-- **Lasagna**: simples, fácil de entender, estruturado em camadas, mas monolítico; na teoria, é fácil de mudar uma camada, mas não na prático
-- **Ravioli**: componentes pequenos e soltos, que contém "nutrientes" para o sistema; qualquer componente pode ser modificado ou trocado sem afetar significativamente os outros componentes
 
 ## O que é um monólito, afinal?
 
