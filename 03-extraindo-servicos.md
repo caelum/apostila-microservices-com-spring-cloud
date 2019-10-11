@@ -83,6 +83,16 @@ A Uber é um exemplo disso: provê um serviço de transporte urbano, mas lançou
 
 Um monólito modular é uma outra maneira de atingir isso, sem termos um Sistema Distribuído.
 
+#### Fronteiras fortes entre componentes
+
+Se usarmos serviços como estratégia de componentização, ao invés de simples pacotes ou módulos, teremos uma separação fortíssima entre o código de cada componente.
+
+Em um monólito não modular é tentador tomar atalhos para entregar funcionalidades mais rápido, esquecendo das fronteiras entre componentes. Mesmo em monólitos modulares, dependendo do sistema de módulos utilizado, é possível acessar em _runtime_ (e até via código) funcionalidades de outros módulos, talvez por meio de _workarounds_ (as famosas gambiarras). Porém, há sistemas de módulos como o Java Module System do Java 9+ e o OSGi, que reforçaram as barreiras entre código de módulos diferentes tanto em desenvolvimento como em runtime.
+
+Uma vantagem de uma Arquitetura de Microservices é que temos esse fronteira fortes entre componentes mantendo a estrutura de cada serviço parecida com a que estamos acostumados. É possível usar o bom e velho _Package by Layer_, já que o código de cada serviço é focado em um conjunto específico de funcionalidades.
+
+Um ponto de atenção é o acesso a dados. Em uma Arquitetura de Microservices, cada serviço tem o seu BD separado. E isso reforça bastante a componentização dos dados, eliminando os perigos de uma integração pelo BD que pode levar a um acomplamento indesejado. Por outro lado, ao separar os BDs, perdemos muitas coisas, que discutiremos adiante.
+
 #### Diversidade tecnológica e experimentação
 
 Em uma aplicação monolítica, as escolhas tecnológicas inicias restringem as linguagens e frameworks que podem ser usados.
@@ -91,7 +101,7 @@ Com Microservices, partes do sistema podem ser implementadas em tecnologias que 
 
 Essa heterogeneidade tecnológica permite que soluções performáticas e com mais funcionalidades sejam utilizadas.
 
-Em seu artigo [Microservice Trade-Offs](https://martinfowler.com/articles/microservice-trade-offs.html) (FOWLER, 2015), Martin Fowler diz que coisas prosaicas como atualizar a versão de uma biblioteca podem ser facilitadas. Em um monólito, temos que usar a mesma versão para todo a aplicação e os upgrades podem ser problemáticos. Ou tudo é atualizado, ou nada. Quanto maior a base de código, maior é o problema nas atualizações de bibliotecas.
+Em seu artigo [Microservice Trade-Offs](https://martinfowler.com/articles/microservice-trade-offs.html) (FOWLER, 2015a), Martin Fowler diz que coisas prosaicas como atualizar a versão de uma biblioteca podem ser facilitadas. Em um monólito, temos que usar a mesma versão para todo a aplicação e os upgrades podem ser problemáticos. Ou tudo é atualizado, ou nada. Quanto maior a base de código, maior é o problema nas atualizações de bibliotecas.
 
 Sam Newman, no livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), argumenta: _Uma das grandes barreiras para testar e adotar novas tecnologias são os riscos associados. Em um monólito, qualquer mudança impactará uma quantia grande do sistema. Com um sistema que consiste de múltiplos serviços, há múltiplos lugares para testar novas tecnologias. Um serviço de baixo risco pode ser usado para minimizar os riscos e limitar os possíveis impactos negativos. A habilidade de absorver novas tecnologias traz vantagens competitivas para as organizações._
 
@@ -107,9 +117,9 @@ Com Microservices, só um pedaço do sistema fica fora do ar ao implantarmos nov
 
 Essa Entrega Contínua (_Continuous Delivery_, em inglês) permite que os negócios da organização reajam rápido ao feedback do cliente, a novas oportunidades e a concorrentes. A mudança cultural e organizacional para permitir isso é um dos temas do DevOps.
 
-No artigo [Microservice Trade-Offs](https://martinfowler.com/articles/microservice-trade-offs.html) (FOWLER, 2015), Martin Fowler argumenta que a relação entre Microservices e Continuous Delivery/DevOps é de duas vias: para ter vários Microservices, provisionar máquinas e implantar aplicações rapidamente são pré-requisitos. Fowler ainda cita Neal Ford, que relaciona uma Arquitetura de Microservices e DevOps: _Microservices são a primeira arquitetura depois da revolução trazida pelo DevOps_.
+No artigo [Microservice Trade-Offs](https://martinfowler.com/articles/microservice-trade-offs.html) (FOWLER, 2015a), Martin Fowler argumenta que a relação entre Microservices e Continuous Delivery/DevOps é de duas vias: para ter vários Microservices, provisionar máquinas e implantar aplicações rapidamente são pré-requisitos. Fowler ainda cita Neal Ford, que relaciona uma Arquitetura de Microservices e DevOps: _Microservices são a primeira arquitetura depois da revolução trazida pelo DevOps_.
 
-Atingir algo parecido com um monólito é até possível com algumas tecnologias como OSGi, mas incomum. Martin Fowler diz, ainda no artigo [Microservice Trade-Offs](https://martinfowler.com/articles/microservice-trade-offs.html) (FOWLER, 2015), que Facebook e Etsy são dois casos de empresas cujos monólitos têm Continuous Delivery. O autor ainda diz que entregas rápidas, confiáveis e frequentes são mais relacionadas com o uso prático de Modularidade do que necessariamente com Microservices.
+Atingir algo parecido com um monólito é até possível com algumas tecnologias como OSGi, mas incomum. Martin Fowler diz, ainda no artigo [Microservice Trade-Offs](https://martinfowler.com/articles/microservice-trade-offs.html) (FOWLER, 2015a), que Facebook e Etsy são dois casos de empresas cujos monólitos têm Continuous Delivery. O autor ainda diz que entregas rápidas, confiáveis e frequentes são mais relacionadas com o uso prático de Modularidade do que necessariamente com Microservices.
 
 #### Maior isolamento de falhas
 
@@ -132,56 +142,102 @@ Referências
   Microservice Patterns - Cap 1 - Benefits of the microservice architecture
 -->
 
-<!--
-
 ### CONTRAS
 
-Complexidade ao operar e monitorar
-Complexidades de sistemas distribuídos
-Perda da consistência dos dados e transações
+#### Dificuldades inerentes a um sistema distribuído
 
-Complexidade de encontrar os microsserviços certos
-  Definir de quais microsserviços devem ser consistido um sistema é algo complexo e subjetivo. Temos que tomar cuidado com os monólitos distribuídos, em que uma série de mudanças sempre acaba afetando um conjunto de microsserviços, que acabam tendo que ser implantados ao mesmo tempo.
+Uma chamada entre dois Microservices envolve a rede. Uma Arquitetura de Microservices é um Sistema Distribuído.
 
-Dificuldades inerentes a um sistema distribuído
-  "Scale breaks hardware.
-  Speed breaks software.
-  Speed at scale breaks everything."
-  Adrian Cockcroft, na palestra da Flowcon 2013 Velocity and Volume (or Speed Wins)
+A comunicação intraprocesso, com as chamadas em memória, é milhares de vezes mais rápida que uma chamada interprocessos.
 
-  “Law of conservation of complexity in software: when we break up big things into small pieces we invariably push the complexity to their interaction."
-  Michael Feathers, no post Microservices Until Macro Complexity
+A performance é afetada negativamente. É preciso tomar cuidado com latência, limites de banda, falhas na rede, indisponibilidade de outros serviços, entre outros problemas. Além disso, transações distribuídas são um problema muito complexo.
 
-  “We are shifting the accidental complexity [...] from inside our application [...] out into our infrastructure [...]
-  NOW is a good time for this because we’ve got many more ways to manage that complexity [...]
-  Programmable infrastructure, infrastructure automation, the movement to the cloud [...]
-  We’ve got better tools to address these things NOW.”
-  James Lewis, no podcast SE Radio
+A rede é lenta e instável e temos que lidar com as consequências disso.
 
-  Por ser um sistema distribuído, uma chamada de um microsserviço a outro envolve a rede. A performance é afetada negativamente. É preciso tomar cuidado com latência, banda disponível, falhas na rede, entre outros problemas. Além disso, transações distribuídas são um problema muito complexo.
-Coordenação de funcionalidades que envolvem muitos microsserviços
-  Mesmo com microsserviços bem projetados, às vezes uma mudança envolve vários deles e, consequentemente, vários times. Nesses casos, é preciso uma coordenação e governança cuidadosa, um controle dos contratos entre os serviços. 
-Saber o momento correto de adoção é difícil
-  Fatiar o sistema, criando barreiras arquiteturais e separando os microsserviços independentes pode ser obscuro no começo de um projeto, quando não se conhece claramente o negócio ou as possíveis alterações. Isso é especialmente difícil para startups, que ainda estão validando o modelo de negócios e fazem mudanças drásticas com frequência.
-Monitoramento complicado
-  Monitorar um monólito é fácil: o sistema está ou não fora do ar, os logs ficam apenas em uma máquina, sabemos claramente por onde uma requisição passou. Com uma arquitetura de microsserviços, precisamos saber da “saúde” de cada um deles, além de agregar logs e rastrear por onde passa uma requisição.
+> **As falácias da Computação Distribuída**
+>
+> Peter Deustch e seus colegas da Sun Microsystems definiram algumas premissas falsas que desenvolvedores assumem quando tratam de aplicações distribuídas:
+> 
+> 1. A rede é confiável
+> 2. A latência é zero
+> 3. A banda é infinita
+> 4. A rede é segura
+> 5. A topologia não muda
+> 6. Só há um administrador
+> 7. O custo de transporte é zero
+> 8. A rede é homogênea
 
-Referências
-Microservice Patterns - Cap 1 - Drawbacks of the microservice architecture
+#### Complexidade ao operar e monitorar
 
+Configurar, fazer deploy e monitorar um monólito é fácil. Depois de gerar o entregável (WAR, JAR, etc) e configurar portas e endereços de BDs, basta replicar o artefato em diferentes servidores. O sistema está ou não fora do ar, os logs ficam apenas em uma máquina e sabemos claramente por onde uma requisição passou.
 
-https://docs.google.com/document/d/19GYmQG1WpL54vmfCc2vkCjf96NPyRz_iIZwmC-wzfLU/edit#heading=h.bbevrrhd8e4g
+Em uma Arquitetura de Microservices, precisamos:
 
-Mais referências:
+- agregar logs que ficam espalhados pelos diversos Microservices 
+- saber da “saúde” de cada um dos Microservices
+- rastrear por quais Microservices passa uma requisição
+- ter uma maneira de facilitar a configuração de portas e endereços de BDs e de outros Microservices
+- fazer deploy dos diferentes Microservices
 
-https://martinfowler.com/articles/microservice-trade-offs.html
-https://martinfowler.com/bliki/MicroservicePremium.html
-https://martinfowler.com/bliki/MicroservicePrerequisites.html
+Já no post [Microservice Prerequisites](https://martinfowler.com/bliki/MicroservicePrerequisites.html) (FOWLER, 2014), Martin Fowler descrever alguns pré-requisitos para a adoção de uma Arquitetura de Microservices:
 
+- **provisionamento rápido**: preparar novos servidores com os softwares, dados e configurações necessários deve ser rápido e o mais automatizado o possível. Provedores e ferramentas de Cloud ajudam muito nessa tarefa.
+- **deploy rápido**: fazer o deploy da aplicação em ambientes de teste e produção deve ser algo rápido e automatizado.
+- **monitoramento básico**: detectar indisponibilidade de serviços, erros e acompanhar métricas de negócio é essencial
+- **cultura DevOps**: é necessária uma mudança cultural em direção a uma maior colaboração entre desenvolvedores e pessoal de infra
 
-http://faculty.salisbury.edu/~xswang/Research/Papers/SERelated/no-silver-bullet.pdf
+Se Continuous Delivery é uma prática importante para monólitos, torna-se essencial para uma Arquitetura de Microservices. Ferramentas de automação de infra-estrutura são imprescindíveis. 
 
- -->
+James Lewis diz, no [podcast SE Radio](https://www.se-radio.net/2014/10/episode-213-james-lewis-on-microservices/) (LEWIS, 2014), que:
+
+_"Nós estamos mudando a COMPLEXIDADE ACIDENTAL de dentro da aplicação para a infraestrutura. AGORA é uma boa hora para isso porque nós temos mais maneiras de gerenciar a complexidade. Infraestrutura programável, automação, tudo indo pra cloud. Nós temos ferramentas melhores para resolver esse problemas AGORA."_
+
+Michael Feathers, no post [Microservices Until Macro Complexity](https://michaelfeathers.silvrback.com/microservices-until-macro-complexity
+) (FEATHERS, 2014), diz que há uma Lei da conservação da complexidade no software:
+
+_"Quando quebramos coisas grandes em pequenos pedaços nós passamos a complexidade para a interação entre elas."_
+
+> **Complexidade Essencial x Complexidade Acidental**
+>
+> No clássico artigo [No Silver Bullets](http://faculty.salisbury.edu/~xswang/Research/Papers/SERelated/no-silver-bullet.pdf) (BROOKS, 1986), Fred Brooks separa complexidades essenciais do software, que tem a ver com o problema que está sendo resolvido (e, poderíamos dizer, com o domínio) de complexidades acidentais, que são reflexos das escolhas tecnológicas. O autor argumenta que mesmo que as complexidades acidentais fossem zero, ainda não teríamos um ganho significativo no esforço de produzir um software. Por isso, **não existe bala de prata**.
+
+#### Perda da consistência dos dados e transações
+
+Manter uma consistência forte dos dados em um Sistema Distribuído é extremamente difícil.
+
+De acordo com o Teorema CAP, cunhado por Eric Brewer na publicação [Towards Robust Distributed Systems](http://pld.cs.luc.edu/courses/353/spr11/notes/brewer_keynote.pdf) (BREWER, 2000), não é possível termos simultaneamente mais que duas das seguintes características: Consistência dos dados, Disponibilidade (_Availability_, em inglês) e tolerância a Partições de rede. Ou seja, se a rede falhar, temos que escolher entre Consistência e Disponibilidade. Se escolhermos Consistência, o sistema ficará indisponível até a falha na rede ser resolvido. Se escolhermos Disponibilidade, a Consistência será sacrificada. Portanto, em um Sistema Distribuído, não temos garantias ACID (Atomicidade, Consistência, Isolamento e Durabilidade). Em um esperto jogo de palavras com os conceitos da químico de ácido e base, Brewer diz que poderíamos ter garantias BASE (Basically Available, Soft-state, Eventually consistent): para manter um Sistema Distribuído disponível, teríamos respostas aproximadas que eventualmente ficariam consistentes.
+
+Daniel Abadi, no paper [Consistency Tradeoffs in Modern Distributed Database System Design](http://www.cs.umd.edu/~abadi/papers/abadi-pacelc.pdf)(ABADI, 2012) , cunha o Teorema PACELC, incluindo alta latência de rede como uma forma de indisponibilidade.
+
+No artigo [Microservice Trade-Offs](https://martinfowler.com/articles/microservice-trade-offs.html) (FOWLER, 2015a), Martin Fowler descreve o seguinte cenário: você faz uma atualização de algo e, ao recarregar a página, a atualização não está lá. Depois de alguns minutos, você dá refresh novamente a atualização aparece. Talvez isso acontece porque a atualização foi feita em um nó do cluster mas o segundo request obteve os dados de outro nó. Eventualmente, os nós ficam consistentes, com os mesmos dados. O autor pondera que inconsistências como essa são irritantes, mas podem ser catastróficas para a Organização quando decisões de negócios são feitas com base em dados inconsistentes. E o pior: é muito difícil de reproduzir e debugar!
+
+<!--@note
+  Um exemplo semelhante são os likes que "não pegam" em redes sociais.
+-->
+
+Em um monólito, é possível alterar vários dados no BD de maneira consistente, usando apenas uma transação. Como cada Microservice tem o seu BD, as transações teriam que ser distribuídas, o que iria na direção da Consistência em detrimento da Disponibilidade. O mundo dos Microservices abraça a consistência eventual (em inglês, _eventual consistency_). Processos de negócio são relativamente tolerantes a pequenas inconsistências momentâneas.
+
+#### Saber o momento correto de adoção é difícil
+
+Encontrar fatias pequenas e independentes do domínio, criando fronteiras arquiteturais alinhadas com os Bounded Contexts, é difícil no começo do projeto, quando não se conhece claramente o Negócio ou as possíveis alterações. Isso é especialmente difícil para startups, que ainda estão validando o Modelo de Negócio e fazem mudanças drásticas com frequência. Aliando-se a isso as complexidade de operação, monitoramento e os desafios de um Sistema Distribuído, uma Arquitetura de Microservices pode ser uma escolha ruim para uma startup que tem uma base de usuário limitada, uma equipe reduzida e pouco financiamento.
+
+Do ponto de vista Lean, usar uma Arquitetura de Microservices para um projeto simples ou em fase inicial pode ser considerado _overengineering_, um tipo de desperdício (Muda).
+
+No artigo [Microservice Premium](https://martinfowler.com/bliki/MicroservicePremium.html) (FOWLER, 2015b), Martin Fowler argumenta que uma Arquitetura de Microservices introduz uma complexidade que pode elevar os custos e riscos do projeto, como se fosse adicionado um ágio (em inglês, _premium_). O autor diz que, para projetos de baixa complexidade (essenciais, poderíamos dizer), uma Arquitetura de Microservices adiciona uma série de complicações no monitoramento, em como lidar com falhas e consistência eventual, entre outras. Já para projetos mais complexos, com um time muito grande, muitos modelos de interação com o usuário, dificuldade em escalar, partes do negócio que evoluem independentemente ou uma base de código gigantesca, vale pensar em uma Arquitetura de Microservices. Martin Fowler conclui: 
+
+_Minha principal orientação seria nem considerar Microservices, a menos que você tenha um sistema complexo demais para gerenciar como um Monólito. A maioria dos sistemas de software deve ser construída como uma única aplicação monolítica. Atenção deve ser prestada à uma boa modularização do Monólito (...) Se você puder  manter o seu sistema simples o suficiente para evitar a necessidade de Microservices: faça._
+
+![O ágio cobrado pelos Microservices em um projeto simples {w=57}](imagens/03-extraindo-servicos/microservices-premium.png)
+
+##### Começar com um Monólito ou com Microservices?
+
+No artigo [Monolith First](https://www.martinfowler.com/bliki/MonolithFirst.html) (FOWLER, 2015c), Martin Fowler argumenta que devemos começar com um Monólito, mesmo se você tiver certeza que a aplicação será grande e complexa o bastante para compensar o uso de Microservices. Fowler baseia o argumento em sua experiência:
+
+_Quase todas as histórias de sucesso de Microservices começaram com um Monólito que ficou muito grande e foi decomposto. Quase todos os casos de sistemas que começaram com Microservices do zero, terminaram em sérios apuros. (...) Até arquitetos experientes trabalhando em domínios familiares tem grandes dificuldades em acertar quais são as fronteiras estáveis entre serviços._
+
+Stefan Tilkov publicou o artigo [Don't start with a monolith](https://martinfowler.com/articles/dont-start-monolith.html) (TILKOV, 2015) no próprio site de Martin Fowler, argumentando o contrário: é incrivelmente difícil, senão impossível, fatiar um monólito. Pra Tilkov, o que é necessário na verdade é um bom conhecimento sobre o domínio da aplicação antes começar a particioná-lo. Outro argumento é que um Monólito bem componentizado e com baixo acoplamento é raríssimo e que uma das maiores vantagens dos Microservices é a fronteira fortíssima entre o código de cada serviço, evitando um emaranhado nas dependências. Partes do monólito comunicam entre si usando as mesmas bibliotecas, usam o mesmo modelo de persistência, podem usar transações no BD e muitas vezes compartilham objetos de domínio. Tudo isso dificulta imensamente uma possível migração posterior para uma Arquitetura de Microservices. Para o autor, em sistemas que sabe-se que serão grandes, complexos e em que o domínio é familiar, vale a pena começar a construí-los em subsistemas da maneira mais independente o possível.
+
+Um outro argumento a favor do uso inicial de uma Arquitetura de Microservices é que, se as ferramentas de deploy, configuração e monitoramento são complexas, devemos começar a dominá-las o mais cedo o possível. Claro, se a visão é que o projeto crescerá em tamanho e complexidade.
 
 ## Quão micro deve ser um microservice?
 
@@ -199,9 +255,14 @@ Um Microservice pode ser modelado como um Agregado ou, preferencialmente, como u
 
 No livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), Sam Newman diz que devemos focar as fronteiras entre os serviços nas fronteiras do negócio. Dessa maneira, saberemos onde estará o código de uma determinada funcionalidade e evitaremos a tentação de deixar um determinado serviço crescer demais. Ao modelar de acordo com o negócio, as fronteiras ficam claras.
 
-Phil Calçado, em um tweet (CALÇADO, 2018),  diz que o critério de decomposição de uma Arquitetura de Microservices deve ser parecido com o de um monólito modular:
+Phil Calçado, em [um tweet](https://twitter.com/pcalcado/status/963183090339385345) (CALÇADO, 2018),  diz que o critério de decomposição de uma Arquitetura de Microservices deve ser parecido com o de um monólito modular:
 
 _Eu sempre descrevo Microservices como a aplicação da mesma maneira de agrupar que você teria em uma aplicação maior, só que através de seus componentes distribuídos._
+
+<!--
+TODO:
+### Cuidado com o Monólito Distribuído
+-->
 
 ## Microservices e SOA
 
@@ -259,12 +320,14 @@ Escolha serviços pelos benefícios não por que o monólito é uma bagunça
 
  -->
 
-
+<!--
+TODO:
 ## Estrangulando o monólito
 
 > **Pattern: STRANGLER APPLICATION**
 >
 > 
+-->
 
 
 ## Criando um microservice de pagamentos
