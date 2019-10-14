@@ -480,6 +480,10 @@ Além disso, um Monólito Modular seria **um passo na direção de uma Arquitetu
 
 ![O Monólito Modular como um meio-termo {w=72}](imagens/02-decompondo-o-monolito/monolito-modular.png)
 
+Kirsten Westeinde, desenvolvedora sênior da Shopify, no post [Deconstructing the Monolith](https://engineering.shopify.com/blogs/engineering/deconstructing-monolith-designing-software-maximizes-developer-productivity) (WESTEINDE, 2019), conta como a empresa chegou a um ponto em que a base de código monolítica, uma das maiores aplicações Ruby On Rails do mundo, começou a tornar-se tão frágil e difícil de entender, que código novo tinha consequências inesperadas e que novos desenvolvedores precisavam aprender muita coisa antes de entregar pequenas mudanças. Foi avaliada uma Arquitetura de Microservices mas foi identificado que o problema, na verdade, estava na falta de barreiras entre contextos diferentes do código. Então, escolheram um monólito modular.
+
+Alguns times passam para uma migração para Microservices, mas resolvem voltar atrás, para um monólito modular. É o caso da Beep Saúde, como é contado por Luiz Costa, CTO, e outros desenvolvedores da Beep no episódio [Monolitos modulares e vacinas](https://hipsters.tech/monolitos-autonomos-e-vacinas-hipsters-on-the-road-17/) do podcast Hipsters On The Road. A Beep teve que escolher entre focar os desenvolvedores em resolver os problemas técnicos trazidos por uma Arquitetura de Microservices ou desenvolver novas funcionalidades, algo imprescindível em uma startup. Resolveram voltar para o monólito, mas de maneira modular, inspirados pela Arquitetura Hexagonal, pela Clean Architecture e pelos Bounded Contexts do DDD.
+
 No final da palestra [Modular monoliths](http://www.codingthearchitecture.com/presentations/sa2015-modular-monoliths) (BROWN, 2015), Simon Brown faz uma provocação:
 
 _"Se você não consegue construir um Monólito Modular, porque você acha que microservices são a resposta"_?
@@ -685,6 +689,8 @@ Um framework OSGi controla o ciclo de vida de um bundle, fazendo com que seja in
 O OSGi também especifica o conceito de _service_, análogo à Service Loader API do Java: um bundle define interface pública e outros bundles, uma ou mais implementações. Para ligar as implementações à interface, um framework OSGi provê um _service registry_. Novas implementações podem ter seu registro feito ou cancelado dinamicamente, sem parar a JVM. Os consumidores de um service dependeriam apenas da interface e do service registry, sem ter acesso a detalhes de implementação.
 
 O nível de encapsulamento de um bundle e a possibilidade de **atualizar e registrar implementações dinamicamente** permitiria que diferentes times cuidassem de diferentes bundles alinhados com os Bounded Contexts (e as áreas de negócio) da organização. A implantação de novas versões de um bundle poderia ser feita sem derrubar a aplicação como um todo.
+
+Porém, OSGi traz alguns problemas que limitaram sua adoção em aplicações e restringiram o uso basicamente a criadores de middleware e IDEs. Há quem diga que OSGi aumenta drasticamente o uso de memória, talvez pela implementação de diferentes Class Loaders, mas há soluções com baixo uso de memória, como de IoT, que usam implementações OSGi. Ross Mason, criador do Mule ESB, escreve no artigo [OSGi? No Thanks](https://blogs.mulesoft.com/dev/news-dev/osgi-no-thanks/) (MASON, 2010) que o principal dos problemas é a curva de aprendizado e a complexidade, com a necessidade de diversas configurações cheias de detalhes técnicos, o que afeta negativamente a experiência do desenvolvedor. 
 
 <!--
 Alexandre: ouvi relatos de um desenvolvedor do Liferay de que o uso de OSGi quadruplicou o uso de memória. Apesar disso, OSGi é usado em software embarcado e na indústria de automóveis. Fica claro que a tecnologia traz dificuldades.

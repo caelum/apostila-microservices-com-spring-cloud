@@ -42,13 +42,17 @@ _Quando você tem uma base de código só, você é tão estável quanto a sua p
 
 E, convenhamos, um monólito modular é algo raríssimo no mercado. Então, para a maioria dos monólitos há problemas com times grandes, deploys e complexidade do código. Mas um monólito modular, com complexidade e dependências gerenciadas, facilitará uma possível migração para serviços.
 
+Simon Brown diz na palestra [Modular monoliths](http://www.codingthearchitecture.com/presentations/sa2015-modular-monoliths) (BROWN, 2015):
+
+_Escolha Microservices por seus benefícios, não por que sua base de código monólitica é uma bagunça._
+
 ### Componentização em serviços
 
 Uma **Arquitetura de Microservices** traz uma abordagem diferente de componentização: a aplicação é decomposta em diversos **serviços**.
 
 Um serviço é um componente de software que provê alguma funcionalidade e pode ser implantado independentemente. Cada serviço provê uma **API** que pode ser “consumida” por seus clientes. Uma chamada a um serviço é feita por meio de **comunicação interprocessos** que, no fim das contas, é comunicação pela rede. Isso faz com que uma Arquitetura de Microservices seja um **Sistema Distribuído**.
 
-Então, microservices:
+Microservices:
 
 - são executados em diferentes processos em máquinas (ou containers) distintos
 - a comunicação é interprocessos, pela rede
@@ -59,15 +63,13 @@ Então, microservices:
 
 ## Prós e contras de uma Arquitetura de Microservices
 
-### PRÓS
-
-#### Times Pequenos e Autônomos
+### PRÓ: Times Pequenos e Autônomos
 
 Um Microservice permite times menores, com uma possibilidade de melhor comunicação e mais focados em uma área de negócio. E isso afeta positivamente a velocidade de desenvolvimento de novas funcionalidades.
 
 Uma monólito com uma Arquitetura de Plugins talvez permita o desenvolvimento de diferentes módulos por times diversos em torno de um núcleo comum. Porém, é uma raridade no mercado.
 
-#### “Trocabilidade”
+### PRÓ: “Trocabilidade”
 
 É comum termos aquele sistema legado em que ninguém toca e que ninguém sabe dar manutenção. E isso acontece porque qualquer mudança ficou muito arriscada.
 
@@ -75,7 +77,7 @@ Com serviços mais focados, independentes e pequenos, é menos provável acabar 
 
 É algo que um monólito modular também permitiria.
 
-#### Reuso e composibilidade
+### PRÓ: Reuso e composibilidade
 
 Diferentes serviços podem ser compostos em novos serviços, atendendo com agilidade às demandas do negócio. É uma velha promessa do SOA (Service-Oriented Architecture).
 
@@ -83,7 +85,7 @@ A Uber é um exemplo disso: provê um serviço de transporte urbano, mas lançou
 
 Um monólito modular é uma outra maneira de atingir isso, sem termos um Sistema Distribuído.
 
-#### Fronteiras fortes entre componentes
+### PRÓ: Fronteiras fortes entre componentes
 
 Se usarmos serviços como estratégia de componentização, ao invés de simples pacotes ou módulos, teremos uma separação fortíssima entre o código de cada componente.
 
@@ -93,7 +95,7 @@ Uma vantagem de uma Arquitetura de Microservices é que temos esse fronteira for
 
 Um ponto de atenção é o acesso a dados. Em uma Arquitetura de Microservices, cada serviço tem o seu BD separado. E isso reforça bastante a componentização dos dados, eliminando os perigos de uma integração pelo BD que pode levar a um acomplamento indesejado. Por outro lado, ao separar os BDs, perdemos muitas coisas, que discutiremos adiante.
 
-#### Diversidade tecnológica e experimentação
+### PRÓ: Diversidade tecnológica e experimentação
 
 Em uma aplicação monolítica, as escolhas tecnológicas inicias restringem as linguagens e frameworks que podem ser usados.
 
@@ -109,7 +111,7 @@ Porém, é importante ressaltar o risco de adotar muitas stacks de tecnologias c
 
 É possível implementar um monólito poliglota.  Mas é algo raro. No caso da JVM, podemos usar linguagens como Java, Kotlin, Scala e Clojure. Com a GraalVM, podemos até mesclar plataformas, usando algumas linguagens da JVM com algumas da LLVM, entre outras. E múltiplos datasources podem permitir o uso de mecanismos de persistências diferentes, como um BD orientado a Grafos, como o Neo4J,  junto a um BD relacional, como o PostgreSQL.
 
-#### Deploy independente
+### PRÓ: Deploy independente
 
 A mudança de uma linha de código em uma aplicação monolítica de um milhão de linhas requer que toda a aplicação seja implantada para que seja feito o _release_ da pequena alteração. Isso leva a deploys de alto risco e alto impacto, o que leva a medo de que alguma coisa dê errado. E esse medo leva a diminuir a frequência dos deploys, o que leva ao acúmulo de mudanças em cada deploy. E quanto mais alterações em um mesmo deploy, maior o risco de que algo dê errado. Esse _ciclo vicioso dos deploys_ é demonstrado por Sam Newman, no livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015).
 
@@ -121,13 +123,13 @@ No artigo [Microservice Trade-Offs](https://martinfowler.com/articles/microservi
 
 Atingir algo parecido com um monólito é até possível com algumas tecnologias como OSGi, mas incomum. Martin Fowler diz, ainda no artigo [Microservice Trade-Offs](https://martinfowler.com/articles/microservice-trade-offs.html) (FOWLER, 2015a), que Facebook e Etsy são dois casos de empresas cujos monólitos têm Continuous Delivery. O autor ainda diz que entregas rápidas, confiáveis e frequentes são mais relacionadas com o uso prático de Modularidade do que necessariamente com Microservices.
 
-#### Maior isolamento de falhas
+### PRÓ: Maior isolamento de falhas
 
 Em em um monólito, se uma parte da aplicação apresentar um vazamento de memória, pode ser que o todo seja interrompido.
 
 Quando há uma falha ou indisponibilidade em um serviço, os outros serviços continuam no ar e, portanto, parte da aplicação ainda permanece disponível e utilizável, o que alguns chamam de _graceful degradation_.
 
-#### Escalabilidade independente
+### PRÓ: Escalabilidade independente
 
 Em um monólito, componentes que tem necessidades de recursos computacionais completamente diferentes devem ser implantados em conjunto, isso leva a um desperdício de recursos. Se uma pequena parte usa muita CPU, por exemplo, estamos restritos a escalar o todo para atender às demandas de processamento.
 
@@ -142,13 +144,14 @@ Referências
   Microservice Patterns - Cap 1 - Benefits of the microservice architecture
 -->
 
-### CONTRAS
-
-#### Dificuldades inerentes a um sistema distribuído
+### CONTRA: Dificuldades inerentes a um Sistema Distribuído
 
 Uma chamada entre dois Microservices envolve a rede. Uma Arquitetura de Microservices é um Sistema Distribuído.
 
 A comunicação intraprocesso, com as chamadas em memória, é milhares de vezes mais rápida que uma chamada interprocessos.
+
+Leslie Lamport, pioneiro da teoria de Sistemas Distribuídos, brincou com a definição de Sistemas Distribuídas em uma [lista interna](https://lamport.azurewebsites.net/pubs/distributed-system.txt) (LAMPORT, 1987) da DEC Systems Research Center: 
+_Um sistema distribuído é um sistema em que uma falha em um computador que você nem sabia da existência torna o seu próprio computador inutilizável._
 
 A performance é afetada negativamente. É preciso tomar cuidado com latência, limites de banda, falhas na rede, indisponibilidade de outros serviços, entre outros problemas. Além disso, transações distribuídas são um problema muito complexo.
 
@@ -167,7 +170,7 @@ A rede é lenta e instável e temos que lidar com as consequências disso.
 > 7. O custo de transporte é zero
 > 8. A rede é homogênea
 
-#### Complexidade ao operar e monitorar
+### CONTRA: Complexidade ao operar e monitorar
 
 Configurar, fazer deploy e monitorar um monólito é fácil. Depois de gerar o entregável (WAR, JAR, etc) e configurar portas e endereços de BDs, basta replicar o artefato em diferentes servidores. O sistema está ou não fora do ar, os logs ficam apenas em uma máquina e sabemos claramente por onde uma requisição passou.
 
@@ -201,7 +204,7 @@ _"Quando quebramos coisas grandes em pequenos pedaços nós passamos a complexid
 >
 > No clássico artigo [No Silver Bullets](http://faculty.salisbury.edu/~xswang/Research/Papers/SERelated/no-silver-bullet.pdf) (BROOKS, 1986), Fred Brooks separa complexidades essenciais do software, que tem a ver com o problema que está sendo resolvido (e, poderíamos dizer, com o domínio) de complexidades acidentais, que são reflexos das escolhas tecnológicas. O autor argumenta que mesmo que as complexidades acidentais fossem zero, ainda não teríamos um ganho significativo no esforço de produzir um software. Por isso, **não existe bala de prata**.
 
-#### Perda da consistência dos dados e transações
+### CONTRA: Perda da consistência dos dados e transações
 
 Manter uma consistência forte dos dados em um Sistema Distribuído é extremamente difícil.
 
@@ -217,7 +220,7 @@ No artigo [Microservice Trade-Offs](https://martinfowler.com/articles/microservi
 
 Em um monólito, é possível alterar vários dados no BD de maneira consistente, usando apenas uma transação. Como cada Microservice tem o seu BD, as transações teriam que ser distribuídas, o que iria na direção da Consistência em detrimento da Disponibilidade. O mundo dos Microservices abraça a consistência eventual (em inglês, _eventual consistency_). Processos de negócio são relativamente tolerantes a pequenas inconsistências momentâneas.
 
-#### Saber o momento correto de adoção é difícil
+### CONTRA: Saber o momento correto de adoção é difícil
 
 Encontrar fatias pequenas e independentes do domínio, criando fronteiras arquiteturais alinhadas com os Bounded Contexts, é difícil no começo do projeto, quando não se conhece claramente o Negócio ou as possíveis alterações. Isso é especialmente difícil para startups, que ainda estão validando o Modelo de Negócio e fazem mudanças drásticas com frequência. Aliando-se a isso as complexidade de operação, monitoramento e os desafios de um Sistema Distribuído, uma Arquitetura de Microservices pode ser uma escolha ruim para uma startup que tem uma base de usuário limitada, uma equipe reduzida e pouco financiamento.
 
@@ -229,7 +232,7 @@ _Minha principal orientação seria nem considerar Microservices, a menos que vo
 
 ![O ágio cobrado pelos Microservices em um projeto simples {w=57}](imagens/03-extraindo-servicos/microservices-premium.png)
 
-##### Começar com um Monólito ou com Microservices?
+#### Começar com um Monólito ou com Microservices?
 
 No artigo [Monolith First](https://www.martinfowler.com/bliki/MonolithFirst.html) (FOWLER, 2015c), Martin Fowler argumenta que devemos começar com um Monólito, mesmo se você tiver certeza que a aplicação será grande e complexa o bastante para compensar o uso de Microservices. Fowler baseia o argumento em sua experiência:
 
@@ -239,13 +242,17 @@ Stefan Tilkov publicou o artigo [Don't start with a monolith](https://martinfowl
 
 Um outro argumento a favor do uso inicial de uma Arquitetura de Microservices é que, se as ferramentas de deploy, configuração e monitoramento são complexas, devemos começar a dominá-las o mais cedo o possível. Claro, se a visão é que o projeto crescerá em tamanho e complexidade.
 
-## Quão micro deve ser um microservice?
+## Quão micro deve ser um Microservice?
 
 Os serviços em uma Arquitetura de Microservices devem ser pequenos. Por isso, o “micro” no nome. Mas o que deve ser considerado “micro”? Algo menor que um miliservice ou maior que um nanoservice (termo infelizmente usado pelo mercado)? Não! O tamanho não é importante! O termo “micro” é enganoso.
 
 <!--@note
   Alexandre: costumo a desenhar uma tabelinha com micro (10^-6), nano (10^-12) e mili (10^-3) e perguntar isso.
 -->
+
+Chris Richardson, no livro [Microservice Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018) diz:
+
+_Um problema com o termo Microservice é que a primeira coisa que você ouve é micro. Isso sugere que um serviço deve ser muito pequeno. (...) Na realidade, tamanho não é uma métrica útil. Um objetivo melhor é definir um serviço bem modelado como um serviço capaz de ser desenvolvido por um time pequeno com um lead time mínimo e com mínima colaboração com outros times. Na teoria, um time deve ser responsável somente por um serviço (...) Por outro lado, se um serviço requer um time grande ou leva muito tempo para ser testado, provavelmente faz sentido dividir o time e o serviço._
 
 O critério para decomposição deve ser, em geral, algo alinhado com o negócio da organização. No fim das contas, o objetivo principal é alinhar negócio à TI. Um serviço pequeno é um serviço que embarca uma capacidade de negócio.
 
@@ -259,10 +266,13 @@ Phil Calçado, em [um tweet](https://twitter.com/pcalcado/status/963183090339385
 
 _Eu sempre descrevo Microservices como a aplicação da mesma maneira de agrupar que você teria em uma aplicação maior, só que através de seus componentes distribuídos._
 
-<!--
-TODO:
 ### Cuidado com o Monólito Distribuído
--->
+
+No livro [Monolith to Microservices](https://learning.oreilly.com/library/view/monolith-to-microservices/9781492047834/) (NEWMAN, 2019), Sam Newman define um Monólito Distribuído como um sistema que consiste de múltiplos serviços mas cujos deploys devem ser feitos ao mesmo tempo. Na experiência do autor, um Monólito Distribuído tem todas as desvantagens de um Sistema Distribuído e todas as desvantagens de um Monólito. Para Newman, um Monólito Distribuído emerge de um ambiente em que não houve foco o suficiente em conceitos como _Information Hiding_ e coesão das funcionalidades de negócio, levando a arquiteturas altamente acopladas em que mudanças se propagam através dos limites de serviço e onde mudanças aparentemente inocentes, que parecem ter escopo local, quebram outras partes do sistema.
+
+Uma maneira comum de chegar a um Monólito Distribuído é ter serviços extremamente pequenos, chegando a um serviço por Entidade de Negócio (objetos que tem continuidade, identidade e estão representados em algum mecanismo de persistência).
+
+Chris Richardson, no livro [Microservice Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018), chega uma conclusão semelhante: um Monólito Distribuído é o resultado de uma decomposição incorreta dos componentes. Para Richardson, o antídoto aos Monólitos Distribuídos é seguir, só que no nível de serviços, o Common Closure Principle definido por Robert "Uncle Bob" Martin: _Agregue, em componentes, classes que mudam ao mesmo tempo e pelos mesmos motivos. Separe em componentes diferentes classes que mudam em momentos diferentes e por razões distintas._
 
 ## Microservices e SOA
 
@@ -283,42 +293,6 @@ Sam Newman, em seu livro [Building Microservices](https://learning.oreilly.com/l
 Microservices são, então, uma abordagem para SOA.
 
 ![Para diversos autores, Microservices são um sabor de SOA {w=30}](imagens/03-extraindo-servicos/microservices-vs-soa.png)
-
-<!--
-
-Microservices permitiriam:
-
-- alta coesão, baixo acoplamento, 
-
-Mas é possível desenvolver um monólito modular, composto por componentes independentes, que colaboram entre si através de chamadas de métodos, idealmente definidos em abstrações (em Java, interfaces ou classes abstratas).
-
-Com um sistema de módulos como o Java Module System (Java 9+) ou OSGi, é possível reforçar as barreiras arquiteturais mesmo com classes públicas, explicitando e limitando as dependências entre os módulos.
-
-Já através de uma arquitetura de plugins, podemos trabalhar em várias bases de código distintas e compor uma aplicação a partir de diferentes módulos.
-
-Por meio de uma solução como OSGi, é até possível atualizar um módulo sem parar toda a aplicação.
--->
-
-<!-- 
-
-Simon Brown
-http://www.codingthearchitecture.com/presentations/sa2015-modular-monoliths
-
-Vantagens do Monólito Modular
-- alta coesão
-- baixo acoplamento
-- com dados encapsulados
-- substituíveis e passíveis de composição
-- foco no negócio, inspirados por agregados ou contextos delimitados
-
-Mais Vantagens do Microservices
-- deploy independente
-- escalabilidade independente
-- tecnologias heterogêneas
-
-Escolha serviços pelos benefícios não por que o monólito é uma bagunça
-
- -->
 
 <!--
 TODO:

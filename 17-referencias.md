@@ -16,6 +16,8 @@ CALÇADO, Phil. 2018. Em: https://twitter.com/pcalcado/status/963183090339385345
 
 CONWAY, Melvin. _How Do Committees Invent?_ Datamation, Abr. 1968. Em: http://www.melconway.com/Home/Committees_Paper.html
 
+COSTA, Luiz. _Monolitos modulares e vacinas. Hipsters On The Road #17._ 2019. Em: https://hipsters.tech/monolitos-autonomos-e-vacinas-hipsters-on-the-road-17/
+
 EVANS, Eric. _Domain-Driven Design: Tackling Complexity in the Heart of Software._ Addison-Wesley Professional. 2003. 560 p. Em: https://www.amazon.com/Domain-Driven-Design-Tackling-Complexity-Software/dp/0321125215
 
 FEATHERS, Michael. _Microservices Until Macro Complexity._ 2014. Em: https://michaelfeathers.silvrback.com/microservices-until-macro-complexity
@@ -38,6 +40,8 @@ KNOERNSCHILD, Kirk. _Java Application Architecture: Modularity Patterns with Exa
 
 KRIENS, Peter. _µServices._ 2010. Em: https://blog.osgi.org/2010/03/services.html
 
+LAMPORT, Leslie. _distribution._ 1987. Em: https://lamport.azurewebsites.net/pubs/distributed-system.txt
+
 LEWIS, James. _Episode 213: James Lewis on Microservices._ 2014. Em: https://www.se-radio.net/2014/10/episode-213-james-lewis-on-microservices/
 
 MACCORMACK, Alan et al. _Exploring the Duality between Product and Organizational Architectures: A Test of the “Mirroring” Hypothesis._ 2008. Em: https://www.hbs.edu/faculty/Publication%20Files/08-039_1861e507-1dc1-4602-85b8-90d71559d85b.pdf
@@ -48,7 +52,11 @@ MARTIN, Robert Cecil. _Microservices and Jars._ 2014. Em: <https://blog.cleancod
 
 MARTIN, Robert Cecil. _Clean Architecture: A Craftsman's Guide to Software Structure and Design._ Prentice Hall, 2017. 432 p. Em: https://www.amazon.com/Clean-Architecture-Craftsmans-Software-Structure/dp/0134494164.
 
-NEWMAN, Sam. _Building Microservices: Designing Fine-Grained Systems._ O'Reilly. 2015. 280 p. Em: https://www.oreilly.com/library/view/building-microservices/9781491950340/
+MASON, Ross. _OSGi? No thanks._ 2010. Em: https://blogs.mulesoft.com/dev/news-dev/osgi-no-thanks/
+
+NEWMAN, Sam. _Building Microservices: Designing Fine-Grained Systems._ O'Reilly, 2015. 280 p. Em: https://www.oreilly.com/library/view/building-microservices/9781491950340/
+
+NEWMAN, Sam. _Monolith to Microservices: Evolutionary Patterns to Transform Your Monolith._ O'Reilly, 2019. Early Release. 284 p. Em: https://learning.oreilly.com/library/view/monolith-to-microservices/9781492047834/
 
 PARLOG, Nicolai. _The Java Module System._ Manning Publications, 2018. Manning Early Access Program, version 10. 503p. Em: <https://www.manning.com/books/the-java-module-system>
 
@@ -61,3 +69,5 @@ SIMONS, Matthew; LEROY, Jonny. _Contending with Creaky Platforms CIO._ Cutter IT
 TILKOV, Stefan. _Don't start with a monolith: ... when your goal is a microservices architecture._ 2015. Em: https://martinfowler.com/articles/dont-start-monolith.html
 
 WALLS, Craig. _Modular Java: Creating Flexible Applications with OSGi and Spring._ The Pragmatic Bookshelf, 2009. 260 p. Em: https://pragprog.com/book/cwosg/modular-java
+
+WESTEINDE, Kirsten. _Deconstructing the Monolith: Designing Software that Maximizes Developer Productivity._ 2019. Em: https://engineering.shopify.com/blogs/engineering/deconstructing-monolith-designing-software-maximizes-developer-productivity
