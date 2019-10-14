@@ -18,15 +18,21 @@ CONWAY, Melvin. _How Do Committees Invent?_ Datamation, Abr. 1968. Em: http://ww
 
 COSTA, Luiz. _Monolitos modulares e vacinas. Hipsters On The Road #17._ 2019. Em: https://hipsters.tech/monolitos-autonomos-e-vacinas-hipsters-on-the-road-17/
 
+DEAN, Jeffrey. _Designs, Lessons and Advice from Building Large Distributed Systems._ 3rd ACM SIGOPS International Workshop on Large Scale Distributed Systems and Middleware. 2009. Em: http://www.cs.cornell.edu/projects/ladis2009/talks/dean-keynote-ladis2009.pdf
+
 EVANS, Eric. _Domain-Driven Design: Tackling Complexity in the Heart of Software._ Addison-Wesley Professional. 2003. 560 p. Em: https://www.amazon.com/Domain-Driven-Design-Tackling-Complexity-Software/dp/0321125215
 
 FEATHERS, Michael. _Microservices Until Macro Complexity._ 2014. Em: https://michaelfeathers.silvrback.com/microservices-until-macro-complexity
 
 FOOTE, Brian; YODER, Joseph. _Big Ball Of Mud._ 1999. Em: http://www.laputan.org/mud/mud.html
 
+FOWLER, Martin. _Patterns of Enterprise Application Architecture._ Addison-Wesley Professional, 2002. 560 p. Em: https://www.amazon.com/Patterns-Enterprise-Application-Architecture-Martin/dp/0321127420
+
 FOWLER, Martin; LEWIS, James. _Microservices: a definition of this new technical term._ 2014. Em: https://martinfowler.com/articles/microservices.html
 
-FOWLER, Martin. _MicroservicePrerequisites._ 2014. Em: https://martinfowler.com/bliki/MicroservicePrerequisites.html
+FOWLER, Martin. _Microservices and the First Law of Distributed Objects._ 2014a. Em: https://martinfowler.com/articles/distributed-objects-microservices.html
+
+FOWLER, Martin. _MicroservicePrerequisites._ 2014b. Em: https://martinfowler.com/bliki/MicroservicePrerequisites.html
 
 FOWLER, Martin. _Microservice Trade-Offs._ 2015a. Em: https://martinfowler.com/articles/microservice-trade-offs.html
 

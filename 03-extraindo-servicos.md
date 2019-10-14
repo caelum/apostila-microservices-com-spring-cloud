@@ -148,7 +148,15 @@ Referências
 
 Uma chamada entre dois Microservices envolve a rede. Uma Arquitetura de Microservices é um Sistema Distribuído.
 
-A comunicação intraprocesso, com as chamadas em memória, é milhares de vezes mais rápida que uma chamada interprocessos.
+A comunicação intraprocesso, com as chamadas em memória, é centenas de milhares de vezes mais rápida que uma chamada interprocessos dentro de um mesmo datacenter. Algumas das latências mostradas pelo pesquisador da Google Jeffrey Dean na palestra [Designs, Lessons and Advice from Building Large Distributed Systems](http://www.cs.cornell.edu/projects/ladis2009/talks/dean-keynote-ladis2009.pdf) (DEAN, 2009):
+
+- Referência Cache L1: 0.5 ns
+- Referência Cache L2: 7 ns
+- Referência à Memória Principal: 100 ns
+- Round trip dentro do mesmo datacenter: 500 000 ns (0,5 ms)
+- Roud trip Califórnia-Holanda: 150 000 000 ns (150 ms)
+
+Uma versão mais atualizada e interativa dessa tabela pode ser encontrada em: https://people.eecs.berkeley.edu/~rcs/research/interactive_latency.html
 
 Leslie Lamport, pioneiro da teoria de Sistemas Distribuídos, brincou com a definição de Sistemas Distribuídas em uma [lista interna](https://lamport.azurewebsites.net/pubs/distributed-system.txt) (LAMPORT, 1987) da DEC Systems Research Center: 
 _Um sistema distribuído é um sistema em que uma falha em um computador que você nem sabia da existência torna o seu próprio computador inutilizável._
@@ -170,6 +178,21 @@ A rede é lenta e instável e temos que lidar com as consequências disso.
 > 7. O custo de transporte é zero
 > 8. A rede é homogênea
 
+#### E a Primeira Lei do Design de Objetos Distribuídos?
+
+No livro [Patterns of Enterprise Application Architecture](https://www.amazon.com/Patterns-Enterprise-Application-Architecture-Martin/dp/0321127420) (FOWLER, 2002), Martin Fowler cunhou a _Primeira Lei do Design de Objetos Distribuídos_: não distribua seus objetos.
+
+Isso valeria para uma Arquitetura de Microservices? Fowler responde a essa pergunta no artigo [Microservices and the First Law of Distributed Objects](https://martinfowler.com/articles/distributed-objects-microservices.html) (FOWLER, 2014a). O autor explica que o contexto da "lei" era a ideia, em voga no final dos anos 90 e no início dos anos 2000, de era possível tratar objetos intraprocesso e remotos de maneira transparente. Com o uso de CORBA, DCOM ou RMI, bastaria rodar objetos em outras máquinas, sem a necessidade de estratégias elaboradas de decomposição e migração. Considerando que a rede é lenta e instável, buscar preços de 100 produtos não teria a mesma performance e confiabilidade comparando uma chamada em memória e uma pela rede. É preciso tomar cuidado com a granularidade das chamadas e tolerância a falhas. A suposta transparência entre chamadas em memória e remotas é uma falácia tardia. Por isso, a lei proposta no livro mencionado.
+
+Fowler, no mesmo artigo, diz que os defensores dos Microservices com que teve contato estão cientes da distinção entre chamadas em memória e pela rede e desconsideram sua suposta transparência. As interações entre Microservices, portanto, seriam de granularidade mais grossa e usariam técnicas como Mensageria.
+
+Apesar de ter uma inclinação para Monólitos, Fowler diz que sua natureza de empiricista o fez aceitar que uma abordagem de Microservices teve sucesso em vários times com que trabalhou. Porém, enquanto é mais fácil pensar sobre Microservices pequenos, o autor diz preocupar-se que a complexidade é empurrada para as interações entre os serviços, onde é menos explícita, o que torna mais difícil descobrir quando algo dá errado.
+
+Essa preocupação ressoa em Michael Feathers que, no post [Microservices Until Macro Complexity](https://michaelfeathers.silvrback.com/microservices-until-macro-complexity) (FEATHERS, 2014), diz que parece haver uma Lei da Conservação da Complexidade no software:
+
+_"Quando quebramos coisas grandes em pequenos pedaços nós passamos a complexidade para a interação entre elas."_
+
+
 ### CONTRA: Complexidade ao operar e monitorar
 
 Configurar, fazer deploy e monitorar um monólito é fácil. Depois de gerar o entregável (WAR, JAR, etc) e configurar portas e endereços de BDs, basta replicar o artefato em diferentes servidores. O sistema está ou não fora do ar, os logs ficam apenas em uma máquina e sabemos claramente por onde uma requisição passou.
@@ -182,7 +205,7 @@ Em uma Arquitetura de Microservices, precisamos:
 - ter uma maneira de facilitar a configuração de portas e endereços de BDs e de outros Microservices
 - fazer deploy dos diferentes Microservices
 
-Já no post [Microservice Prerequisites](https://martinfowler.com/bliki/MicroservicePrerequisites.html) (FOWLER, 2014), Martin Fowler descrever alguns pré-requisitos para a adoção de uma Arquitetura de Microservices:
+Já no post [Microservice Prerequisites](https://martinfowler.com/bliki/MicroservicePrerequisites.html) (FOWLER, 2014b), Martin Fowler descrever alguns pré-requisitos para a adoção de uma Arquitetura de Microservices:
 
 - **provisionamento rápido**: preparar novos servidores com os softwares, dados e configurações necessários deve ser rápido e o mais automatizado o possível. Provedores e ferramentas de Cloud ajudam muito nessa tarefa.
 - **deploy rápido**: fazer o deploy da aplicação em ambientes de teste e produção deve ser algo rápido e automatizado.
@@ -194,11 +217,6 @@ Se Continuous Delivery é uma prática importante para monólitos, torna-se esse
 James Lewis diz, no [podcast SE Radio](https://www.se-radio.net/2014/10/episode-213-james-lewis-on-microservices/) (LEWIS, 2014), que:
 
 _"Nós estamos mudando a COMPLEXIDADE ACIDENTAL de dentro da aplicação para a infraestrutura. AGORA é uma boa hora para isso porque nós temos mais maneiras de gerenciar a complexidade. Infraestrutura programável, automação, tudo indo pra cloud. Nós temos ferramentas melhores para resolver esse problemas AGORA."_
-
-Michael Feathers, no post [Microservices Until Macro Complexity](https://michaelfeathers.silvrback.com/microservices-until-macro-complexity
-) (FEATHERS, 2014), diz que há uma Lei da conservação da complexidade no software:
-
-_"Quando quebramos coisas grandes em pequenos pedaços nós passamos a complexidade para a interação entre elas."_
 
 > **Complexidade Essencial x Complexidade Acidental**
 >
@@ -294,8 +312,15 @@ Microservices são, então, uma abordagem para SOA.
 
 ![Para diversos autores, Microservices são um sabor de SOA {w=30}](imagens/03-extraindo-servicos/microservices-vs-soa.png)
 
+
 <!--
+
 TODO:
+
+## Decidindo por uma Arquitetura de Microservices no Caelum Eats
+
+## Como falhar numa migração: o Big Rewrite
+
 ## Estrangulando o monólito
 
 > **Pattern: STRANGLER APPLICATION**
