@@ -28,6 +28,8 @@ FOOTE, Brian; YODER, Joseph. _Big Ball Of Mud._ 1999. Em: http://www.laputan.org
 
 FOWLER, Martin. _Patterns of Enterprise Application Architecture._ Addison-Wesley Professional, 2002. 560 p. Em: https://www.amazon.com/Patterns-Enterprise-Application-Architecture-Martin/dp/0321127420
 
+FOWLER, Martin. _StranglerFigApplication._ 2004. Em: https://martinfowler.com/bliki/StranglerFigApplication.html
+
 FOWLER, Martin; LEWIS, James. _Microservices: a definition of this new technical term._ 2014. Em: https://martinfowler.com/articles/microservices.html
 
 FOWLER, Martin. _Microservices and the First Law of Distributed Objects._ 2014a. Em: https://martinfowler.com/articles/distributed-objects-microservices.html
@@ -52,6 +54,8 @@ LEWIS, James. _Episode 213: James Lewis on Microservices._ 2014. Em: https://www
 
 MACCORMACK, Alan et al. _Exploring the Duality between Product and Organizational Architectures: A Test of the “Mirroring” Hypothesis._ 2008. Em: https://www.hbs.edu/faculty/Publication%20Files/08-039_1861e507-1dc1-4602-85b8-90d71559d85b.pdf
 
+MARTIN, Robert Cecil. _Clean Code: A Handbook of Agile Software Craftsmanship._  Prentice Hall, 2009. 464 p. Em: https://www.amazon.com/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882
+
 MARTIN, Robert Cecil. _Screaming Architecture._ 2011. Em: https://blog.cleancoder.com/uncle-bob/2011/09/30/Screaming-Architecture.html
 
 MARTIN, Robert Cecil. _Microservices and Jars._ 2014. Em: <https://blog.cleancoder.com/uncle-bob/2014/09/19/MicroServicesAndJars.html>.
@@ -72,8 +76,14 @@ RUBEY, Raymond J. _Pasta Theory of Software._ 1992. Em: https://www.gnu.org/fun/
 
 SIMONS, Matthew; LEROY, Jonny. _Contending with Creaky Platforms CIO._ Cutter IT Journal, Dec. 2010. Em: http://jonnyleroy.com/2011/02/03/dealing-with-creaky-legacy-platforms/
 
+SPOLSKY, Joel. _Things You Should Never Do, Part I._ 2000. Em: https://www.joelonsoftware.com/2000/04/06/things-you-should-never-do-part-i/
+
+SRINIVAS, Prashanth Nuggehalli. _Strangler fig inside (licença GFDL)_ 2010. Em: https://en.wikipedia.org/wiki/File:Strangler_fig_inside.jpg 
+
 TILKOV, Stefan. _Don't start with a monolith: ... when your goal is a microservices architecture._ 2015. Em: https://martinfowler.com/articles/dont-start-monolith.html
 
 WALLS, Craig. _Modular Java: Creating Flexible Applications with OSGi and Spring._ The Pragmatic Bookshelf, 2009. 260 p. Em: https://pragprog.com/book/cwosg/modular-java
 
 WESTEINDE, Kirsten. _Deconstructing the Monolith: Designing Software that Maximizes Developer Productivity._ 2019. Em: https://engineering.shopify.com/blogs/engineering/deconstructing-monolith-designing-software-maximizes-developer-productivity
+
+WINTON, David. _Code Rush_. 2000. Em: https://www.youtube.com/watch?v=4Q7FTjhvZ7Y

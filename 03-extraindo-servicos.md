@@ -44,7 +44,7 @@ E, convenhamos, um monólito modular é algo raríssimo no mercado. Então, para
 
 Simon Brown diz na palestra [Modular monoliths](http://www.codingthearchitecture.com/presentations/sa2015-modular-monoliths) (BROWN, 2015):
 
-_Escolha Microservices por seus benefícios, não por que sua base de código monólitica é uma bagunça._
+_Escolha Microservices por seus benefícios, não por que sua base de código monolítica é uma bagunça._
 
 ### Componentização em serviços
 
@@ -60,6 +60,10 @@ Microservices:
 - podem usar múltiplos mecanismos de persistência em paradigmas diversos (Relacional, NoSQL, etc), desde que não compartilhados com outros serviços
 - há diversidade tecnológica, sendo a única restrição a possibilidade de prover uma API em um protocolo padrão (HTTP, AMQP, etc)
 - há uma fronteira fortíssima entre as bases de código
+
+Sam Newman, no livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), define Microservices da seguinte maneira:
+
+_Microservices são serviços pequenos e autônomos que trabalham juntos._
 
 ## Prós e contras de uma Arquitetura de Microservices
 
@@ -312,21 +316,88 @@ Microservices são, então, uma abordagem para SOA.
 
 ![Para diversos autores, Microservices são um sabor de SOA {w=30}](imagens/03-extraindo-servicos/microservices-vs-soa.png)
 
-
-<!--
-
-TODO:
-
 ## Decidindo por uma Arquitetura de Microservices no Caelum Eats
 
-## Como falhar numa migração: o Big Rewrite
+Por enquanto, no Caelum Eats, temos uma aplicação monolítica.
+
+Há times separados pelos Bounded Contexts identificados: Pagamentos, Distância, Pedidos, Restaurantes, Administrativo. O código está organizado, , alinhados com os Negócios, mas a base de código é uma só. Poderíamos fazer algo mais independente se usássemos uma Arquitetura de Plugins e/ou um Module System diferente , mas os módulos Maven requerem todos os times trabalhando no mesmo projeto.
+
+Há maior controle das dependências entre os módulos do que um projeto não modularizado. Mas ainda é possível, com os módulos Maven, usar classes das dependências transitivas: por exemplo, o módulo de Distância, que depende do módulo de Restaurantes, pode usar classes do módulo Administrativo. A fronteira entre módulos Maven não é forte o bastante.
+
+O cenário de Negócios requer uma evolução rápida de algumas partes da aplicação, como o módulo de Pagamentos, que deseja explorar novos meios de pagamento como criptomoedas e QR Code, além de permitir formas de pagamento mais antigas, como dinheiro.
+
+Já em termos tecnológicos, algumas partes da aplicação da requerem experimentação, como o módulo de Distância tem a necessidade de explorar novas tecnologias seja de geoprocessamento e até de plataformas de programação diferentes da JVM.
+
+Quanto às operações, há partes da aplicação que apresentam uso intenso de CPU, como o módulo de Distância, levando a necessidade de escalar toda a aplicação em diferentes instâncias para atender à necessidade de processamento de um dos módulos. O mesmo módulo de Distância apresenta uso elevado de memória e eventuais estouros de memória, os famigerados `OutOfMemoryError`, param a instância da aplicação como um todo.
+
+O deploy deve ser feito em conjunto, já que o entregável da aplicação é o fat JAR do Spring Boot gerado pelo módulo `eats-application`. Como o módulo de Pagamentos tem uma taxa de mudança mais frequente que o resto da aplicação, o deploy do módulo de Pagamentos é um deploy de toda a aplicação. O time de pagamentos precisa coordenar a atividade com os outros times antes de lançar uma nova versão.
+
+Nesse cenário, poderíamos aproveitar alguns dos prós de uma Arquitetura de Microservices:
+
+- **Deploy independente**: o time de Pagamentos poderia publicar novas versões com a frequência desejada, minimizando a necessidade de sincronizar os trabalhos com outras equipes, deixando essa coordenação para mudanças nos contratos com outras equipes
+- **Escalabilidade independente**: se separarmos o módulo de Distância em um serviço, podemos alocar mais recursos de memória e processamento, sem a necessidade de investir em poder computacional para os outros módulos
+- **Maior isolamento de falhas**: um estouro de memória em um serviço de Distância ficaria isolado a instâncias desse serviço, sem derrubar outras funcionalidades 
+- **Experimentação tecnológica**: o time de Distância poderia explorar o uso de novas tecnologias com maior independência
+- **Fronteiras fortes entre componentes**: acabaríamos com o uso indevido de dependências transitivas e as bases de código ficariam completamente isoladas; as dependências entre os serviços seriam por meio de suas APIs
+
+<!--@note
+  Alexandre: costumo a desenhar um grafo de dependências entre os módulos e argumentar que é mais fácil começar pelos módulos mais de fora, que não nenhuma dependência aferente (que chega). Não tenho nenhuma referência sobre o assunto, mas é algo do qual eu desconfio! :)
+-->
+
+Uma vez que decidimos ir em direção a uma Arquitetura de Microservices, temos que ter consciência das dificuldades que enfrentaremos. Teremos que lidar:
+
+- com as consequências de termos um Sistema Distribuído
+- com uma maior complexidade no deploy e monitoramento
+- com a possível perda de consistência dos dados
+- com a ausência de garantias transacionais
+
+## Como falhar numa migração: o Big Bang Rewrite
+
+No artigo [Things You Should Never Do, Part I](https://www.joelonsoftware.com/2000/04/06/things-you-should-never-do-part-i/) (SPOLSKY, 2000), Joel Spolsky conta o caso da Netscape, que passou 3 anos sem lançar uma nova versão e, nesse tempo, viu sua fatia de mercado cair drasticamente. Spolsky diz que o motivo para o fracasso é o pior erro estratégico para uma companhia que depende de software: _reescrever código do zero_. Segundo o autor, é comum que programadores querem jogar código antigo fora e escrever tudo do zero e o motivo para isso é que _é mais difícil ler código do que escrever_. Reescrever todo o código, para Joel, é jogar conhecimento fora, dar vantagem competitiva para os concorrentes e gastar dinheiro com código que já existe. Uma refatoração cuidadosa e reescrita pontual de trechos de código seria uma abordagem melhor.
+
+> O ocaso da Netscape e o nascimento do Mozilla são assunto do documentário [Code Rush](https://www.youtube.com/watch?v=4Q7FTjhvZ7Y) (WINTON, 2000).
+
+Robert "Uncle Bob" Martin chama essa ideia de reescrever todo o projeto de _Grand Redesign in the Sky_, no livro [Clean Code](https://www.amazon.com/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882) (MARTIN, 2009). Uncle Bob descreve o cenário em que um time dos sonhos é escolhido para reescrever um projeto do zero, enquanto outro time continua a manter o sistema atual. O novo time passa a ter que fazer tudo o que o software antigo faz, mantendo-se atualizado com as mudanças que são continuamente realizadas.
+
+Esse cenário de manter um sistema antigo enquanto um novo é reescrito do zero lembra um dos paradoxos do filósofo pré-socrático Zenão de Eleia: o paradoxo de Aquiles e a tartaruga. Nesse paradoxo, o herói grego Aquiles e uma tartaruga resolvem apostar uma corrida, com uma vantagem inicial para a tartaruga. Mesmo a velocidade de Aquiles sendo maior que a da tartaruga, quando Aquiles chega à posição inicial A do animal, este move-se até uma posição B. Quando Aquiles chega à posição B, a tartaruga já teria avançado para uma posição C e assim sucessivamente, _ad infinitum_.
+
+Chris Richardson, no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018), chama essa ideia de desenvolver uma nova versão do zero de _Big Bang Rewrite_ e diz que é algo extremamente arriscado e que provavelmente resultará em fracasso. Duas aplicações teria que ser mantidas, funcionalidades teriam que ser duplicadas e existiria o risco de parte das funcionalidades reescritas não serem necessárias para o Negócio em um futuro próximo. Para Richardson, o sistema legado seria um alvo em constante movimento.
 
 ## Estrangulando o monólito
 
+Como fazer a migração para uma Arquitetura de Microservices, já que um Big Bang Rewrite não é uma boa ideia?
+
+Uma ideia eficaz é refatorar a aplicação monolítica incrementalmente, removendo funcionalidades e criando novos serviços ao redor do monólito. Com o decorrer do tempo, o Monólito vai encolhendo até, eventualmente, ser reduzido a pó.
+
+Martin Fowler, no artigo [Strangler Fig Application](https://martinfowler.com/bliki/StranglerFigApplication.html) (FOWLER, 2004), faz uma metáfora dessa redução progressiva do Monólito com um tipo de figueira que cresce em volta de uma árvore hospedeira, eventualmente matando a árvore original e tornando-se uma coluna com o núcleo oco.
+
+![Figueira que matou árvore original deixando uma coluna oca, por P. N. Srinivas (SRINIVAS, 2010)](imagens/03-extraindo-servicos/strangler_fig_inside.jpg)
+
 > **Pattern: STRANGLER APPLICATION**
 >
-> 
--->
+> Modernize uma aplicação desenvolvendo incrementalmente uma nova aplicação ao redor do legado.
+
+No livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018), Chris Richardson dá algumas dicas de como lidar com uma Strangler Application:
+
+- **Demonstre valor frequentemente e desde cedo**: a ideia é que sejam usados ciclos curtos e frequentes de entrega. Dessa maneira, a Strangler Application reduz o risco e oferece alto retorno sobre o investimento (ROI), ainda que coexistindo com o sistema original. Devem ser priorizadas novas funcionalidades ou migrações de alto impacto e valor de negócio. Assim, os financiadores da migração oferecerão o suporte necessário, justificando o investimento técnico na nova arquitetura.
+- **Minimize as mudanças no Monólito**: será necessário alterar o monólito durante a migração para serviços. Mas essas mudanças tem que ser gerenciadas, evitando que sejam de alto custo, arriscada e consumam muito tempo.
+- **Simplifique a infraestrutura**: pode haver o desejo de explorar novas e sofisticadas plataformas de operações como Kubernetes ou AWS Lambda. A única coisa mandatória é um deployment pipeline com testes automatizados. Com um número reduzido de serviços, não há a necessidade de deploy ou monitoramento sofisticados. Adie o investimento até que haja experiência com uma Arquitetura de Microservices.
+
+Richardson ainda cita que a migração para Microservices pode durar alguns anos, como foi o caso da Amazon. E pode ser que a organização dê prioridade a funcionalidades que geram receita, em detrimento da quebra do Monólito, principalmente, se não oferecer obstáculos.
+
+Fowler, em seu artigo [Strangler Fig Application](https://martinfowler.com/bliki/StranglerFigApplication.html) (FOWLER, 2004), argumenta que novas aplicações deveriam ser arquitetadas de maneira a faciliar uma possível estrangulação no futuro. Afinal, o código que escrevemos hoje será o legado de amanhã.
+
+## Extraindo serviços do Monólito do Caelum Eats
+
+Como vimos anteriormente, o módulo de Pagamentos do Monólito do Caelum Eats precisa evoluir mais rápido que os demais e, portanto, seria interessante que o deploy fosse independente.
+
+Já para o módulo de Distância, há a necessidade de experimentação tecnológica. Em termos de operações, há maior uso de recursos computacionais e, então, seria interessante escalar esse módulo de maneira independente. Além disso, o módulo de Distância falha mais frequentemente que os outros módulos, tirando toda a aplicação do ar. Seria interessante que as falhas fossem isoladas.
+
+Podemos pensar numa estratégia em que os módulos de Pagamentos e Distância seriam extraídos por seus respectivos times, em paralelo. Esses times trabalhariam em bases de código separadas e, no melhor estilo DevOps, cuidariam de sua infraestrutura.
+
+Ainda há um empecilho: o Banco de Dados. Por enquanto, deixaremos um só BD. Mais adiante, discutiremos se essa será a decisão final.
+
+![Estrangulando o Monólito do Caelum Eats {w=73}](imagens/03-extraindo-servicos/distancia-service-extraido.png)
 
 
 ## Criando um microservice de pagamentos
