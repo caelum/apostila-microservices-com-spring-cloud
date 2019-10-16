@@ -68,9 +68,15 @@ NEWMAN, Sam. _Building Microservices: Designing Fine-Grained Systems._ O'Reilly,
 
 NEWMAN, Sam. _Monolith to Microservices: Evolutionary Patterns to Transform Your Monolith._ O'Reilly, 2019. Early Release. 284 p. Em: https://learning.oreilly.com/library/view/monolith-to-microservices/9781492047834/
 
-PARLOG, Nicolai. _The Java Module System._ Manning Publications, 2018. Manning Early Access Program, version 10. 503p. Em: <https://www.manning.com/books/the-java-module-system>
+PARLOG, Nicolai. _The Java Module System._ Manning Publications, 2018. Manning Early Access Program, version 10. 503 p. Em: <https://www.manning.com/books/the-java-module-system>
 
-RICHARDSON, Chris. _Microservice Patterns._ Manning Publications, 2018. 520 p. Em: https://www.manning.com/books/microservices-patterns
+RICHARDS, Mark. _Microservices AntiPatterns and Pitfalls._ O'Reilly, 2016. 66 p. Em: https://learning.oreilly.com/library/view/microservices-antipatterns-and/9781492042716/
+
+RICHARDSON, Chris. _Microservice Patterns._ Manning Publications, 2018a. 520 p. Em: https://www.manning.com/books/microservices-patterns
+
+RICHARDSON, Chris. _Pattern: Shared Database._ 2018b. Em: https://microservices.io/patterns/data/shared-database.html
+
+RICHARDSON, Chris. _Pattern: Database per Service._ 2018c. Em: https://microservices.io/patterns/data/database-per-service.html
 
 RUBEY, Raymond J. _Pasta Theory of Software._ 1992. Em: https://www.gnu.org/fun/jokes/pasta.code.html
 

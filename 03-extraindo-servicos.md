@@ -278,7 +278,7 @@ Os serviços em uma Arquitetura de Microservices devem ser pequenos. Por isso, o
   Alexandre: costumo a desenhar uma tabelinha com micro (10^-6), nano (10^-12) e mili (10^-3) e perguntar isso.
 -->
 
-Chris Richardson, no livro [Microservice Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018) diz:
+Chris Richardson, no livro [Microservice Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a) diz:
 
 _Um problema com o termo Microservice é que a primeira coisa que você ouve é micro. Isso sugere que um serviço deve ser muito pequeno. (...) Na realidade, tamanho não é uma métrica útil. Um objetivo melhor é definir um serviço bem modelado como um serviço capaz de ser desenvolvido por um time pequeno com um lead time mínimo e com mínima colaboração com outros times. Na teoria, um time deve ser responsável somente por um serviço (...) Por outro lado, se um serviço requer um time grande ou leva muito tempo para ser testado, provavelmente faz sentido dividir o time e o serviço._
 
@@ -300,13 +300,13 @@ No livro [Monolith to Microservices](https://learning.oreilly.com/library/view/m
 
 Uma maneira comum de chegar a um Monólito Distribuído é ter serviços extremamente pequenos, chegando a um serviço por Entidade de Negócio (objetos que tem continuidade, identidade e estão representados em algum mecanismo de persistência).
 
-Chris Richardson, no livro [Microservice Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018), chega uma conclusão semelhante: um Monólito Distribuído é o resultado de uma decomposição incorreta dos componentes. Para Richardson, o antídoto aos Monólitos Distribuídos é seguir, só que no nível de serviços, o Common Closure Principle definido por Robert "Uncle Bob" Martin: _Agregue, em componentes, classes que mudam ao mesmo tempo e pelos mesmos motivos. Separe em componentes diferentes classes que mudam em momentos diferentes e por razões distintas._
+Chris Richardson, no livro [Microservice Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), chega uma conclusão semelhante: um Monólito Distribuído é o resultado de uma decomposição incorreta dos componentes. Para Richardson, o antídoto aos Monólitos Distribuídos é seguir, só que no nível de serviços, o Common Closure Principle definido por Robert "Uncle Bob" Martin: _Agregue, em componentes, classes que mudam ao mesmo tempo e pelos mesmos motivos. Separe em componentes diferentes classes que mudam em momentos diferentes e por razões distintas._
 
 ## Microservices e SOA
 
 SOA (Service-Oriented Architecture) é uma abordagem arquitetural documentada pela Gartner em um artigo de 1996 que, no começo da década de 2000, passou a ser adotada por várias grandes corporações. A oportunidade de vender soluções de software e hardware foi aproveitada por empresas de TI como IBM, Oracle, HP, SAP e Sun durante essa década.
 
-Chris Richardson, em seu livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018), descreve SOA como sendo uma arquitetura que usa _smart pipes_ como ESB, protocolos pesados como SOAP e WS-*, Persistência centralizada em BDs corporativos e serviços de granularidade grossa. Talvez seja a versão mais comum de SOA que vemos implementada nas organizações.
+Chris Richardson, em seu livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), descreve SOA como sendo uma arquitetura que usa _smart pipes_ como ESB, protocolos pesados como SOAP e WS-*, Persistência centralizada em BDs corporativos e serviços de granularidade grossa. Talvez seja a versão mais comum de SOA que vemos implementada nas organizações.
 
 Martin Fowler e James Lewis dizem em seu artigo sobre [Microservices](https://martinfowler.com/articles/microservices.html) (FOWLER; LEWIS, 2014), que há uma grande ambiguidade sobre o que SOA realmente é e, dependendo da definição, uma Arquitetura de Microservices é SOA, mas pode não ser. Talvez seria “SOA do jeito certo”. Algumas características a distinguem do SOA implementado em grandes organizações: governança e gerenciamento de dados descentralizado; mais inteligência nos Microservices (_smart endpoints_) e menos nos canais de comunicação (_dumb pipes_). Um ESB seria um _smart pipe_, já que faz roteamento de mensagens, transformações, orquestração e até algumas regras de negócio. Ainda citam em um rodapé que a Netflix, uma das referências em Microservices, inicialmente chamava sua abordagem de _fine-grained SOA_.
 
@@ -367,7 +367,7 @@ Robert "Uncle Bob" Martin chama essa ideia de reescrever todo o projeto de _Gran
 
 Esse cenário de manter um sistema antigo enquanto um novo é reescrito do zero lembra um dos paradoxos do filósofo pré-socrático Zenão de Eleia: o paradoxo de Aquiles e a tartaruga. Nesse paradoxo, o herói grego Aquiles e uma tartaruga resolvem apostar uma corrida, com uma vantagem inicial para a tartaruga. Mesmo a velocidade de Aquiles sendo maior que a da tartaruga, quando Aquiles chega à posição inicial A do animal, este move-se até uma posição B. Quando Aquiles chega à posição B, a tartaruga já teria avançado para uma posição C e assim sucessivamente, _ad infinitum_.
 
-Chris Richardson, no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018), chama essa ideia de desenvolver uma nova versão do zero de _Big Bang Rewrite_ e diz que é algo extremamente arriscado e que provavelmente resultará em fracasso. Duas aplicações teria que ser mantidas, funcionalidades teriam que ser duplicadas e existiria o risco de parte das funcionalidades reescritas não serem necessárias para o Negócio em um futuro próximo. Para Richardson, o sistema legado seria um alvo em constante movimento.
+Chris Richardson, no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), chama essa ideia de desenvolver uma nova versão do zero de _Big Bang Rewrite_ e diz que é algo extremamente arriscado e que provavelmente resultará em fracasso. Duas aplicações teria que ser mantidas, funcionalidades teriam que ser duplicadas e existiria o risco de parte das funcionalidades reescritas não serem necessárias para o Negócio em um futuro próximo. Para Richardson, o sistema legado seria um alvo em constante movimento.
 
 ## Estrangulando o monólito
 
@@ -383,7 +383,7 @@ Martin Fowler, no artigo [Strangler Fig Application](https://martinfowler.com/bl
 >
 > Modernize uma aplicação desenvolvendo incrementalmente uma nova aplicação ao redor do legado.
 
-No livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018), Chris Richardson dá algumas dicas de como lidar com uma Strangler Application:
+No livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), Chris Richardson dá algumas dicas de como lidar com uma Strangler Application:
 
 - **Demonstre valor frequentemente e desde cedo**: a ideia é que sejam usados ciclos curtos e frequentes de entrega. Dessa maneira, a Strangler Application reduz o risco e oferece alto retorno sobre o investimento (ROI), ainda que coexistindo com o sistema original. Devem ser priorizadas novas funcionalidades ou migrações de alto impacto e valor de negócio. Assim, os financiadores da migração oferecerão o suporte necessário, justificando o investimento técnico na nova arquitetura.
 - **Minimize as mudanças no Monólito**: será necessário alterar o monólito durante a migração para serviços. Mas essas mudanças tem que ser gerenciadas, evitando que sejam de alto custo, arriscada e consumam muito tempo.
@@ -392,6 +392,32 @@ No livro [Microservices Patterns](https://www.manning.com/books/microservices-pa
 Richardson ainda cita que a migração para Microservices pode durar alguns anos, como foi o caso da Amazon. E pode ser que a organização dê prioridade a funcionalidades que geram receita, em detrimento da quebra do Monólito, principalmente, se não oferecer obstáculos.
 
 Fowler, em seu artigo [Strangler Fig Application](https://martinfowler.com/bliki/StranglerFigApplication.html) (FOWLER, 2004), argumenta que novas aplicações deveriam ser arquitetadas de maneira a faciliar uma possível estrangulação no futuro. Afinal, o código que escrevemos hoje será o legado de amanhã.
+
+### Começar a migração pelo BD ou pela aplicação?
+
+Sam Newman, no livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), recomenda uma progressão que começa pelo BD:
+
+1. Encontrar as linhas de costura (em inglês, _seams_) da aplicação, agrupando o código do Monólito em pacotes.
+2. Identificar as costuras no BD, tentando já quebrar dependências.
+3. Dividir o schema do BD, mantendo o código no monólito. Nesse momento, joins, foreign keys e integridade transacional já seriam perdidas. Para Newman, seria uma boa maneira de explorar a decomposição e ajustar detalhes.
+4. Só então o código seria dividido em serviços, poucos de cada vez, progressivamente
+
+Já no livro [Microservices AntiPatterns and Pitfalls](https://learning.oreilly.com/library/view/microservices-antipatterns-and/9781492042716/) (RICHARDS, 2016), Mark Richards discorda diametralmente. Richards argumenta que são muitos comuns ajustes na granularidade dos serviços no começo da migração. Podemos ter quebrado demais os serviços, ou de menos. E reagrupar os dados no BD é muito mais difícil, custoso e propenso a erros que reagrupar o código da aplicação. Para o autor, uma migração para Microservices deveria começar com o código. Assim que haja uma garantia que a granularidade do serviço está correta, os dados podem ser migrados. É importante ressaltar que manter o BD monolítico é uma solução paliativa. Richards deixa claro o risco dessa abordagem: acoplamento dos serviços pelo BD. Discutiremos essa ideia mais adiante no curso.
+
+### O que extrair do monólito?
+
+Chris Richardson, no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), diz que os módulos devem ser classificados de acordo com critérios que ajudem a visualizar antecipadamente os benefícios de extraí-los do Monólito. Entre os critérios:
+
+- O desenvolvimento será acelerado pela extração: se uma parte específica da aplicação sofrerá uma grande evolução em um futuro próximo, convertê-la para um serviço pode acelerar as entregas.
+- Um problema de performance, escalabilidade ou confiabilidade será resolvido: se uma fatia da aplicação apresenta problemas nesse requisitos não-funcionais, afetando o Monólito como um todo, pode ser uma boa ideia extraí-la para um serviço.
+- Permitirá a extração de outros serviços: às vezes, as dependências entre os módulos fazem com que fique mais fácil extrair um serviço depois de algum outro ter sido extraído
+
+Sam Newman, no livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), traz reflexões semelhantes. Seriam bons candidatos a serem extraídos, partes do Monólito:
+
+- que mudam com uma frequência muito maior
+- que tem times separados, às vezes geograficamente
+- que possuem necessidades de segurança e proteção da informação mais restritas
+- que teriam vantagens no uso de uma tecnologia diferente
 
 ## Extraindo serviços do Monólito do Caelum Eats
 
@@ -405,6 +431,7 @@ Ainda há um empecilho: o Banco de Dados. Por enquanto, deixaremos um só BD. Ma
 
 ![Estrangulando o Monólito do Caelum Eats {w=73}](imagens/03-extraindo-servicos/distancia-service-extraido.png)
 
+<!-- TODO: texto sobre SPLITTING THE DOMAIN MODEL do capítulo Strategies for refactoring a monolith to microservices do Microservice Patterns -->
 
 ## Criando um Microservice de pagamentos
 

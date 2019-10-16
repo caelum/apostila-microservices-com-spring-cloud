@@ -241,7 +241,9 @@ eats
 
 <!--@note
 
-Costumo a desenhar a arquitetura em 3 camadas (layers) como uma maneira horizontal de "fatiar" o código.
+Sam Newman fala dessa abordagem de separar em pacotes como uma primeira coisa a se fazer quando for quebrar o monólito, no capítulo Breaking The Monolith do Building Microservices.
+
+Alexandre: Costumo a desenhar a arquitetura em 3 camadas (layers) como uma maneira horizontal de "fatiar" o código.
 
 Já agrupar por Bounded Contexts seria uma maneira vertical.
 

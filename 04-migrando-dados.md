@@ -1,17 +1,77 @@
 # Migrando dados
 
+## Banco de Dados Compartilhado: uma boa ideia?
+
+Mesmo depois de extrairmos os serviços de Pagamentos e Distância, mantivemos o mesmo MySQL monolítico.
+
+![BD Compartilhado no Caelum Eats {w=73}](imagens/03-extraindo-servicos/distancia-service-extraido.png)
+
+Há vantagens em manter um BD Compartilhado, como as mencionadas por Chris Richardson na página [Shared Database](https://microservices.io/patterns/data/shared-database.html) (RICHARDSON, 2018b):
+
+- os desenvolvedores estão familiarizados com BD relacionais e soluções de ORM
+- há o reforço da consistência dos dados com as garantias ACID (Atomicidade, Consistência, Isolamento e Durabilidade) do MySQL e de outros BDs relacionais
+- é possível fazer consultas complexas de maneira eficiente, com joins de dados dos múltiplos serviços
+- um único BD é mais fácil de operar e monitorar
+
+Era comum em adoções de SOA que fosse mantido um BD Corporativo, que mantinha todos os dados da organização.
+
+Porém, há diversas desvantagens, como as discutidas por Richardson na mesma página:
+
+- dificuldade em escalar BDs, especialmente, relacionais
+- necessidade de diferentes paradigmas de persistência para alguns serviços, como BDs orientados a grafos, como Neo4J, ou BDs bons em armazenar dados pouco estruturados, como MongoDB
+- acoplamento no desenvolvimento, fazendo com que haja a necessidade de coordenação para a evolução dos schemas do BD monolítico, o que pode diminuir a velocidade dos times
+- acoplamento no _runtime_, fazendo com que um lock em uma tabela ou uma consulta pesada feita por um serviço afete os demais
+
+No livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), Sam Newman foca bastante no acoplamento gerado pelo Shared Database. Newman diz que essa Integração pelo BD é muito comum no mercado. A facilidade de obter e modificar dados de outro serviço diretamente pelo BD explica a popularidade. É como se o schema do BD fosse uma API. O acoplamento é feito por detalhes de implementação e uma mudança no schema do BD quebra os "clientes" da integração. Uma migração para outro paradigma de BD fica impossibilitada. A promessa de autonomia de uma Arquitetura de Microservices seria uma promessa não cumprida. Ficaria difícil evitar mudanças que quebram o contrato, o que inevitavelmente levaria a medo de qualquer mudança.
+
+## Um Banco de Dados por serviço
+
+No artigo [Database per service](https://microservices.io/patterns/data/database-per-service.html) (RICHARDSON, 2018c), Chris Richardson argumenta em favor de um BD separado para cada serviço. O BD é um detalhe de implementação do serviço e não deve ser acessado diretamente por outros serviços.
+
+Podemos fazer um paralelo com o conceito de encapsulamento em Orientação a Objetos. Um objeto deve proteger seus detalhes internos e tornar os atributos privados é uma condição para isso. Qualquer manipulação dos atributos deve ser feita pelos métodos públicos.
+
+No nível de serviços, os dados estarão em algum mecanismo de persistência, que devem ser privados. O acesso aos dados deve ser feito pela API do serviço, não diretamente.
+
+A autonomia e o desacoplamento oferecidos por essa abordagem cumprem a promessa de uma Arquitetura de Microservices. As mudanças na implementação da persistência de um serviço não afetariam os demais. Cada serviço poderia usar o tipo de BD mais adequado às suas necessidades. Seria possível escalar um BD de um serviço independentemente, otimizando recursos computacionais.
+
+Claro, não deixam de existir pontos negativos nessa abordagem. Temos que lidar com uma possível falta de consistência dos dados. Cenários de negócio transacionais passam a ser um desafio. Consultas que juntam dados de vários serviços são dificultadas. Há também a complexidade de operar e monitorar vários BDs distintos. Se forem usados múltiplos paradigmas de persistência, talvez seja difícil ter os especialistas necessários na organização.
+
+### Um Servidor de Banco de Dados por serviço
+
+Richardson cita algumas estratégias para tornar privados os dados persistidos de um serviço:
+
+- Tabelas Privadas por Serviço: cada serviço tem um conjunto de tabelas que só deve ser acessada por esse serviço. Pode ser reforçado por um usuário para cada serviço e o uso de grants.
+- Schema por Serviço: cada serviço tem seu próprio Schema no BD.
+- Servidor de BD por Serviço: cada serviço tem seu próprio servidor de BD separado. Serviços com muitos acessos ou consultas pesadas trazem a necessidade de um servidor de BD separado.
+
+Ter Tabelas Privadas ou um Schema Separado por serviço pode ser usado como um passo em direção à uma eventual migração para um servidor separado. 
+
+Quando há a necessidade, para um serviço, de mecanismo de persistência com um paradigma diferente dos demais serviços, o servidor do BD deverá ser separado.
+
+## Bancos de Dados separados no Caelum Eats
+
+No Caelum Eats, vamos criar servidores de BD separados do MySQL do Monólito para os serviços de Pagamentos e de Distância.
+
+O time de Pagamentos também usará um MySQL.
+
+Já o time de Distância planeja explorar uma nova tecnologia de persistência, mais alinhada com as necessidades de geoprocessamento: o MongoDB. É um BD NoSQL, orientado a documentos, com um paradigma diferente do relacional.
+
+![Servidores de BD separados para os serviços de Pagamentos e Distância {w=73}](imagens/04-migrando-dados/preparando-bds-separados-para-pagamentos-e-distancia.png)
+
+Por enquanto, apenas criaremos os servidores de cada BD. Daria trabalho instalar e configurar os BDs manualmente. Então, para essas necessidades de infraestrutura, usaremos o Docker!
+
 ## Criando uma nova instância do MySQL a partir do Docker
 
 Abra um Terminal e baixe a imagem do MySQL 5.7 para sua máquina com o seguinte comando:
 
 ```sh
-docker pull mysql:5.7
+docker image pull mysql:5.7
 ```
 
 Suba um container do MySQL 5.7 com o seguinte comando:
 
 ```sh
-docker run --rm -d -p 3307:3306 --name eats.mysql -e MYSQL_ROOT_PASSWORD=caelum123 -e MYSQL_DATABASE=eats_pagamento -e MYSQL_USER=pagamento -e MYSQL_PASSWORD=pagamento123 mysql:5.7
+docker container run --rm -d -p 3307:3306 --name eats.mysql -e MYSQL_ROOT_PASSWORD=caelum123 -e MYSQL_DATABASE=eats_pagamento -e MYSQL_USER=pagamento -e MYSQL_PASSWORD=pagamento123 mysql:5.7
 ```
 
 Usamos as configurações:
@@ -27,7 +87,7 @@ Mais detalhes sobre essas opções podem ser encontrados em: https://docs.docker
 Liste os containers que estão sendo executados pelo Docker com o comando:
 
 ```sh
-docker ps
+docker container ps
 ```
 
 Deve aparecer algo como:
@@ -40,7 +100,7 @@ CONTAINER ID                                                       IMAGE        
 É possível formatar as informações, deixando a saída do comando mais enxuta. Para isso, use a opção `--format`:
 
 ```sh
-docker ps --format "{{.Image}}\t{{.Names}}"
+docker container ps --format "{{.Image}}\t{{.Names}}"
 ```
 
 O resultado será semelhante a:
@@ -52,7 +112,7 @@ mysql:5.7     eats.mysql
 Acesse os logs do container `eats.mysql` com o comando:
 
 ```sh
-docker logs eats.mysql
+docker container logs eats.mysql
 ```
 
 Podemos executar um comando dentro de um container por meio do `docker exec`.
@@ -60,7 +120,7 @@ Podemos executar um comando dentro de um container por meio do `docker exec`.
 Para acessar a interface de linha de comando do MySQL (o comando `mysql`) com o database e usuário criados em passos anteriores, devemos executar:
 
 ```sh
-docker exec -it eats.mysql mysql -upagamento -p eats_pagamento
+docker container exec -it eats.mysql mysql -upagamento -p eats_pagamento
 ```
 
 A opção `-i` (ou `--interactive`) repassa a entrada padrão do host para o container do Docker.
@@ -94,7 +154,7 @@ Para sair, digite `exit`.
 Pare a execução do container `eats.mysql` com o comando a seguir:
 
 ```sh
-docker stop eats.mysql
+docker container stop eats.mysql
 ```
 
 ## Criando uma instância do MongoDB a partir do Docker
@@ -102,22 +162,24 @@ docker stop eats.mysql
 Baixe a imagem do MongoDB 3.6 com o comando a seguir:
 
 ```sh
-docker pull mongo:3.6
+docker container pull mongo:3.6
 ```
 
 Execute o MongoDb 3.6 em um container com o comando:
 
 ```sh
-docker run --rm -d -p 27018:27017 --name eats.mongo mongo:3.6
+docker container run --rm -d -p 27018:27017 --name eats.mongo mongo:3.6
 ```
 
 Note que mudamos a porta do host para `27018`. A porta padrão do MongoDB é `27017`.
 
 Liste os containers, obtenha os logs de `eats.mongo` e pare a execução. Use como exemplo os comandos listados no exercício do MySQL.
 
-## Gerenciando containers de infraestrutura com Docker Compose
+## Simplificando o gerenciamento dos containers com Docker Compose
 
-No seu Desktop, defina um arquivo `docker-compose.yml` com o seguinte conteúdo:
+O Docker Compose permite definir uma série de _services_ (cuidado com o nome!) que permitem descrever a configuração de containers. Com essa ferramenta, é possível disparar novas instâncias de maneira muito fácil!
+
+Para isso, basta definirmos um arquivo `docker-compose.yml`. Os services devem ter um nome e referências às imagens do Docker Hub e podem ter definições de portas utilizadas, variáveis de ambiente e diversas outras configurações.
 
 ####### docker-compose.yml
 
@@ -142,57 +204,20 @@ services:
       - "27018:27017"
 ```
 
-Observação: mantenha os TABs certinhos. São muito importantes em um arquivo `.yml`. Em caso de dúvida, peça ajuda ao instrutor.
-
-Caso não queira digita, o conteúdo do `docker-compose.yml` pode ser encontrado em: https://gitlab.com/snippets/1859850
-
-Mude para o diretório do `docker-compose.yml` , o Desktop, no caso. Suba ambos os containers, do MySQL e do MongoDB, com o comando:
+Para subir os serviços definidos no `docker-compose.yml`, execute o comando:
 
 ```sh
 docker-compose up -d
 ```
-
 A opção `-d`, ou `--detach`, roda os containers no background, liberando o Terminal.
-
-Observe os containers sendo executados com o comando do Docker:
-
-```sh
-docker ps
-```
-
-Deverá ser impresso algo como:
-
-```txt
-CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                               NAMES
-49bf0d3241ad        mysql:5.7           "docker-entrypoint..."   26 minutes ago      Up 3 minutes        33060/tcp, 0.0.0.0:3307->3306/tcp   eats-microservices_mysql.pagamento_1
-4890dcb9e898        mongo:3.6           "docker-entrypoint..."   26 minutes ago      Up 3 minutes        0.0.0.0:27018->27017/tcp            eats-microservices_mongo.distancia_1
-```
 
 É possível executar um Terminal diretamente em uma dos containers criados pelo Docker Compose com o comando `docker-compose exec`.
 
 Por exemplo, para acessar o comando `mongo`, a interface de linha de comando do MongoDB, do service `mongo.distancia`, faça:
 
 ```sh
-  docker-compose exec mongo.distancia mongo
+docker-compose exec mongo.distancia mongo
 ```
-
-Devem aparecer informações sobre o MongoDB, como a versão, que deve ser algo como _MongoDB server version: 3.6.12_.
-
-Digite o seguinte comando:
-
-```sh
-show dbs
-```
-
-Deve ser impresso algo parecido com:
-
-```txt
-admin   0.000GB
-config  0.000GB
-local   0.000GB
-```
-
-Para sair, digite `quit()`, com os parênteses.
 
 Você pode obter os logs de ambos os containers com o seguinte comando:
 
@@ -217,6 +242,65 @@ Depois de parados com `stop`, para iniciá-los novamente, faça um `docker-compo
 É possível parar e remover um _service_ específico, passando seu nome no final do comando.
 
 _ATENÇÃO: **evite** usar o comando `docker-compose down` durante o curso. Esse comando apagará todos os dados dos seus BD. Use apenas o comando `docker-compose stop`._
+
+## Exercício: Gerenciando containers de infraestrutura com Docker Compose
+
+1. No seu Desktop, defina um arquivo `docker-compose.yml` com o conteúdo anterior, que pode ser encontrado em: https://gitlab.com/snippets/1859850
+
+  Observação: mantenha os TABs certinhos. São muito importantes em um arquivo `.yml`. Em caso de dúvida, peça ajuda ao instrutor.
+
+2. No Desktop, suba ambos os containers, do MySQL e do MongoDB, com o comando:
+
+  ```sh
+  cd ~/Desktop
+  docker-compose up -d
+  ```
+
+  Observe os containers sendo executados com o comando do Docker:
+
+  ```sh
+  docker container ps
+  ```
+
+  Deverá ser impresso algo como:
+
+  ```txt
+  CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                               NAMES
+  49bf0d3241ad        mysql:5.7           "docker-entrypoint..."   26 minutes ago      Up 3 minutes        33060/tcp, 0.0.0.0:3307->3306/tcp   eats-microservices_mysql.pagamento_1
+  4890dcb9e898        mongo:3.6           "docker-entrypoint..."   26 minutes ago      Up 3 minutes        0.0.0.0:27018->27017/tcp            eats-microservices_mongo.distancia_1
+  ```
+
+3. Acesse o MongoDB do service `mongo.distancia` com o comando:
+
+  ```sh
+  docker-compose exec mongo.distancia mongo
+  ```
+
+  Devem aparecer informações sobre o MongoDB, como a versão, que deve ser algo como _MongoDB server version: 3.6.12_.
+
+  Digite o seguinte comando:
+
+  ```sh
+  show dbs
+  ```
+
+  Deve ser impresso algo parecido com:
+
+  ```txt
+  admin   0.000GB
+  config  0.000GB
+  local   0.000GB
+  ```
+
+  Para sair, digite `quit()`, com os parênteses.
+
+4. Observe os logs dos services com o comando:
+
+  ```sh
+  docker-compose logs
+  ```
+
+<!-- TODO: continuar daqui -->
 
 ## Separando schema do BD de pagamentos do monólito
 
@@ -309,7 +393,7 @@ select * from pagamento;
 
 Os pagamentos devem ter sido migrados.
 
-![Schema separado para o BD de pagamentos {w=35}](imagens/05-migrando-dados/separando-schema-do-bd-de-pagamentos.png)
+![Schema separado para o BD de pagamentos {w=35}](imagens/04-migrando-dados/separando-schema-do-bd-de-pagamentos.png)
 
 ## Exercício: migrando dados de pagamento para schema separado
 
