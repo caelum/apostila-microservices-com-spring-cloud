@@ -1,4 +1,4 @@
-# Service Registry, Self Registration e Client Side Discovery
+# Service Discovery
 
 ## Implementando um Service Registry com o Eureka
 

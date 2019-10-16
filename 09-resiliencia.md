@@ -1,4 +1,4 @@
-# Circuit Breaker e Retry
+# Resiliência
 
 ## Exercício: simulando demora no serviço de distância
 
