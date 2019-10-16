@@ -20,7 +20,7 @@ Em 2010, Jez Humble e David Farley publicaram o livro **Continuous Delivery**, e
 
 Todo esse contexto é resumido por Sam Newman no início do livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015):
 
-_Domain-driven design. Continuous delivery. On-demand virtualization. Infrastructure automation. Small autonomous teams. Systems at scale. Microservices have emerged from this world._
+_Domain-driven design. Continuous delivery. Virtualização sob demanda. Automação de infraestrutura. Times pequenos e autônomos. Sistemas em larga escala. Microservices emergiram desse mundo._
 
 ## Do monólito (modular) aos Microservices
 
@@ -230,7 +230,7 @@ _"Nós estamos mudando a COMPLEXIDADE ACIDENTAL de dentro da aplicação para a 
 
 Manter uma consistência forte dos dados em um Sistema Distribuído é extremamente difícil.
 
-De acordo com o Teorema CAP, cunhado por Eric Brewer na publicação [Towards Robust Distributed Systems](http://pld.cs.luc.edu/courses/353/spr11/notes/brewer_keynote.pdf) (BREWER, 2000), não é possível termos simultaneamente mais que duas das seguintes características: Consistência dos dados, Disponibilidade (_Availability_, em inglês) e tolerância a Partições de rede. Ou seja, se a rede falhar, temos que escolher entre Consistência e Disponibilidade. Se escolhermos Consistência, o sistema ficará indisponível até a falha na rede ser resolvido. Se escolhermos Disponibilidade, a Consistência será sacrificada. Portanto, em um Sistema Distribuído, não temos garantias ACID (Atomicidade, Consistência, Isolamento e Durabilidade). Em um esperto jogo de palavras com os conceitos da químico de ácido e base, Brewer diz que poderíamos ter garantias BASE (Basically Available, Soft-state, Eventually consistent): para manter um Sistema Distribuído disponível, teríamos respostas aproximadas que eventualmente ficariam consistentes.
+De acordo com o Teorema CAP, cunhado por Eric Brewer na publicação [Towards Robust Distributed Systems](http://pld.cs.luc.edu/courses/353/spr11/notes/brewer_keynote.pdf) (BREWER, 2000), não é possível termos simultaneamente mais que duas das seguintes características: Consistência dos dados, Disponibilidade (_Availability_, em inglês) e tolerância a Partições de rede. Ou seja, se a rede falhar, temos que escolher entre Consistência e Disponibilidade. Se escolhermos Consistência, o sistema ficará indisponível até a falha na rede ser resolvido. Se escolhermos Disponibilidade, a Consistência será sacrificada. Portanto, em um Sistema Distribuído, não temos garantias ACID (Atomicidade, Consistência, Isolamento e Durabilidade). Em um esperto jogo de palavras com os conceitos da Química de ácido e base, Brewer diz que poderíamos ter garantias BASE (Basically Available, Soft-state, Eventually consistent): para manter um Sistema Distribuído disponível, teríamos respostas aproximadas que eventualmente ficariam consistentes.
 
 Daniel Abadi, no paper [Consistency Tradeoffs in Modern Distributed Database System Design](http://www.cs.umd.edu/~abadi/papers/abadi-pacelc.pdf)(ABADI, 2012) , cunha o Teorema PACELC, incluindo alta latência de rede como uma forma de indisponibilidade.
 
@@ -308,7 +308,7 @@ Martin Fowler e James Lewis dizem em seu artigo sobre [Microservices](https://ma
   Alexandre: eu já trabalhei, nos idos de 2013, como analista de integração em uma grande empresa de seguros do Brasil. Haviam 5 diretorias: Seguros, Saúde, Previdência, Capitalização e Consórcios. Um serviço era basicamente uma diretoria. Portanto, tínhamos 5 serviços. Uma história interessante é que uma merge 5 empresas diferentes com sistemas feitos em COBOL, Oracle Forms + PL/SQL, SQL Server + T-SQL e até Web Services SOAP. E tudo isso tinha que ser vendido como uma coisa só, num front-end. Era usado um ESB de um desses grandes players do mercado de TI.
 -->
 
-Henrique Lobo mostra em seu artigo [Repensando micro serviços](https://www.itexto.com.br/devkico/?p=1768) que SOA como descrito pelo consórcio de padrões abertos [OASIS](https://en.wikipedia.org/wiki/OASIS_(organization) é muito parecido com o espírito dos microservices.
+Henrique Lobo mostra em seu artigo [Repensando micro serviços](https://www.itexto.com.br/devkico/?p=1768) que SOA como descrito pelo consórcio de padrões abertos [OASIS](https://en.wikipedia.org/wiki/OASIS_(organization) é muito parecido com o espírito dos Microservices.
 
 Sam Newman, em seu livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), reconhece que SOA trouxe boas ideias, mas que houve uma falta de consenso em como fazer SOA bem e dificuldade em ter uma narrativa alternativa à dos vendedores. SOA passou a ser visto como uma coleção de ferramentas e não como uma abordagem arquitetural. Ainda fala que uma Arquitetura de Microservices está para SOA assim como XP e Scrum estão para Agile: uma abordagem específica que veio de projetos reais.
 
@@ -400,7 +400,7 @@ Ainda há um empecilho: o Banco de Dados. Por enquanto, deixaremos um só BD. Ma
 ![Estrangulando o Monólito do Caelum Eats {w=73}](imagens/03-extraindo-servicos/distancia-service-extraido.png)
 
 
-## Criando um microservice de pagamentos
+## Criando um Microservice de pagamentos
 
 Pelo navegador, abra `https://start.spring.io/`.
 Em _Project_, mantenha _Maven Project_.
@@ -735,7 +735,7 @@ Extraímos nosso primeiro serviço do monólito. A evolução do código de paga
   git clone https://gitlab.com/aovs/projetos-cursos/fj33-eats-pagamento-service.git
   ```
 
-  Vamos criar um workspace do Eclipse separado para os microservices, mantendo aberto o workspace com o monólito. Para isso, clique no ícone do Eclipse da área de trabalho. Em _Workspace_, defina `/home/<usuario-do-curso>/workspace-microservices`, onde `<usuario-do-curso>` é o login do curso.
+  Vamos criar um workspace do Eclipse separado para os Microservices, mantendo aberto o workspace com o monólito. Para isso, clique no ícone do Eclipse da área de trabalho. Em _Workspace_, defina `/home/<usuario-do-curso>/workspace-microservices`, onde `<usuario-do-curso>` é o login do curso.
 
   No Eclipse, importe o projeto `fj33-eats-pagamento-service`, usando o menu _File > Import > Existing Maven Projects_.
 
@@ -830,7 +830,7 @@ Extraímos nosso primeiro serviço do monólito. A evolução do código de paga
 
   Observe que, após a confirmação do pagamento, o status do pedido **está _REALIZADO_ e não _PAGO_**. Isso ocorre porque removemos a chamada à classe `PedidoService`, cujo código ainda está no monólito. Corrigiremos esse detalhe mais adiante no curso.
 
-## Criando um microservice de distância
+## Criando um Microservice de distância
 
 Abra `https://start.spring.io/` no navegador.
 Em _Project_, mantenha _Maven Project_.
@@ -1182,7 +1182,7 @@ Ufa! Mais um serviço extraído do monólito. Em um projeto real, isso seria fei
   git clone https://gitlab.com/aovs/projetos-cursos/fj33-eats-distancia-service.git
   ```
 
-  No workspace de microservices do Eclipse, use o menu _File > Import > Existing Maven Projects_ para importar o projeto `fj33-eats-distancia-service`.
+  No workspace de Microservices do Eclipse, use o menu _File > Import > Existing Maven Projects_ para importar o projeto `fj33-eats-distancia-service`.
 
   Execute a classe `EatsDistanciaServiceApplication`.
 
