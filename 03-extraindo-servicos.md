@@ -431,9 +431,62 @@ Ainda há um empecilho: o Banco de Dados. Por enquanto, deixaremos um só BD. Ma
 
 ![Estrangulando o Monólito do Caelum Eats {w=73}](imagens/03-extraindo-servicos/distancia-service-extraido.png)
 
-<!-- TODO: texto sobre SPLITTING THE DOMAIN MODEL do capítulo Strategies for refactoring a monolith to microservices do Microservice Patterns -->
+## Quebrando o Domínio
 
-## Criando um Microservice de pagamentos
+No capítulo que discute sobre como refatorar um monólito em direção a Microservices, do livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), Chris Richardson diz que é necessário extrair o Modelo de Domínio específico para um novo serviço do Modelo de Domínio já existente no Monólito. E um dos principais desafios é eliminar referências a objetos de outros domínios, que vão além das fronteiros de um serviço.
+
+No Caelum Eats, por exemplo, o novo serviço de Pagamentos teria um objeto `Pagamento` que está relacionado a um `Pedido`, que continuará no módulo de Pedido do Monólito.
+
+```java
+class Pagamento {
+
+  // outros atributos...
+
+  @ManyToOne(optional=false)
+  private Pedido pedido;
+
+}
+```
+
+![Referência a um objeto além da fronteira do serviço {w=45}](imagens/03-extraindo-servicos/referencias-alem-da-fronteira-do-servico.png)
+
+Essa dependência a objetos além dos limites do serviço é problemática porque haveria um acoplamento indesejado entre os Modelos de Domínio. Não há a necessidade do serviço de Pagamentos conhecer todos os detalhes de um pedido. Além disso, como tanto `Pagamento` como `Pedido` são entidades, haveria uma dependência pelo BD, que queremos evitar, pensando nos próximos passos da extração do serviço de Pagamentos.
+
+Uma ideia seria usar bibliotecas com o Modelo de Domínio de outro serviço, o que é comumente chamado de _Shared Libs_. Por exemplo, no Caelum Eats, poderíamos ter um JAR apenas com a classe `Pedido` e classes associadas, como `ItemDoPedido`, `Entrega` e `Avaliacao`.
+
+Porém, usar _Shared Libs_ para classes de Domínio traz um acoplamento entre os serviços ao redor da API. A cada mudança do Modelo de Domínio de um serviço, todos os seus clientes devem receber uma nova versão do JAR e deve ser feito um novo deploy em cada um deles.
+
+Para Richardson, porém, há lugar para _Shared Libs_: para funcionalidades que são improváveis de serem modificadas, como uma classe `Moeda`. Bibliotecas técnicas, como frameworks, drivers e ferramentas para tarefas mais específicas, não são um problema.
+
+Richardson argumenta que uma boa solução é pensar em termos de Agregados do DDD, que referenciam outros Agregados por meio da identidade de sua raiz.
+
+Traduzindo isso para o cenário do Caelum Eats, teríamos uma referência, em `Pagamento`, apenas ao `id` do `Pedido`:
+
+```java
+class Pagamento {
+
+  // outros atributos...
+
+  @̶M̶a̶n̶y̶T̶o̶O̶n̶e̶(̶o̶p̶t̶i̶o̶n̶a̶l̶=̶f̶a̶l̶s̶e̶)̶
+  p̶r̶i̶v̶a̶t̶e̶ ̶P̶e̶d̶i̶d̶o̶ ̶p̶e̶d̶i̶d̶o̶;̶
+
+  @Column(nullable=false)
+  private Long pedidoId;
+
+}
+```
+
+![Referências a objetos além da fronteira devem ser por sua identidade {w=41}](imagens/03-extraindo-servicos/referencias-a-objetos-alem-da-fronteira-pela-identidade.png)
+
+Richardson discute que uma pequena mudança como a feita anteriormente pode trazer um grande impacto para outras classes, que esperavam uma referência a um objeto. Além disso, há desafios maiores como extrair lógica de negócio de classes que tem mais de uma responsabilidade.
+
+Um outro caso interessante são serviços que tem visões diferentes de uma mesma entidade. Por exemplo, a classe `Restaurante` é utilizada tanto pelo módulo de Restaurante do Monólito como pelo serviço de Distância. Mas, enquanto o módulo Restaurante tem a necessidade de manter o CNPJ, taxa de entrega e outros detalhes, o serviço de Distância só está interessado no CEP e Tipo de Cozinha.
+
+![Diferentes serviços tem diferentes interesses em relação a uma Entidade {w=48}](imagens/03-extraindo-servicos/diferentes-servicos-tem-diferentes-interesses-em-relacao-a-uma-mesma-entidade.png)
+
+## Criando um Microservice de Pagamentos
+
+Vamos iniciar criando um projeto para o serviço de pagamentos.
 
 Pelo navegador, abra `https://start.spring.io/`.
 Em _Project_, mantenha _Maven Project_.
@@ -485,7 +538,7 @@ spring.jackson.serialization.fail-on-empty-beans=false
 
 Observação: `<SEU USUARIO>` e `<SUA SENHA>` devem ser trocados pelos valores do MySQL do monólito.
 
-## Extraindo código de pagamentos do monólito
+### Extraindo código de pagamentos do monólito
 
 Copie do módulo `eats-pagamento` do monólito, as seguintes classes, colando-as no pacote `br.com.caelum.eats.pagamento` do `eats-pagamento-service`:
 
@@ -612,7 +665,7 @@ i̶m̶p̶o̶r̶t̶ ̶b̶r̶.̶c̶o̶m̶.̶c̶a̶e̶l̶u̶m̶.̶e̶a̶t̶s̶.̶p�
 i̶m̶p̶o̶r̶t̶ ̶b̶r̶.̶c̶o̶m̶.̶c̶a̶e̶l̶u̶m̶.̶e̶a̶t̶s̶.̶p̶e̶d̶i̶d̶o̶.̶P̶e̶d̶i̶d̶o̶S̶e̶r̶v̶i̶c̶e̶;̶
 ```
 
-## Fazendo a UI chamar novo serviço de pagamentos
+### Fazendo a UI chamar novo serviço de pagamentos
 
 Adicione uma propriedade `pagamentoUrl`, que aponta para o endereço do novo serviço de pagamentos, no arquivo `environment.ts`:
 
@@ -703,7 +756,7 @@ _Access to XMLHttpRequest at 'http://localhost:8081/pagamentos' from origin 'htt
 
 Isso acontece porque precisamos habilitar o CORS no serviço de pagamentos, que está sendo invocado diretamente pelo navegador.
 
-## Habilitando CORS no serviço de pagamentos
+### Habilitando CORS no serviço de pagamentos
 
 Para habilitar o Cross-Origin Resource Sharing (CORS) no serviço de pagamento, é necessário definir uma classe `CorsConfig` no pacote `br.com.caelum.eats.pagamento`, semelhante à do módulo `eats-application` do monólito:
 
@@ -723,7 +776,7 @@ Faça um novo pedido, crie e confirme um pagamento. Deve funcionar!
 
 Note apenas um detalhe: o status do pedido, exibido na tela após a confirmação do pagamento, **está _REALIZADO_ e não _PAGO_**. Isso ocorre porque removemos a chamada à classe `PedidoService`, que ainda está no módulo `eats-pedido` do monólito. Corrigiremos esse detalhe mais adiante no curso.
 
-## Apagando código de pagamentos do monólito
+### Apagando código de pagamentos do monólito
 
 Remova a dependência a `eats-pagamento` do `pom.xml` do módulo `eats-application` do monólito:
 
@@ -915,7 +968,7 @@ spring.jackson.serialization.fail-on-empty-beans=false
 
 Troque `<SEU USUARIO>` e `<SUA SENHA>` pelos valores do BD.
 
-## Extraindo código de distância do monólito
+###  Extraindo código de distância do monólito
 
 Copie para o pacote `br.com.caelum.eats.distancia` do serviço `eats-distancia-service`, as seguintes classes do módulo `eats-distancia` do monólito:
 
@@ -1043,7 +1096,7 @@ Limpe o import:
 i̶m̶p̶o̶r̶t̶ ̶b̶r̶.̶c̶o̶m̶.̶c̶a̶e̶l̶u̶m̶.̶e̶a̶t̶s̶.̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶.̶R̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶S̶e̶r̶v̶i̶c̶e̶;̶
 ```
 
-## Simplificando o restaurante do serviço de distância
+### Simplificando o restaurante do serviço de distância
 
 O `eats-distancia-service` necessita apenas de um subconjunto das informações do restaurante: o `id`, o `cep`, se o restaurante está `aprovado` e o `tipoDeCozinhaId`.
 
@@ -1123,7 +1176,7 @@ i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶v̶a̶l̶i̶d̶a̶t̶i̶o̶n̶.̶c̶o̶n�
 i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶v̶a̶l̶i̶d̶a̶t̶i̶o̶n̶.̶c̶o̶n̶s̶t̶r̶a̶i̶n̶t̶s̶.̶S̶i̶z̶e̶;̶
 ```
 
-## Fazendo a UI chamar serviço de distância
+### Fazendo a UI chamar serviço de distância
 
 Abra o projeto `fj33-eats-ui` e defina uma nova propriedade `distanciaUrl` no arquivo `environment.ts`:
 
@@ -1170,7 +1223,7 @@ export class RestauranteService {
 }
 ```
 
-## Removendo código de distância do monólito
+### Removendo código de distância do monólito
 
 Remova a dependência a `eats-distancia` do `pom.xml` do módulo `eats-application`:
 
