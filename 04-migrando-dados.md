@@ -1014,3 +1014,32 @@ Para saber sobre outras propriedades, consulte: https://docs.spring.io/spring-bo
   ```
 
   Observação: como é disparado um GET, é possível testar as URLs anteriores diretamente pelo navegador.
+
+## Para saber mais: Change Data Capture
+
+Mudar dados de um servidor de BD para outro sempre foi um desafio, mesmo para projetos com BDs monolíticos.
+
+Nesse capítulo, fizemos um dump com um script SQL para que fosse importado no MySQL de Pagamentos e um dump com um arquivo CSV para que fosse importado no MongoDB de Distância.
+
+Esse processo tem um uso limitado em uma aplicação real. O sistema que usa o BD original teria que ficar fora do ar durante o dump e import no BD de destino. Se o sistema for mantido no ar, os dados continuariam a ser alterados, inseridos e deletados.
+
+Um dump, porém, é um passo útil para alimentar o novo BD com um snapshot dos dados em um momento inicial. Sam Newman descreve esse passo, no livro [Monolith to Microservices](https://learning.oreilly.com/library/view/monolith-to-microservices/9781492047834/) (NEWMAN, 2019), como _Bulk Synchronize Data_.
+
+Logo em seguida, é necessário ter alguma forma de sincronização. Uma maneira é usar **Change Data Capture** (CDC): as modificações no BD original são detectadas e alimentadas no novo BD. A técnica é descrita no livro de Sam Newman e também por Mario Amaral e outros membros da equipe da Elo7, no episódio [Estratégias de migração de dados no Elo7](https://hipsters.tech/estrategias-de-migracao-de-dados-no-elo7-hipsters-on-the-road-07/) (AMARAL et al., 2019) do podcast Hipsters On The Road.
+
+Uma das maneiras de implementar CDC é usando _triggers_. É algo que os BDs já fazem e não há a necessidade de introduzir nenhuma nova tecnologia. Porém, como Sam Newman diz em seu livro, as ferramentas e o controle de mudanças de triggers deixam a desejar e podem complicar a aplicação se forem usadas exageradamente. Além disso, na maioria dos BDs só é possível executar SQL. E o destino for um BD não relacional ou um outro sistema?
+
+Sam Newman diz, em seu livro, que uma outra maneira de implementar é utilizar um _Batch Delta Copier_: um programa que roda de tempos em tempos, com um `cron` ou similares, e consulta o BD original, verificando os dados que foram alterados e copiando os dados para o BD de destino. Porém, a lógica de saber o que foi alterado pode ser complexa e requerer a adição de colunas de _timestamps_ nas tabelas. Além disso, as consultas podem ser pesadas, afetando a performance do BD original.
+
+Uma outra maneira de implementar CDC, descrita por Renato Sardinha no post [Introdução ao Change Data Capture (CDC)](https://elo7.dev/cdc-parte-1/) (SARDINHA, 2019) do blog de desenvolvimento da Elo7, é publicar _eventos_ (que estudaremos mais adiante) junto ao código que faz as modificações no BD original. A vantagem é que os eventos poderiam ser consumidos por qualquer outro sistema, não só BDs. Sardinha levanta a complexidade dessa solução: a arquitetura requer um sistema de Mensageria, há a necessidade dos desenvolvedores emitirem esses eventos manualmente e, se alterações forem feitas diretamente no BD por SQL, os eventos não seriam disparados.
+
+A conclusão que os livros, podcasts e posts mencionados chegam é a mesma: podem ser usados os **transaction logs** dos BDs para implementar CDC. A maioria dos BDs relacionais mantém um log de transações (no MySQL, o `binlog`), que contém um registro de todas as mudanças comitadas e é usado na replicação entre nós de um cluster de BDs.
+
+Existem ferramentas como o [Debezium](https://debezium.io/), que lêem o transaction log de BDs como MySQL, PostgreSQL, MongoDB, Oracle e SQL Server e publicam eventos automaticamente em um Message Broker (especificamente o Kafka, no caso do Debezium). A solução é complexa e requer um sistema de Mensageria, mas consegue obter atualizações por SQL diretamente no BD e permite que os eventos sejam consumidos por diferentes ferramentas. Além do Debezium, existem ferramentas semelhantes como o [LinkedIn Databus](https://github.com/linkedin/databus) para o Oracle, o [DynamoDB Streams]((http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html) para o DynamoDB da Amazon e o [Eventuate Tram](https://github.com/eventuate-tram/eventuate-tram-core), mantido por Chris Richardson.
+
+Com o CDC funcionando com Debezium ou outra ferramenta parecida, podemos usar uma estratégia progressiva descrita por Sam Newman, em seu livro e, de maneira semelhante, pelo pessoal da Elo 7:
+
+- Inicialmente, é feito um dump (ou Bulk Synchronize)
+- Depois, leituras e escritas são mantidas no BD original e os dados são escritos no novo BD com CDC. Assim, é possível observar o comportamento do novo BD com o volume de dados real.
+- Em passo seguinte, o BD original fica apenas para leitura e a leitura e escrita é feita no novo BD. No caso de problemas inesperados, o BD original fica como solução paliativa.
+- Finalmente, com a estabilização das operações e da migração, o BD original é removido.

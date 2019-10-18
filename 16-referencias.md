@@ -2,6 +2,8 @@
 
 ABADI, Daniel J. _Consistency Tradeoffs in Modern Distributed Database System Design._ IEEE Computer Society, Feb. 2012. Em: http://www.cs.umd.edu/~abadi/papers/abadi-pacelc.pdf
 
+AMARAL, Mario et al. _Estratégias de migração de dados no Elo7 – Hipsters On The Road #07._ 2019. Em: https://hipsters.tech/estrategias-de-migracao-de-dados-no-elo7-hipsters-on-the-road-07/
+
 ASERG-UFMG, Applied Software Engineering Research Group. _Does Conway’s Law apply to Linux?_ 2017. Em: https://medium.com/@aserg.ufmg/does-conways-law-apply-to-linux-6acf23c1ef15
 
 BREWER, Eric. _Towards Robust Distributed Systems._ Principles Of Distributed Computing. 2000. Em: http://pld.cs.luc.edu/courses/353/spr11/notes/brewer_keynote.pdf
@@ -16,7 +18,7 @@ CALÇADO, Phil. 2018. Em: https://twitter.com/pcalcado/status/963183090339385345
 
 CONWAY, Melvin. _How Do Committees Invent?_ Datamation, Abr. 1968. Em: http://www.melconway.com/Home/Committees_Paper.html
 
-COSTA, Luiz. _Monolitos modulares e vacinas. Hipsters On The Road #17._ 2019. Em: https://hipsters.tech/monolitos-autonomos-e-vacinas-hipsters-on-the-road-17/
+COSTA, Luiz et al. _Monolitos modulares e vacinas – Hipsters On The Road #17._ 2019. Em: https://hipsters.tech/monolitos-autonomos-e-vacinas-hipsters-on-the-road-17/
 
 DEAN, Jeffrey. _Designs, Lessons and Advice from Building Large Distributed Systems._ 3rd ACM SIGOPS International Workshop on Large Scale Distributed Systems and Middleware. 2009. Em: http://www.cs.cornell.edu/projects/ladis2009/talks/dean-keynote-ladis2009.pdf
 
@@ -81,6 +83,8 @@ RICHARDSON, Chris. _Pattern: Database per Service._ 2018c. Em: https://microserv
 RUBEY, Raymond J. _Pasta Theory of Software._ 1992. Em: https://www.gnu.org/fun/jokes/pasta.code.html
 
 SADALAGE, Pramod; AMBER, Scott. _Refactoring Databases: Evolutionary Database Design._ Addison-Wesley Professional, 2006. 384 p. Em: https://learning.oreilly.com/library/view/refactoring-databases-evolutionary/0321293533/
+
+SARDINHA, Renato. _Introdução ao Change Data Capture (CDC)._ 2019. Em: https://elo7.dev/cdc-parte-1/
 
 SIMONS, Matthew; LEROY, Jonny. _Contending with Creaky Platforms CIO._ Cutter IT Journal, Dec. 2010. Em: http://jonnyleroy.com/2011/02/03/dealing-with-creaky-legacy-platforms/
 
