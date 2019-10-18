@@ -404,6 +404,16 @@ Sam Newman, no livro [Building Microservices](https://learning.oreilly.com/libra
 
 Já no livro [Microservices AntiPatterns and Pitfalls](https://learning.oreilly.com/library/view/microservices-antipatterns-and/9781492042716/) (RICHARDS, 2016), Mark Richards discorda diametralmente. Richards argumenta que são muitos comuns ajustes na granularidade dos serviços no começo da migração. Podemos ter quebrado demais os serviços, ou de menos. E reagrupar os dados no BD é muito mais difícil, custoso e propenso a erros que reagrupar o código da aplicação. Para o autor, uma migração para Microservices deveria começar com o código. Assim que haja uma garantia que a granularidade do serviço está correta, os dados podem ser migrados. É importante ressaltar que manter o BD monolítico é uma solução paliativa. Richards deixa claro o risco dessa abordagem: acoplamento dos serviços pelo BD. Discutiremos essa ideia mais adiante no curso.
 
+Já em seu novo livro [Monolith to Microservices](https://learning.oreilly.com/library/view/monolith-to-microservices/9781492047834/) (NEWMAN, 2019), Sam Newman explora diferentes abordagens para extração de serviços: pelo BD primeiro, pelo código primeiro e BD e código juntos.
+
+Newman diz que começaria pelo BD nos casos em que a performance ou consistência dos dados são preocupações especiais, de maneira a antecipar problemas. Uma desvantagem de começar pelo BD seria o fato de não trazer benefícios claros no curto prazo.
+
+Começar a extração de serviços pelo código, para Newman, traz a vantagem de facilitar o entendimento de qual é o código necessário para o serviço a ser extraído. Além disso, desde cedo há um artefato de código cujo deploy é independente. Uma grande desvantagem é que, na experiência de Newman, é muito comum parar a migração e manter um Shared Database. Outra preocupação é que desafios de performance e consistência são deixados para o futuro, o que pode trazer surpresas nefastas.
+
+Fazer a extração simultânea do BD e do código deve ser evitado, na opinião de Newman. É um passo muito grande, de alto risco e impacto.
+
+No fim das contas, Newman conclui com "Depende". Cada situação é diferente e prós e contras tem que ser discutidos com o contexto específico em mente.
+
 ### O que extrair do monólito?
 
 Chris Richardson, no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), diz que os módulos devem ser classificados de acordo com critérios que ajudem a visualizar antecipadamente os benefícios de extraí-los do Monólito. Entre os critérios:
@@ -449,6 +459,8 @@ class Pagamento {
 ```
 
 ![Referência a um objeto além da fronteira do serviço {w=45}](imagens/03-extraindo-servicos/referencias-alem-da-fronteira-do-servico.png)
+
+_Observação: além de depender de `Pedido`, um `Pagamento` também depende de `FormaDePagamento` que está presente no módulo Administrativo do Monólito._
 
 Essa dependência a objetos além dos limites do serviço é problemática porque haveria um acoplamento indesejado entre os Modelos de Domínio. Não há a necessidade do serviço de Pagamentos conhecer todos os detalhes de um pedido. Além disso, como tanto `Pagamento` como `Pedido` são entidades, haveria uma dependência pelo BD, que queremos evitar, pensando nos próximos passos da extração do serviço de Pagamentos.
 
@@ -774,7 +786,7 @@ class CorsConfig implements WebMvcConfigurer {
 
 Faça um novo pedido, crie e confirme um pagamento. Deve funcionar!
 
-Note apenas um detalhe: o status do pedido, exibido na tela após a confirmação do pagamento, **está _REALIZADO_ e não _PAGO_**. Isso ocorre porque removemos a chamada à classe `PedidoService`, que ainda está no módulo `eats-pedido` do monólito. Corrigiremos esse detalhe mais adiante no curso.
+> Note apenas um detalhe: o status do pedido, exibido na tela após a confirmação do pagamento, **está _REALIZADO_ e não _PAGO_**. Isso ocorre porque removemos a chamada à classe `PedidoService`, que ainda está no módulo `eats-pedido` do monólito. Corrigiremos esse detalhe mais adiante no curso.
 
 ### Apagando código de pagamentos do monólito
 
