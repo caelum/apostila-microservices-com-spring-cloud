@@ -346,10 +346,6 @@ Nesse cenário, poderíamos aproveitar alguns dos prós de uma Arquitetura de Mi
 - **Experimentação tecnológica**: o time de Distância poderia explorar o uso de novas tecnologias com maior independência
 - **Fronteiras fortes entre componentes**: acabaríamos com o uso indevido de dependências transitivas e as bases de código ficariam completamente isoladas; as dependências entre os serviços seriam por meio de suas APIs
 
-<!--@note
-  Alexandre: costumo a desenhar um grafo de dependências entre os módulos e argumentar que é mais fácil começar pelos módulos mais de fora, que não nenhuma dependência aferente (que chega). Não tenho nenhuma referência sobre o assunto, mas é algo do qual eu desconfio! :)
--->
-
 Uma vez que decidimos ir em direção a uma Arquitetura de Microservices, temos que ter consciência das dificuldades que enfrentaremos. Teremos que lidar:
 
 - com as consequências de termos um Sistema Distribuído
@@ -428,6 +424,20 @@ Sam Newman, no livro [Building Microservices](https://learning.oreilly.com/libra
 - que tem times separados, às vezes geograficamente
 - que possuem necessidades de segurança e proteção da informação mais restritas
 - que teriam vantagens no uso de uma tecnologia diferente
+
+No livro [Monolith to Microservices](https://learning.oreilly.com/library/view/monolith-to-microservices/9781492047834/) (NEWMAN, 2019), Sam Newman argumenta que, na priorização de novos serviços a serem extraídos do Monólito, devem ser levadas em conta as dependências entre os grupos de funcionalidade (ou componentes). Partes do código com muitas dependências aferentes (que chegam) dariam muito trabalho para serem extraídas, já que iriam requerer mudanças no código de todas as outras partes que a usam.  Já partes do código com poucas, ou nenhuma, dependência aferente seriam bem mais fácil de serem extraídas.
+
+![Dependências impactam na facilidade de extração {w=43}](imagens/03-extraindo-servicos/modulo-dificil-de-extrair.png)
+
+Na imagem anterior, Notificação é um componente difícil de ser extraído, porque tem muitas dependências que chegam. Já um componente como Notas Fiscais seria mais fácil de extrair, porque ninguém depende dele.
+
+Porém, Newman discute que uma visão parecida com a da imagem anterior é uma visão lógica do domínio. Não necessariamente essa visão estará refletida no código. Por exemplo, o BD é um ponto de acoplamento muitas vezes negligenciado.
+
+Ainda no livro [Monolith to Microservices](https://learning.oreilly.com/library/view/monolith-to-microservices/9781492047834/) (NEWMAN, 2019), Newman discute que a facilidade de decomposição deve ser ponderada com o benefício trazido para os Negócios. Se o módulo de Notas Fiscais muda muito pouco e não melhora o _time to market_, talvez não seja um bom uso do tempo do time de desenvolvimento e, consequentemente, dos recursos financeiros da organização.
+
+Newman, então, argumenta em favor de uma visão multidimensional, considerando tanto a facilidade como o benefício trazido pelas decomposições. Os componentes podem ser posicionados em um quadrante considerando essas duas dimensões. Ainda que subjetivas, as posições relativas ajudam na priorização. Os componentes que estiverem no canto superior direito do quadrante são bons candidatos à decomposição.
+
+![Quadrante de priorização de decomposições {w=43}](imagens/03-extraindo-servicos/quadrante-de-priorizacao-de-decomposicoes.png)
 
 ## Extraindo serviços do Monólito do Caelum Eats
 
