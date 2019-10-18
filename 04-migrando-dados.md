@@ -24,6 +24,8 @@ Porém, há diversas desvantagens, como as discutidas por Richardson na mesma p�
 
 No livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), Sam Newman foca bastante no acoplamento gerado pelo Shared Database. Newman diz que essa Integração pelo BD é muito comum no mercado. A facilidade de obter e modificar dados de outro serviço diretamente pelo BD explica a popularidade. É como se o schema do BD fosse uma API. O acoplamento é feito por detalhes de implementação e uma mudança no schema do BD quebra os "clientes" da integração. Uma migração para outro paradigma de BD fica impossibilitada. A promessa de autonomia de uma Arquitetura de Microservices seria uma promessa não cumprida. Ficaria difícil evitar mudanças que quebram o contrato, o que inevitavelmente levaria a medo de qualquer mudança.
 
+Sam Newman conta, no livro [Monolith to Microservices](https://learning.oreilly.com/library/view/monolith-to-microservices/9781492047834/) (NEWMAN, 2019), sobre uma experiência em um banco de investimento em que o time chegou a conclusão que uma reestruturação do schema do BD iriam aumentar drasticamente a performance do sistema. Então, descobriram que outras aplicações tinham acesso de leitura, e até de escrita, ao BD. Como o mesmo usuário e senha eram utilizados, era impossível saber quais eram essas aplicações e o que estava sendo acessado. Por uma análise de tráfego de rede, estimaram que cerca de 20 outras aplicações estavam usando integração pelo BD. Eventualmente, as credenciais foram desabilitadas e o time esperou o contato das pessoas que mantinham essas aplicações. Então, descobriram que a maioria das aplicações não tinha uma equipe para mantê-las. Ou seja, o schema antigo teria que ser mantido. O BD passou a ser uma API pública. O time de Newman resolveu o problema criando um schema privado e projetando os dados em Views públicas com informações limitadas, para que os outros sistemas acessassem.
+
 ## Um Banco de Dados por serviço
 
 No artigo [Database per service](https://microservices.io/patterns/data/database-per-service.html) (RICHARDSON, 2018c), Chris Richardson argumenta em favor de um BD separado para cada serviço. O BD é um detalhe de implementação do serviço e não deve ser acessado diretamente por outros serviços.
@@ -59,6 +61,8 @@ Já o time de Distância planeja explorar uma nova tecnologia de persistência, 
 ![Servidores de BD separados para os serviços de Pagamentos e Distância {w=73}](imagens/04-migrando-dados/preparando-bds-separados-para-pagamentos-e-distancia.png)
 
 Por enquanto, apenas criaremos os servidores de cada BD. Daria trabalho instalar e configurar os BDs manualmente. Então, para essas necessidades de infraestrutura, usaremos o Docker!
+
+> O curso [Infraestrutura ágil com Docker e Docker Swarm](https://www.caelum.com.br/curso-infraestrutura-agil-com-docker-e-docker-swarm) (DO-26) aprofunda nos conceitos do Docker e tecnologias relacionadas.
 
 ## Criando uma nova instância do MySQL a partir do Docker
 
@@ -300,11 +304,74 @@ _ATENÇÃO: **evite** usar o comando `docker-compose down` durante o curso. Esse
   docker-compose logs
   ```
 
-<!-- TODO: continuar daqui -->
+## Separando Schemas
+
+Agora temos um container com um MySQL específico para o serviço de Pagamentos. Vamos migrar os dados para esse servidor de BD. Mas o faremos de maneira progressiva e metódica.
+
+No livro [Monolith to Microservices](https://learning.oreilly.com/library/view/monolith-to-microservices/9781492047834/) (NEWMAN, 2019), Sam Newman descreve, entre várias abordagens de migração, o uso de Views como um passo em direção a esconder informações entre serviços distintos que usam um Shared Database.
+
+Um passo importante nessa progressão é usar, nos diferentes serviços, Schemas Separados dentro do Shared Database (ou, poderíamos dizer, um _database_ separado em um mesmo SGBD). Como comentado em capítulos anteriores, no livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), Sam Newman recomenda o uso de Schemas Separados mesmo mantendo o código no Monólito Modular.
+
+> **Pattern: Schemas separados**
+>
+> Inicie a decomposição dos dados do Monólito usando Schemas Separados no mesmo servidor de BD, alinhados aos Bounded Contexts.
+
+No livro [Monolith to Microservices](https://learning.oreilly.com/library/view/monolith-to-microservices/9781492047834/) (NEWMAN, 2019), Sam Newman argumenta que usar Schemas Separados seria uma _separação lógica_, enquanto usar um servidor de BD separado seria uma separação _física_. A separação lógica permite mudanças independentes e encapsulamento, enquanto que a separação física potencialmente melhor vazão, latência, uso de recursos e isolamento de falhas. Contudo, a separação lógica é uma condição para a separação física.
+
+Mesmo com Schemas Separados, se for utilizado um mesmo servidor de BD, podemos ter usuários que tem acesso a mais de um Schema e, portanto, que conseguem fazer migração de dados.
+
+Uma vez que decidimos por Schemas Separados, a integridade oferecida por _foreign keys_ (FKs) nos BDs relacionais tem que ser deixada de lado. Essa perda traz duas consequências:
+
+- consultas que fazem join dos dados tem que ser feitas em memória, tornando a operação mais lenta
+- perda de consistência dos dados, cujos efeitos discutiremos mais adiante
+
+Tanto Sam Newman como Chris Richardson indicam como referência para a evolução de BDs relacionais o livro [Refactoring Databases](https://learning.oreilly.com/library/view/refactoring-databases-evolutionary/0321293533/) (SADALAGE; AMBER, 2006) de Pramod Sadalage e Scott Ambler.
 
 ## Separando schema do BD de pagamentos do monólito
 
-O Flyway será usado como ferramenta de migração de dados do `eats-pagamento-service`. Deve ser adicionada uma dependência no `pom.xml`:
+Em capítulos anteriores, quebramos o Modelo de Domínio de `Pagamento` para que não dependesse de `FormaDePagamento` nem de `Pedido`, que são dos módulos Administrativo e de Pedido do Monólito, respectivamente. Porém, as FKs foram mantidas.
+
+Nessa momento, criaremos um Schema Separado para o serviço de Pagamentos. Não existiram FKs às tabelas que representam `FormaDePagamento` e `Pedido`. Serão mantidos apenas os ids dessas tabelas.
+
+![Schema separado para o BD de pagamentos {w=35}](imagens/04-migrando-dados/separando-schema-do-bd-de-pagamentos.png)
+
+Mas como efetuar essa alteração? 
+
+Criaremos scripts `.sql` com instruções DDL (Data Definition Language), como `CREATE TABLE` ou `ALTER TABLE`, para criar as estruturas das tabelas e, instruções DML (Data Manipulation Languagem), como `INSERT` ou `UPDATE`, para popular os dados.
+
+Para executar esses scripts, usaremos uma ferramenta de Migration.
+
+Entre as bibliotecas mais usadas para Migration em projetos Java estão Liquibase e Flyway. Ambas estão bem integradas com o Spring Boot. O Liquibase permite que as Migrations sejam definidas em XML, JSON, YAML e SQL. Já no Flyway, podem ser usados SQL e Java. Uma grande vantagem do Liquibase é a possibilidade de ter Migrations de rollback na versão _community_. 
+
+Uma ferramenta de migração de dados tem uma maneira de definir a versão dos scripts e de controlar quais scripts já foram executados. Assim, é possível recriar um BD do zero, saber qual é a versão atual de um BD específico e evoluir para novas versões.
+
+O Monólito já usa o Flyway para DDL e DML.
+
+No caso do Flyway, há uma nomenclatura padrão para o nome dos arquivos `.sql`: 
+
+- Um `V` como prefixo.
+- Um número de versão incremental e único, como `0001` ou `0919`. Pode haver pontos para versões intermediárias, como `2.5`
+- Dois underscores (`__`) como separador
+- Uma descrição
+- A extensão `.sql` como sufixo.
+
+Um exemplo de nome de arquivo seria `V0001__cria-tabela-pagamento.sql`.
+
+Para manter a versão atual do BD e saber quais scripts foram executados, o Flyway mantém uma tabela chamada `flyway_schema_history`. No livro [Refactoring Databases](https://learning.oreilly.com/library/view/refactoring-databases-evolutionary/0321293533/) (SADALAGE; AMBER, 2006), os autores já demonstram a necessidade de manter qual a última versão do Schema em uma tabela que chamam de _Database Configuration_.
+
+Um novo Schema não teria essa tabela e, portanto, estaria vazia, significando que todos os scripts devem ser executados. Essa tabela tem colunas como: 
+
+- `version`, que contém as versões executadas;
+- `script`, que contém o nome do arquivo executado;
+- `installed_on`, que contém a data/hora da execução;
+- `checksum`, que contém um número calculado a partir do arquivo `.sql`;
+- `success`, que indica se a execução foi bem sucedida.
+
+_Observação: o `checksum` é checado para todos os scripts ao iniciar a aplicação. Não mude ou remova scripts porque a aplicação pode deixar de subir. Cuidado!_ 
+
+Usaremos o Flyway também para o serviço de Pagamentos.
+
+Para isso, deve ser adicionada uma dependência ao Flyway no `pom.xml` do `eats-pagamento-service`:
 
 ####### fj33-eats-pagamento-service/pom.xml
 
@@ -393,7 +460,9 @@ select * from pagamento;
 
 Os pagamentos devem ter sido migrados.
 
-![Schema separado para o BD de pagamentos {w=35}](imagens/04-migrando-dados/separando-schema-do-bd-de-pagamentos.png)
+Novos pagamentos serão armazenados apenas no schema `eats_pagamento`. Os dados do serviço de Pagamentos são suficientemente independentes para serem mantidos em um BD separado.
+
+É importante lembrar que a mudança do status do pedido para _PAGO_, que perdemos ao extrair o serviço de Pagamentos do Monólito, ainda precisa ser resolvida. Faremos isso mais adiante.
 
 ## Exercício: migrando dados de pagamento para schema separado
 
@@ -423,6 +492,22 @@ Os pagamentos devem ter sido migrados.
   ```
 
   Os pagamentos devem ter sido migrados. Note as colunas `forma_de_pagamento_id` e `pedido_id`.
+
+## Migrando dados de um servidor MySQL para outro
+
+Nesse momento, temos um servidor de BD com Schemas separados para o Monólito e para o serviço de Pagamentos. Também temos um servidor de BD específico para Pagamentos, mas ainda vazio.
+
+No MySQL, o Schema (ou _database_) pode ser criado, se ainda não existir, quando a aplicação conecta com o BD se usarmos a propriedade `createDatabaseIfNotExist`. Em um projeto Spring Boot, isso pode ser definido na URL de conexão do _data source_:
+
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3307/eats_pagamento?createDatabaseIfNotExist=true
+```
+
+Com o Schema criado no MySQL de Pagamentos, precisamos criar as estruturas das tabelas e migrar os dados. Para isso, podemos gerar um dump com o comando `mysqldump` a partir do Schema `eats_pagamento` do MySQL do Monólito. Será gerado um script `.sql` com todo o DDL e DML do Schema.
+
+O script com o dump pode ser carregado no outro MySQL, específico de Pagamentos, com o comando `mysql`. Mãos à obra!
+
+![Dump do schema de Pagamentos importado para servidor de BD específico {w=65}](imagens/04-migrando-dados/dump-do-mysql-do-monolito-para-o-de-pagamentos.png)
 
 ## Exercício: migrando dados de pagamento para um servidor MySQL específico
 
@@ -577,6 +662,55 @@ Note que a porta `3307` foi incluída na URL, mas mantivemos ainda `localhost`.
 
 4. (opcional) Apague a tabela `pagamento` do database `eats`, do monólito. Remova também o database `eats_pagamento` do MySQL do monólito. Atenção: muito cuidado para não remover dados indesejados!
 
+## Migrando dados do MySQL para MongoDB
+
+Provisionamos, pelo Docker Compose, um MongoDB específico para o serviço de Distância. Por enquanto, não há dados nesse BD.
+
+O MongoDB não é um BD relacional, mas de um paradigma orientado a documentos.
+
+Não existem tabelas no MongoDB, mas _collections_. As collections armazenam _documents_. Um document é _schemaless_, pois não tem colunas e tipos  definidos. Um document tem um _id_ como identificador, que deve ser único.
+
+No MongoDB, um _database_ agrupa várias collections, de maneira semelhante ao MySQL.
+
+Há um conflito entre os conceitos de um BD relacional como o MySQL e de um BD orientado a documentos, como o MongoDB. Por isso, as estratégias de migração devem ser diferentes.
+
+Devemos exportar um subconjunto dos dados de um `Restaurante`, que são relevantes para o serviço de Distância: o `id`, o `cep`, o `tipoDeCozinhaId` e o atributo `aprovado`, que indica se o restaurante já foi revisado e aprovado pelo Administrativo do Caelum Eats.
+
+Não é possível fazer um dump para um script `.sql`. Porém, como a nossa migração é simples, podemos usar um arquivo CSV com os dados de restaurantes que são relevantes para o serviço de Distância. Já que restaurantes não aprovados não são interessantes para o cálculo de distância, podemos fazer uma filtragem, mantendo apenas os restaurantes já aprovados.
+
+Para criar esse CSV a partir do MySQL, podemo usar um `select` com a instrução `into outfile`:
+
+```sql
+select r.id, r.cep, r.tipo_de_cozinha_id from restaurante r where r.aprovado = true into outfile '/tmp/restaurantes.csv' fields terminated by ',' enclosed by '"' lines terminated by '\n';
+```
+
+A consulta anterior criará um arquivo `/tmp/restaurantes.csv`, com uma estrutura semelhante à seguinte:
+
+####### /tmp/restaurantes.csv
+
+```csv
+"1","70238500","1"
+"2","71458-074","6"
+```
+
+Para importar o CSV para o MongoDB, podemos usar a ferramenta `mongoimport`. Algumas opções do comando:
+
+- `--db`, o database de destino
+- `--collection`, a collection de destino
+- `--type`, o tipo do arquivo (no caso, um CSV)
+- `--file`, o caminho do arquivo a ser importado
+- `--fields`, para definir os nomes das propriedades do document
+
+Perceba que não há os nomes das propriedades no arquivo `restaurantes.csv`. Por isso, devemos definí-las usando a opção `--fields`. O campo de identificação do document deve se chamar `_id`. 
+
+Para importar o conteúdo do CSV para a collection `restaurantes` do database `eats_distancia`, com os campos `_id`, `cep` e `tipoDeCozinhaId`, devemos executar o seguinte comando:
+
+```sh
+mongoimport --db eats_distancia --collection restaurantes --type csv  --fields=_id,cep,tipoDeCozinhaId --file restaurantes.csv
+```
+
+![Dump para CSV para MongoDB de Distância {w=65}](imagens/04-migrando-dados/dump-dos-dados-de-restaurante-do-monolito-para-o-mongodb-de-distancia.png)
+
 ## Exercício: migrando dados de restaurantes do MySQL para o MongoDB
 
 1. Em um Terminal, acesse o MySQL do monólito com o usuário `root`, já acessando `eats`, o database monolítico:
@@ -723,7 +857,9 @@ A classe `Restaurante` do serviço de distância deve ser modificada, removendo 
 
 A anotação `@Document`, do Spring Data MongoDB, deve ser adicionada.
 
-A anotação `@Id` deve ser mantida, porém o import será trocado.
+A anotação `@Id` deve ser mantida, porém o import será trocado para `org.springframework.data.annotation.Id`, uma anotação genérica do Spring Data.
+
+> Perceba que, apesar do campo ser `_id` no document, o manteremos como `id` no código Java. A anotação `@Id` cuidará de informar qual dos atributos é o identificador do documento e está relacionado ao campo `_id`.
 
 O atributo `aprovado` pode ser removido, já que a migração dos dados foi feita de maneira que o database de distância do MongoDB só contém restaurantes já aprovados.
 

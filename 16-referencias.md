@@ -80,6 +80,8 @@ RICHARDSON, Chris. _Pattern: Database per Service._ 2018c. Em: https://microserv
 
 RUBEY, Raymond J. _Pasta Theory of Software._ 1992. Em: https://www.gnu.org/fun/jokes/pasta.code.html
 
+SADALAGE, Pramod; AMBER, Scott. _Refactoring Databases: Evolutionary Database Design._ Addison-Wesley Professional, 2006. 384 p. Em: https://learning.oreilly.com/library/view/refactoring-databases-evolutionary/0321293533/
+
 SIMONS, Matthew; LEROY, Jonny. _Contending with Creaky Platforms CIO._ Cutter IT Journal, Dec. 2010. Em: http://jonnyleroy.com/2011/02/03/dealing-with-creaky-legacy-platforms/
 
 SPOLSKY, Joel. _Things You Should Never Do, Part I._ 2000. Em: https://www.joelonsoftware.com/2000/04/06/things-you-should-never-do-part-i/
