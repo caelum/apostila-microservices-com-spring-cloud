@@ -158,12 +158,12 @@ Referências
 
 Uma chamada entre dois Microservices envolve a rede. Uma Arquitetura de Microservices é um Sistema Distribuído.
 
-A comunicação intraprocesso, com as chamadas em memória, é centenas de milhares de vezes mais rápida que uma chamada interprocessos dentro de um mesmo datacenter. Algumas das latências mostradas pelo pesquisador da Google Jeffrey Dean na palestra [Designs, Lessons and Advice from Building Large Distributed Systems](http://www.cs.cornell.edu/projects/ladis2009/talks/dean-keynote-ladis2009.pdf) (DEAN, 2009):
+A comunicação intraprocesso, com as chamadas em memória, é centenas de milhares de vezes mais rápida que uma chamada interprocessos dentro de um mesmo data center. Algumas das latências mostradas pelo pesquisador da Google Jeffrey Dean na palestra [Designs, Lessons and Advice from Building Large Distributed Systems](http://www.cs.cornell.edu/projects/ladis2009/talks/dean-keynote-ladis2009.pdf) (DEAN, 2009):
 
 - Referência Cache L1: 0.5 ns
 - Referência Cache L2: 7 ns
 - Referência à Memória Principal: 100 ns
-- Round trip dentro do mesmo datacenter: 500 000 ns (0,5 ms)
+- Round trip dentro do mesmo data center: 500 000 ns (0,5 ms)
 - Roud trip Califórnia-Holanda: 150 000 000 ns (150 ms)
 
 Uma versão mais atualizada e interativa dessa tabela pode ser encontrada em: https://people.eecs.berkeley.edu/~rcs/research/interactive_latency.html
@@ -321,6 +321,60 @@ Sam Newman, em seu livro [Building Microservices](https://learning.oreilly.com/l
 Microservices são, então, uma abordagem para SOA.
 
 ![Para diversos autores, Microservices são um sabor de SOA {w=30}](imagens/03-extraindo-servicos/microservices-vs-soa.png)
+
+## Microservices e a Cloud
+
+### Os 12 fatores do Heroku
+
+Um dos fundadores da plataforma de Cloud Heroku, Adam Wiggins, escreveu em 2011 um texto em que descreve soluções comuns para aplicações Web do tipo SaaS (Software as a Service) que rodam em plataformas de Cloud Computing. Essas soluções foram coletadas a partir da experiência em desenvolver, operar e escalar milhares de aplicações. É o que o autor chamou de [Os 12 Fatores](https://www.12factor.net) (WIGGINS, 2011):
+
+1. _Base de Código_: há só uma base de código para a aplicação, rastreada em um sistema de controle de versão como Git e que pode gerar diferentes deploys (desenvolvimento, testes, produção).
+2. _Dependências_: todas as bibliotecas e frameworks usados pela aplicação devem ser declarados explicitamente como dependências. As dependências são isoladas, impedindo que dependências implícitas vazem a partir do ambiente de execução.
+3. _Configurações_: tudo que varia entre deploys, como credenciais de BDs e  de serviços externos como Amazon S3, deve estar separado do código da aplicação. Essas configurações devem ser armazenadas em variáveis de ambiente, que são uma maneira multiplataforma e não ficarão na base de código.
+4. _Backing services_: não há distinção entre um BD local ou serviço externo como New Relic (usado para métricas). Todos são recursos acessíveis pela rede e cujas URL e credenciais estão nas configurações, e não no código.
+5. _Build, release, run_: há 3 estágios distintos para transformar código em um deploy. O estágio de _build_ converte um repositório de código em um executável, contendo todas as dependências. O estágio de _release_ combina um executável com as configurações de um deploy, gerando um release imutável e com um timestamp. O estágio de _run_ executa um release em um ou mais processos. O build é iniciado quando há novo código. O run pode ser iniciado automaticamente, por exemplo, em um reboot do servidor.
+6. _Processos_: devem ser _stateless_. Dados de sessão deve estar em um _datastore_ que tem expiração, como o Redis. Nunca deve ser assumido que a memória ou o disco estarão disponíveis em um próximo _request_.
+7. _Port binding_: a aplicação é auto-contida e expõe a si mesma por meio de uma porta HTTP. Não há a necessidade de um servidor Web ou servidor de aplicação. Uma camada de roteamento repassa um _hostname_ público para a porta HTTP da aplicação.
+8. _Concorrência_: deve ser possível escalar a aplicação horizontalmente, replicando múltiplas instâncias idênticas que recebem requests de um _load balancer_. Podem existir processos web, que tratam de um request HTTP e processos _worker_, que cuidam de tarefas que demoram mais. 
+9. _Descartabilidade_: processos são descartáveis e são iniciados e parados a qualquer momento. O tempo de _startup_ deve ser minimizado. Para um processo web, todos requests HTTP devem ser finalizados antes de parar. Para um processo worker, o job deve ser retornado à fila. Os processos devem considerar falhas de hardware e lidar com paradas inesperadas. 
+10. _Paridade dev/prod_: não devem ser acumuladas semanas de trabalho entre deploys em produção. Os desenvolvedores que escrevem código devem estar envolvidos na implantação e monitoramento em produção. As ferramentas de desenvolvimento devem ser semelhantes às de produção.
+11. _Logs_: devem ser tratados como eventos que fluem continuamente enquanto a aplicação estiver no ar. Não devem ser armazenados em arquivos. O ambiente de execução cuida de rotear os logs para ferramentas de análise como Splunk.
+12. _Processos de Admin_: tarefas de administração, como scripts que são executados apenas uma vez, devem ser executados em um ambiente idêntico aos processos worker. O código dessas tarefas pontuais deve estar junto ao código da aplicação.
+
+### Cloud Native
+
+No workshop [Patterns for Continuous Delivery, High Availability, DevOps & Cloud Native Open Source with NetflixOSS](https://www.slideshare.net/adrianco/yowworkshop-131203193626phpapp01-1) (COCKCROFT, 2013), Adrian Cockcroft, um dos responsáveis pela migração da Netflix para Cloud iniciada em 2009, conta como seu time uniu patterns de sucesso no que começou a ser referida como arquitetura **Cloud Native**. A agilidade nos negócios, produtividade dos desenvolvedores e melhora na Escalabilidade e Disponibilidade são resultados da adoção de Continuous Delivery, DevOps, Open Source, Microservices, dados desnormalizados (NoSQL) e Cloud Computing com data centers globais. Isso permitiu que a Netflix atendesse a um crescimento exponencial no número de usuários. Algumas das ferramentas desenvolvidas na Netflix tiveram seu código aberto, numa plataforma chamada [Neflix OSS](https://netflix.github.io/).
+
+Em 2015, foi criada a [Cloud Native Computing Foundation](https://www.cncf.io/) (CNCF) a partir da Linux Foundation, visando manter projetos open-source de ferramentas Cloud Native de maneira a evitar _vendor lock-in_. Entre os projetos mantidos pela CNCF estão orquestradores de containers como Kubernetes, proxys como o Envoy e ferramentas de monitoramento como o Prometheus. Entre as empresas que participam da CNCF estão Google, Amazon, Microsoft, Alibaba, Baidu, totalizando US$ 13 trilhões de valor de mercado, em números de 2019.
+
+Segundo a [definição da CNCF](https://github.com/cncf/toc/blob/master/DEFINITION.md) (CNCF TOC, 2018):
+
+_Tecnologias Cloud Native empoderam organizações a construir e rodar aplicações escaláveis em ambientes dinâmicos e modernos como Clouds públicas, privadas ou híbridas. Containers, Service Meshes, Microservices, infraestrutura imutável e APIs declarativas são exemplos dessa abordagem. Essas técnicas permitem sistemas baixamente acoplados, que são resilientes, gerenciáveis e observáveis. Combinadas a automação robusta, permitem que os engenheiros façam mudanças de grande impacto frequentemente e de maneira previsível, com o mínimo de esforço._
+
+<!--@note
+  Vale mostrar a interactive landscape da CNCF: https://landscape.cncf.io
+-->
+
+## Microservices chassis
+
+Há preocupações comuns em uma Arquitetura de Microservices:
+
+- Configuração externalizada
+- Health checks
+- Métricas de aplicação
+- Service discovery
+- Circuit breakers
+- Distributed tracing
+
+_Observação: várias dessas necessidades serão abordadas nos próximos capítulos._
+
+Chris Richardson, no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), chama de **Microservices chassis** um framework ou conjunto de bibliotecas que tratam dessas questões transversais.
+
+Frameworks Java como [Dropwizard](https://www.dropwizard.io/en/stable/) e [Spring Boot](https://spring.io/projects/spring-boot) são exemplos de Microservices chassis. 
+
+O [Spring Cloud](https://spring.io/projects/spring-cloud) é um conjunto de ferramentas que expandem as capacidades do Spring Boot e oferecem implementações para patterns comuns de sistemas distribuídos. Há, por exemplo, o [Spring Cloud Netflix](https://spring.io/projects/spring-cloud-netflix), que integra vários componentes da Netflix OSS com o ecossistema do Spring. Estudaremos várias das ferramentas do Spring Cloud durante o curso.
+
+No Java EE (ou Jakarta EE), foi criada a especificação MicroProfile, um conjunto de especificações com foco que servem como um Microservices chassis. Entre as implementações estão: [KumuluzEE](https://ee.kumuluz.com/), [Wildfly Swarm/Thorntail](https://thorntail.io/), baseado no Wildfly da JBoss/Red Hat, [Open Liberty](https://openliberty.io/), baseado no WebSphere Liberty da IBM, [Payara Micro](https://www.payara.fish/software/payara-server/payara-micro/), baseado no Payara, um fork do GlassFish, e [Apache TomEE](https://tomee.apache.org/), baseado no Tomcat.
 
 ## Decidindo por uma Arquitetura de Microservices no Caelum Eats
 

@@ -6,6 +6,8 @@ AMARAL, Mario et al. _Estratégias de migração de dados no Elo7 – Hipsters O
 
 ASERG-UFMG, Applied Software Engineering Research Group. _Does Conway’s Law apply to Linux?_ 2017. Em: https://medium.com/@aserg.ufmg/does-conways-law-apply-to-linux-6acf23c1ef15
 
+BARR, Jeff. _Migration Complete – Amazon’s Consumer Business Just Turned off its Final Oracle Database._ 2019. Em: https://aws.amazon.com/pt/blogs/aws/migration-complete-amazons-consumer-business-just-turned-off-its-final-oracle-database
+
 BREWER, Eric. _Towards Robust Distributed Systems._ Principles Of Distributed Computing. 2000. Em: http://pld.cs.luc.edu/courses/353/spr11/notes/brewer_keynote.pdf
 
 BROOKS, Fred. _No Silver Bullet: Essence and Accident in Software Engineering._ Elsevier Science B. V. 1986. Em: http://faculty.salisbury.edu/~xswang/Research/Papers/SERelated/no-silver-bullet.pdf
@@ -16,9 +18,13 @@ CALÇADO, Phil. _Evoluindo uma Arquitetura inteiramente sobre APIs: o caso da So
 
 CALÇADO, Phil. 2018. Em: https://twitter.com/pcalcado/status/963183090339385345
 
+COCKCROFT, Adrian. _Patterns for Continuous Delivery, High Availability, DevOps & Cloud Native Open Source with NetflixOSS._ 2013. Em: https://www.slideshare.net/adrianco/yowworkshop-131203193626phpapp01-1
+
 CONWAY, Melvin. _How Do Committees Invent?_ Datamation, Abr. 1968. Em: http://www.melconway.com/Home/Committees_Paper.html
 
 COSTA, Luiz et al. _Monolitos modulares e vacinas – Hipsters On The Road #17._ 2019. Em: https://hipsters.tech/monolitos-autonomos-e-vacinas-hipsters-on-the-road-17/
+
+CNCF TOC (Techinical Oversight Committee). _CNCF Cloud Native Definition v1.0._ 2018. Em: https://github.com/cncf/toc/blob/master/DEFINITION.md
 
 DEAN, Jeffrey. _Designs, Lessons and Advice from Building Large Distributed Systems._ 3rd ACM SIGOPS International Workshop on Large Scale Distributed Systems and Middleware. 2009. Em: http://www.cs.cornell.edu/projects/ladis2009/talks/dean-keynote-ladis2009.pdf
 
@@ -72,6 +78,8 @@ NEWMAN, Sam. _Monolith to Microservices: Evolutionary Patterns to Transform Your
 
 PARLOG, Nicolai. _The Java Module System._ Manning Publications, 2018. Manning Early Access Program, version 10. 503 p. Em: <https://www.manning.com/books/the-java-module-system>
 
+PONTE, Rafael. 2019. Em: https://twitter.com/rponte/status/1186337012724441089
+
 RICHARDS, Mark. _Microservices AntiPatterns and Pitfalls._ O'Reilly, 2016. 66 p. Em: https://learning.oreilly.com/library/view/microservices-antipatterns-and/9781492042716/
 
 RICHARDSON, Chris. _Microservice Patterns._ Manning Publications, 2018a. 520 p. Em: https://www.manning.com/books/microservices-patterns
@@ -97,5 +105,7 @@ TILKOV, Stefan. _Don't start with a monolith: ... when your goal is a microservi
 WALLS, Craig. _Modular Java: Creating Flexible Applications with OSGi and Spring._ The Pragmatic Bookshelf, 2009. 260 p. Em: https://pragprog.com/book/cwosg/modular-java
 
 WESTEINDE, Kirsten. _Deconstructing the Monolith: Designing Software that Maximizes Developer Productivity._ 2019. Em: https://engineering.shopify.com/blogs/engineering/deconstructing-monolith-designing-software-maximizes-developer-productivity
+
+WIGGINS, Adam. _The Twelve-Factor App_. 2011. Em: https://www.12factor.net
 
 WINTON, David. _Code Rush_. 2000. Em: https://www.youtube.com/watch?v=4Q7FTjhvZ7Y

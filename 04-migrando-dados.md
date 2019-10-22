@@ -26,9 +26,25 @@ No livro [Building Microservices](https://learning.oreilly.com/library/view/buil
 
 Sam Newman conta, no livro [Monolith to Microservices](https://learning.oreilly.com/library/view/monolith-to-microservices/9781492047834/) (NEWMAN, 2019), sobre uma experiência em um banco de investimento em que o time chegou a conclusão que uma reestruturação do schema do BD iriam aumentar drasticamente a performance do sistema. Então, descobriram que outras aplicações tinham acesso de leitura, e até de escrita, ao BD. Como o mesmo usuário e senha eram utilizados, era impossível saber quais eram essas aplicações e o que estava sendo acessado. Por uma análise de tráfego de rede, estimaram que cerca de 20 outras aplicações estavam usando integração pelo BD. Eventualmente, as credenciais foram desabilitadas e o time esperou o contato das pessoas que mantinham essas aplicações. Então, descobriram que a maioria das aplicações não tinha uma equipe para mantê-las. Ou seja, o schema antigo teria que ser mantido. O BD passou a ser uma API pública. O time de Newman resolveu o problema criando um schema privado e projetando os dados em Views públicas com informações limitadas, para que os outros sistemas acessassem.
 
+Em [um tweet](https://twitter.com/rponte/status/1186337012724441089) (PONTE, 2019), Rafael Ponte, deixa claro que usar um Shared Database é integração de sistemas e que, nesse cenário, é preciso manter um contrato bem definido. Dessa maneira, a evolução dos schemas e a manutenção de longo prazo ficam facilitadas. Segundo Ponte, o problema é que o mercado utilizado o que ele chamada de _orgia de dados_, em que os sistemas acessando diretamente os dados, sem um contrato claro. E BDs permitem diversas maneiras de definir contratos:
+
+- Grants a schemas
+- API via procedures
+- API via views
+- API via tabelas de integração
+- Eventos e signals
+
+Rafael Ponte explica que tabelas de integração são especialmente úteis, pois são simples de implementar e provêem um contrato bem definido. Nenhum sistema conhece a estrutura de tabelas do outro, os detalhes de implementação do BD original. Há, portanto, _information hiding_ e encapsulamento. Um sistema produz dados para a tabela de integração e outro sistema consome esses dados, na cadência em que desejar.
+
+Ponte afirma existem diversas estratégias de integração via BD. Procedures permitem uma maior flexibilidade na implementação, permitindo validação, enrichment, queuing, roteamento, etc. Views funcionam como uma API read-only, onde o sistema consumirdor não conhece nada da estrutura interna de tabelas.
+
 ## Um Banco de Dados por serviço
 
 No artigo [Database per service](https://microservices.io/patterns/data/database-per-service.html) (RICHARDSON, 2018c), Chris Richardson argumenta em favor de um BD separado para cada serviço. O BD é um detalhe de implementação do serviço e não deve ser acessado diretamente por outros serviços.
+
+> **Pattern: Database per service**
+>
+> Faça com que os dados de um Microservice sejam apenas acessíveis por sua API.
 
 Podemos fazer um paralelo com o conceito de encapsulamento em Orientação a Objetos. Um objeto deve proteger seus detalhes internos e tornar os atributos privados é uma condição para isso. Qualquer manipulação dos atributos deve ser feita pelos métodos públicos.
 
@@ -1027,6 +1043,10 @@ Um dump, porém, é um passo útil para alimentar o novo BD com um snapshot dos 
 
 Logo em seguida, é necessário ter alguma forma de sincronização. Uma maneira é usar **Change Data Capture** (CDC): as modificações no BD original são detectadas e alimentadas no novo BD. A técnica é descrita no livro de Sam Newman e também por Mario Amaral e outros membros da equipe da Elo7, no episódio [Estratégias de migração de dados no Elo7](https://hipsters.tech/estrategias-de-migracao-de-dados-no-elo7-hipsters-on-the-road-07/) (AMARAL et al., 2019) do podcast Hipsters On The Road.
 
+> **Pattern: Change Data Capture (CDC)**
+>
+> Capture as mudanças em um BD, para que ações sejam tomadas a partir dos dados modificados.
+
 Uma das maneiras de implementar CDC é usando _triggers_. É algo que os BDs já fazem e não há a necessidade de introduzir nenhuma nova tecnologia. Porém, como Sam Newman diz em seu livro, as ferramentas e o controle de mudanças de triggers deixam a desejar e podem complicar a aplicação se forem usadas exageradamente. Além disso, na maioria dos BDs só é possível executar SQL. E o destino for um BD não relacional ou um outro sistema?
 
 Sam Newman diz, em seu livro, que uma outra maneira de implementar é utilizar um _Batch Delta Copier_: um programa que roda de tempos em tempos, com um `cron` ou similares, e consulta o BD original, verificando os dados que foram alterados e copiando os dados para o BD de destino. Porém, a lógica de saber o que foi alterado pode ser complexa e requerer a adição de colunas de _timestamps_ nas tabelas. Além disso, as consultas podem ser pesadas, afetando a performance do BD original.
@@ -1035,7 +1055,7 @@ Uma outra maneira de implementar CDC, descrita por Renato Sardinha no post [Intr
 
 A conclusão que os livros, podcasts e posts mencionados chegam é a mesma: podem ser usados os **transaction logs** dos BDs para implementar CDC. A maioria dos BDs relacionais mantém um log de transações (no MySQL, o `binlog`), que contém um registro de todas as mudanças comitadas e é usado na replicação entre nós de um cluster de BDs.
 
-Existem ferramentas como o [Debezium](https://debezium.io/), que lêem o transaction log de BDs como MySQL, PostgreSQL, MongoDB, Oracle e SQL Server e publicam eventos automaticamente em um Message Broker (especificamente o Kafka, no caso do Debezium). A solução é complexa e requer um sistema de Mensageria, mas consegue obter atualizações por SQL diretamente no BD e permite que os eventos sejam consumidos por diferentes ferramentas. Além do Debezium, existem ferramentas semelhantes como o [LinkedIn Databus](https://github.com/linkedin/databus) para o Oracle, o [DynamoDB Streams]((http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html) para o DynamoDB da Amazon e o [Eventuate Tram](https://github.com/eventuate-tram/eventuate-tram-core), mantido por Chris Richardson.
+Existem _transaction log miners_ como o [Debezium](https://debezium.io/), que lêem o transaction log de BDs como MySQL, PostgreSQL, MongoDB, Oracle e SQL Server e publicam eventos automaticamente em um Message Broker (especificamente o Kafka, no caso do Debezium). A solução é complexa e requer um sistema de Mensageria, mas consegue obter atualizações feitas diretamente no BD e permite que os eventos sejam consumidos por diferentes ferramentas. Além do Debezium, existem ferramentas semelhantes como o [LinkedIn Databus](https://github.com/linkedin/databus) para o Oracle, o [DynamoDB Streams](http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html) para o DynamoDB da Amazon e o [Eventuate Tram](https://github.com/eventuate-tram/eventuate-tram-core), mantido por Chris Richardson.
 
 Com o CDC funcionando com Debezium ou outra ferramenta parecida, podemos usar uma estratégia progressiva descrita por Sam Newman, em seu livro e, de maneira semelhante, pelo pessoal da Elo 7:
 
@@ -1043,3 +1063,5 @@ Com o CDC funcionando com Debezium ou outra ferramenta parecida, podemos usar um
 - Depois, leituras e escritas são mantidas no BD original e os dados são escritos no novo BD com CDC. Assim, é possível observar o comportamento do novo BD com o volume de dados real.
 - Em passo seguinte, o BD original fica apenas para leitura e a leitura e escrita é feita no novo BD. No caso de problemas inesperados, o BD original fica como solução paliativa.
 - Finalmente, com a estabilização das operações e da migração, o BD original é removido.
+
+É importante salientar que uma Migração de Dados não acontece de uma hora pra outra. Jeff Barr, da Amazon, diz no post [Migration Complete – Amazon’s Consumer Business Just Turned off its Final Oracle Database](https://aws.amazon.com/pt/blogs/aws/migration-complete-amazons-consumer-business-just-turned-off-its-final-oracle-database/) (BARR, 2019), que a migração de BDs Oracle para BDs da AWS de diferentes paradigmas, como DynamoDB, Aurora e Redshift, foi feita ao longo de vários anos.
