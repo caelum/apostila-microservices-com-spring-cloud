@@ -8,6 +8,12 @@ ASERG-UFMG, Applied Software Engineering Research Group. _Does Conway’s Law ap
 
 BARR, Jeff. _Migration Complete – Amazon’s Consumer Business Just Turned off its Final Oracle Database._ 2019. Em: https://aws.amazon.com/pt/blogs/aws/migration-complete-amazons-consumer-business-just-turned-off-its-final-oracle-database
 
+BERNERS-LEE, Tim et al. _Uniform Resource Locators (URL)._ 1994. Em: https://tools.ietf.org/html/rfc1738
+
+BERNERS-LEE, Tim et al. _Hypertext Transfer Protocol -- HTTP/1.0._ 1996. Em: https://tools.ietf.org/html/rfc1945
+
+BERNERS-LEE, Tim et al. _Uniform Resource Identifiers (URI): Generic Syntax._ 1998. Em: https://tools.ietf.org/html/rfc2396
+
 BREWER, Eric. _Towards Robust Distributed Systems._ Principles Of Distributed Computing. 2000. Em: http://pld.cs.luc.edu/courses/353/spr11/notes/brewer_keynote.pdf
 
 BROOKS, Fred. _No Silver Bullet: Essence and Accident in Software Engineering._ Elsevier Science B. V. 1986. Em: http://faculty.salisbury.edu/~xswang/Research/Papers/SERelated/no-silver-bullet.pdf
@@ -27,6 +33,8 @@ COSTA, Luiz et al. _Monolitos modulares e vacinas – Hipsters On The Road #17._
 CNCF TOC (Techinical Oversight Committee). _CNCF Cloud Native Definition v1.0._ 2018. Em: https://github.com/cncf/toc/blob/master/DEFINITION.md
 
 DEAN, Jeffrey. _Designs, Lessons and Advice from Building Large Distributed Systems._ 3rd ACM SIGOPS International Workshop on Large Scale Distributed Systems and Middleware. 2009. Em: http://www.cs.cornell.edu/projects/ladis2009/talks/dean-keynote-ladis2009.pdf
+
+DUSSEAULT, Lisa; SNELL James M. _PATCH Method for HTTP._ 2010. Em: https://tools.ietf.org/html/rfc5789
 
 EVANS, Eric. _Domain-Driven Design: Tackling Complexity in the Heart of Software._ Addison-Wesley Professional. 2003. 560 p. Em: https://www.amazon.com/Domain-Driven-Design-Tackling-Complexity-Software/dp/0321125215
 
