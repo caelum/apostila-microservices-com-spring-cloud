@@ -4,6 +4,8 @@ ABADI, Daniel J. _Consistency Tradeoffs in Modern Distributed Database System De
 
 AMARAL, Mario et al. _Estratégias de migração de dados no Elo7 – Hipsters On The Road #07._ 2019. Em: https://hipsters.tech/estrategias-de-migracao-de-dados-no-elo7-hipsters-on-the-road-07/
 
+AQUILES, Alexandre. _Todo o poder emana do cliente: explorando uma API GraphQL._ 2017. Em: https://blog.caelum.com.br/todo-o-poder-emana-do-cliente-explorando-uma-api-graphql/
+
 ASERG-UFMG, Applied Software Engineering Research Group. _Does Conway’s Law apply to Linux?_ 2017. Em: https://medium.com/@aserg.ufmg/does-conways-law-apply-to-linux-6acf23c1ef15
 
 BARR, Jeff. _Migration Complete – Amazon’s Consumer Business Just Turned off its Final Oracle Database._ 2019. Em: https://aws.amazon.com/pt/blogs/aws/migration-complete-amazons-consumer-business-just-turned-off-its-final-oracle-database
@@ -40,7 +42,11 @@ EVANS, Eric. _Domain-Driven Design: Tackling Complexity in the Heart of Software
 
 FEATHERS, Michael. _Microservices Until Macro Complexity._ 2014. Em: https://michaelfeathers.silvrback.com/microservices-until-macro-complexity
 
+FERREIRA, Rodrigo. _REST: Princípios e boas práticas._ 2017. Em: https://blog.caelum.com.br/rest-principios-e-boas-praticas
+
 FIELDING, Roy. _Architectural Styles and the Design of Network-based Software Architectures._ 2000. Em: https://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm
+
+FIELDING, Roy. _REST APIs must be hypertext-driven._ 2008. Em: https://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven
 
 FOOTE, Brian; YODER, Joseph. _Big Ball Of Mud._ 1999. Em: http://www.laputan.org/mud/mud.html
 
@@ -84,6 +90,8 @@ MARTIN, Robert Cecil. _Clean Architecture: A Craftsman's Guide to Software Struc
 
 MASON, Ross. _OSGi? No thanks._ 2010. Em: https://blogs.mulesoft.com/dev/news-dev/osgi-no-thanks/
 
+NELSON, Teodhor Holm. _Complex Information Processing: A File Structure for the Complex, the Changing, and the Indeterminate._ Association for Computing Machinery (ACM) National Conference. 1965.Em: https://elmcip.net/node/7367
+
 NEWMAN, Sam. _Building Microservices: Designing Fine-Grained Systems._ O'Reilly, 2015. 280 p. Em: https://www.oreilly.com/library/view/building-microservices/9781491950340/
 
 NEWMAN, Sam. _Monolith to Microservices: Evolutionary Patterns to Transform Your Monolith._ O'Reilly, 2019. Early Release. 284 p. Em: https://learning.oreilly.com/library/view/monolith-to-microservices/9781492047834/
@@ -103,6 +111,8 @@ RICHARDSON, Chris. _Pattern: Database per Service._ 2018c. Em: https://microserv
 RICHARDSON, Leonard;  RUBY, Sam. _RESTful Web Services: Web Services for the Real World._ O'Reilly, 2007. 448 p. Em: https://learning.oreilly.com/library/view/restful-web-services/9780596529260/
 
 RICHARDSON, Leonard. _Justice Will Take Us Millions Of Intricate Moves - Act Three: The Maturity Heuristic._ 2008. Em: https://www.crummy.com/writing/speaking/2008-QCon/act3.html
+
+ROBINSON, Ian. _Getting Things Done with REST._ QCon London 2011. Em: https://www.infoq.com/presentations/Getting-Things-Done-with-REST
 
 RUBEY, Raymond J. _Pasta Theory of Software._ 1992. Em: https://www.gnu.org/fun/jokes/pasta.code.html
 

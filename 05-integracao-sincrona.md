@@ -256,12 +256,12 @@ As restrições e princípios que fundamentam o estilo arquitetural da Web são 
 
 - _Cliente/Servidor_: a UI é separada do armazenamento dos dados, permitindo a portabilidade para diferentes plataformas e simplificando o Servidor.
 - _Stateless_: cada request do cliente deve conter todos os dados necessários, sem tomar vantagem de nenhum contexto armazenado no servidor. Sessões de usuário devem ser mantidas no cliente. Essa característica melhor: a Escalabilidade, já que não há uso de recursos entre requests diferentes; Confiabilidade, já que torna mais fácil a recuperação de falhas parciais; Visibilidade, já que não há a necessidade de monitorar além de um único request. Como desvantagem, há uma piora na Performance da rede, um aumento de dados repetitivos entre requests e uma dependência da implementação correta dos múltiplos clientes.
-- _Cache_: os requests podem ser classificados como cacheáveis, fazendo com que o cliente possa reusar o response para requests equivalentes. Assim, a Latência é reduzida de maneira a melhorar a Eficiência, Escalabilidade e a Performance percebida pelo usuário. Porém, a Confiabilidade pode ser afetada caso haja aumento siginificante de dados desatualizados.
-- _Interface Uniforme_: URLs, representações, métodos padronizados e links são restrições da Web que simplificam a Arquitetura e aumentam a Visbilidade das interações, encorajando a evolução independente de cada parte. Por outro lado, são menos eficientes que protocolos específicos.
+- _Cache_: os requests podem ser classificados como cacheáveis, fazendo com que o cliente possa reusar o response para requests equivalentes. Assim, a Latência é reduzida de maneira a melhorar a Eficiência, Escalabilidade e a Performance percebida pelo usuário. Porém, a Confiabilidade pode ser afetada caso haja aumento significante de dados desatualizados.
+- _Interface Uniforme_: URLs, representações, métodos padronizados e links são restrições da Web que simplificam a Arquitetura e aumentam a Visibilidade das interações, encorajando a evolução independente de cada parte. Por outro lado, são menos eficientes que protocolos específicos.
 - _Sistema em Camadas_: cada componente só conhece a camada com a qual interage imediatamente, minimizando a complexidade, aumentando a independência e permitindo intermediários como _load balancers_, _firewalls_ e _caches_. Porém, pode ser adicionada latência.
 - _Code-On-Demand_: os clientes podem estender as funcionalidades por meio da execução de _applets_ e _scripts_, aumentando a Extensibilidade. Por outro lado, a Visibilidade do sistema diminui.
 
-Fielding chama esse estilo arquitetural da Web de Representational State Transfer, ou simplesmente **REST**. Adicionando o sufixo _-ful_, que denota "que possui a característica de" em inglês, podemos chamar serviços que seguem esse estilo arquietural de _RESTful_.
+Fielding chama esse estilo arquitetural da Web de Representational State Transfer, ou simplesmente **REST**. Adicionando o sufixo _-ful_, que denota "que possui a característica de" em inglês, podemos chamar serviços que seguem esse estilo arquitetural de _RESTful_.
 
 <!--@note
 
@@ -272,6 +272,8 @@ Fielding chama esse estilo arquitetural da Web de Representational State Transfe
     REST - RESTful
 
 -->
+
+> Um excelente resumo de boas práticas e princípios de uma API RESTful podem ser encontrado no blog da Caelum, no post [REST: Princípios e boas práticas](https://blog.caelum.com.br/rest-principios-e-boas-praticas) (FERREIRA, 2017)
 
 Leonard Richardson e Sam Ruby, no livro [RESTful Web Services](https://learning.oreilly.com/library/view/restful-web-services/9780596529260/) (RICHARDSON; RUBY, 2007), contrastam serviços no estilo _Remote Procedure Call_ (RPC) com serviços _Resource-Oriented_.
 
@@ -519,9 +521,9 @@ HTTP/1.1 409 Conflict
 
 ### Nível 3 - Controles de Hypermedia
 
-Um dos conceitos importantes da Web é o uso de hypertext.
+Um dos conceitos importantes do HTTP, o protocolo da Web, é o uso de hypertext.
 
-O Nível 3 de Maturidade, o nível final, é atingido quando são utilizados links. Mas falaremos sobre isso mais adiante.
+O Nível 3, o nível final, de Maturidade de uma API RESTful é atingido quando são utilizados links. Mas falaremos sobre isso mais adiante.
 
 ## Cliente REST com RestTemplate do Spring
 
@@ -936,6 +938,113 @@ public class PagamentoController {
   
   Veja que, depois dessa mudança, o status do pedido fica como **_PAGO_** e não apenas como _REALIZADO_.
 
+## O poder dos Links
+
+Ao descrevermos as boas ideias do procolo HTTP, mencionamos a importância dos links. Quando falamos sobre REST e sobre o Nível 3, o máximo, do Modelo de Maturidade de Leonard Richardson, falamos mais uma vez de links.
+
+Roy Fielding, o criador do termo REST, diz no post [REST APIs must be hypertext-driven](https://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven) (FIELDING, 2008) que toda API, para ser considerada RESTful, deve necessariamente usar links.
+
+### Hypertext? Hypermedia?
+
+HyperText é um conceito tão importante para a Web que está nas iniciais de seu protocolo, o HTTP, e de seu formato de documentos original, o HTML.
+
+O termo hypertext, foi cunhado por Ted Nelson e publicado no artigo [Complex Information Processing](https://elmcip.net/node/7367) (NELSON, 1965) para denotar um material escrito ou pictórico interconectado de maneira tão complexa que não pode ser representado convenientemente em papel. A ideia original é que seria algo que iria além do texto e deveria ser representado em uma tela interativa.
+
+Nos comentários do post [REST APIs must be hypertext-driven](https://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven) (FIELDING, 2008), Fielding dá a sua definição:
+
+_Quando eu digo hypertext, quero dizer a apresentação simultânea de informações e controles, de forma que as informações se tornem o meio pelo qual o usuário (ou autômato) obtém escolhas e seleciona ações._
+
+_A hypermedia é apenas uma expansão sobre o que o texto significa para incluir âncoras temporais em um fluxo de mídia; a maioria dos pesquisadores abandonou a distinção._
+
+_Hypertext não precisa ser HTML num navegador. Máquinas podem seguir links quando entendem o formato de dados e os tipos de relacionamento._
+
+### Monte a sua histório seguindo links
+
+No final da década de 1970 e começo da década de 1980, surgiu a série de livros-jogo "Escolha a sua aventura" (em inglês, _Choose Your Own Adventure_), lançada pela editora americana Bantam Books e editada pela Ediouro no Brasil.
+
+Títulos como "A Gruta do Tempo" (em inglês, _The Cave of Time_), de Edward Packard, permitiam que o leitor fizesse escolhas e determinasse o rumo da história.
+
+Na página 1 do livro, a história era contada linearmente, até que o personagem chegava a um ponto de decisão, em que eram oferecidas algumas opções para o leitor determinar o rumo da narrativa. Por exemplo:
+
+- Se quiser seguir o velho camponês para ver aonde ele vai, vá para a página 3.
+- Se preferir voltar para casa, vá para a página 15.
+- Se quiser sentar e esperar, vá para a página 71.
+
+O leitor poderia coletar itens no decorrer da história que seriam determinadas em trechos posteriores. Por exemplo:
+
+- Se você tiver o item mágico "Olho do Falcão", vá para a página 210.
+- Se você não tiver o item, mas possui a perícia "Rastreamento", vá para a página 19.
+- Caso contrário, vá para a página 101.
+
+Essa ideia de montar a sua história seguindo links parece muito com o uso de hypertext para APIs RESTful.
+
+Em sua palestra [Getting Things Done with REST](https://www.infoq.com/presentations/Getting-Things-Done-with-REST) (ROBINSON, 2011), Ian Robinson cita talvez o mais famoso desses livros-jogo, o de título "O Feiticeiro da Montanha de Fogo" (em inglês, _The Warlock of Firetop Mountain_), escrito por Ian Livingstone e Steve Jackson e publicado em 1982 pela Puffin Books.
+
+### Links para a transição de estados
+
+Algumas entidades de negócio mudam de estados no decorrer do seu uso em uma aplicação.
+
+No Caelum, um restaurante é cadastrado e, para entrar nos resultados de buscas feitas pelos usuário, precisa ser aprovado pelo setor Administrativo. Podemos dizer que um restaurante começa com o estado _CADASTRADO_ e então pode passar para o estado de _APROVADO_.
+
+![A transição de estados de um restaurante {w=28}](imagens/05-integracao-sincrona/maquina-de-estados-de-restaurantes.png)
+
+Para o restaurante, não há nenhum que indica os estados possíveis. Há apenas um atributo `aprovado` na classe `Restaurante` do módulo de Restaurante do Monólito.
+
+Já para um pedido, há mais estados possíveis. Os valores desses estados estão representados na enum `Status` da classe `Pedido` do módulo de Pedido do Monólito.
+
+![A transição de estados de um pedido {w=80}](imagens/05-integracao-sincrona/maquina-de-estados-de-pedidos.png)
+
+Um pagamento tem uma transição mais interessante: depois de _CRIADO_, pode ser _CONFIRMADO_ ou _CANCELADO_.
+
+![A transição de estados de um pagamento {w=26}](imagens/05-integracao-sincrona/maquina-de-estados-de-pagamentos.png)
+
+Se observarmos a implementação da API de pagamentos do `eats-pagamento-service`, 
+
+- um `POST` em `/pagamentos` adiciona um novo pagamento com o estado `CRIADO` e retorna um código `201` com a URL do novo recurso no cabeçalho `Location`. Por exemplo, `/pagamentos/15`
+- um `PUT` em `/pagamentos/15` confirma o pagamento de `id` 15, fazendo sua transição para o estado `CONFIRMADO`
+- um `DELETE` em `/pagamentos/15` cancela o pagamento de `id` 15, deixando-o no estado `CANCELADO`
+
+Ao invocar a URL de um pagamento com diferentes métodos HTTP, fazemos a transição dos estados de um pagamento.
+
+Para um cliente HTTP fazer essa transição de estados, seu programador deve saber previamente quais os estados possíveis e quais URLs devem ser chamadas. No caso de uma mudança de URL, o programador teria que corrigir o código.
+
+Poderíamos tornar o cliente HTTP mais flexível se representássemos as transições de estados possíveis por meio de links. Essa ideia é comumente chamada de **Hypermedia As The Engine Of Application State (HATEOAS)**.
+
+Ainda teríamos que saber a utilidade de cada link. Para isso, temos o _link relation_, uma descrição do link que, em geral, é definida em um atributo `rel` associado ao link.
+
+Há um [padrão de link relations](https://www.iana.org/assignments/link-relations/link-relations.xhtml) mantido pela IANA. Alguns deles:
+
+- `self`: um link para o próprio recurso
+- `search`: um link para o um recurso de busca.
+- `next`: um link para o próximo recurso de uma série. Comumente usado em paginação.
+- `previous`: um link para o recurso anterior de uma série. Comumente usado em paginação.
+- `first`: um link para o primeiro recurso de uma série. Comumente usado em paginação.
+- `last`:um link para o último recurso de uma série. Comumente usado em paginação.
+
+
+<!-- TODO: 
+
+fundamentar HATEOAS
+
+https://softwareengineering.stackexchange.com/questions/307446/in-rest-is-hateoas-really-about-self-discovery-or-about-navigation
+
+https://www.ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm#sec_5_2
+
+exemplo de links em XML e JSON
+
+falar sobre HAL
+
+
+Modelo de Maturidade do Richardson - nível 3
+https://martinfowler.com/articles/richardsonMaturityModel.html
+
+Spring DATA REST
+https://spring.io/guides/gs/accessing-data-rest/
+
+gRPC
+
+-->
+
 
 ## Exercício opcional: Spring HATEOAS e HAL
 
@@ -1262,15 +1371,7 @@ https://github.com/alexandreaquiles/eats/commit/f8ef33b88cd3d96c62627a13b4e8470c
 
 ## Para saber mais: Todo o poder emana do cliente - explorando uma API GraphQL
 
-> Texto publicado no blog da Caelum em: https://blog.caelum.com.br/todo-o-poder-emana-do-cliente-explorando-uma-api-graphql/
-
-Esse tal de GraphQL tem causado bastante burburinho. Dizem que é uma alternativa mais flexível e eficiente a APIs REST. Já foi detectado pelo seu radar?
-
-No [episódio 55](http://hipsters.tech/startups-processos-e-mercado-global-hipsters-55/) do Hipsters Ponto Tech, o pessoal da [Pipefy](http://docs.pipefy.apiary.io/) disse que uma API GraphQL no back-end, junto ao React e shadow DOM no front-end, levaram a uma melhoria drástica na performance. Outras empresas brasileiras como a [GetNinjas](https://labs.getninjas.com.br/compartilhando-dados-em-uma-arquitetura-de-microsservicos-usando-graphql-35a5aca4a7dc) e a [Taller](https://blog.taller.net.br/graphql-hoje-usando-apollo-em-aplicacoes-que-utilizam-apis-rest/) também tem usado o GraphQL.
-
-Empresas gringas como a [Shopify](https://help.shopify.com/en/api/storefront-api/reference), [Artsy](https://artsy.github.io/blog/2016/06/19/graphql-for-mobile/) e [Yelp](https://www.yelp.com/developers/graphql/guides/intro) provêem APIs com suporte ao GraphQL. O GitHub [migrou](https://github.blog/2016-09-14-the-github-graphql-api/) sua API de REST para GraphQL.
-
-E claro, o Facebook, que desenvolveu o GraphQL em 2012 para uso interno e o [abriu ao público](https://code.facebook.com/posts/1691455094417024) em 2015.
+> O texto dessa seção é baseado no post [Todo o poder emana do cliente: explorando uma API GraphQL](https://blog.caelum.com.br/todo-o-poder-emana-do-cliente-explorando-uma-api-graphql/) (AQUILES, 2017) do blog da Caelum.
 
 ### Quais as limitações de uma API REST?
 
@@ -1440,7 +1541,7 @@ O array retornado contabiliza mais 14 objetos representando os pull requests. De
 
 Então, sabemos que há 44 (30 + 14) pull requests abertos no repositório do Express.
 
-### Resumindo
+### Resumindo a consulta REST
 
 No momento da escrita desse artigo, o número de stars do Express no GitHub é 33508 e o de pull requests abertos é 44. Para descobrir isso, tivemos que:
 
@@ -1462,7 +1563,7 @@ Numa API GraphQL, o cliente diz exatamente os dados que quer da API, tornando a 
 
 A API, por sua vez, retorna apenas os dados que o cliente pediu, fazendo com que a transferência da resposta seja bastante **eficiente**.
 
-### Mas afinal de contas, o que é GraphQL?
+Mas afinal de contas, o que é GraphQL?
 
 GraphQL _não_ é um banco de dados, _não_ é um substituto do SQL, _não_ é uma ferramenta do lado do servidor e _não_ é específico para React (apesar de muito usado por essa comunidade).
 
@@ -1470,7 +1571,7 @@ Um servidor que aceita requisições GraphQL poderia ser implementado em _qualqu
 
 Clientes que enviam requisições GraphQL também poderiam ser implementados em qualquer tecnologia: web, mobile, desktop, etc. Diversas [bibliotecas](https://graphql.org/code/#graphql-clients) auxiliam nessa tarefa.
 
-GraphQL é uma **query language para APIs** que foi [especificada](https://graphql.github.io/graphql-spec/) pelo Facebook.
+GraphQL é uma **query language para APIs** que foi [especificada](https://graphql.github.io/graphql-spec/) pelo Facebook em 2012 para uso interno e aberta ao público em 2015.
 
 A _query language_ do GraphQL é **fortemente tipada** e descreve, através de um _schema_, o modelo de dados oferecido pelo serviço. Esse schema pode ser usado para verificar se uma dada requisição é válida e, caso seja, executar as tarefas no back-end e estruturar os dados da resposta.
 
@@ -1591,7 +1692,7 @@ O retorno será um JSON em que os dados estarão na propriedade `data`:
 
 Repare que os campos da consulta, dentro da `query`, tem exatamente a mesma estrutura do retorno da API. É como se a resposta fosse a própria consulta, mas com os valores preenchidos. Por isso, montar consultas com GraphQL é razoavelmente intuitivo.
 
-### Resumindo
+### Resumindo a consulta GraphQL
 
 Obtivemos os mesmos resultados: 33508 stars e 44 pull requests. Para isso, tivemos que:
 
@@ -1607,10 +1708,11 @@ Poderíamos buscar outros dados da API do GitHub: o número de issues abertas, a
 
 Uma coisa é certa: com uma consulta GraphQL, eu faria menos requisições e receberia menos dados desnecessários. Mais flexibilidade e mais eficiência.
 
-> Considerando o Modelo de Maturidade de Richardson, podemos considerar que o GraphQL está no Nível 0:
-> - não diferentes recursos, apenas uma URI como ponto de entrada para toda a API GraphQL
-> - não há a ideia de diferentes verbos HTTP, só é usado POST
-> - não há diferentes representações, apenas um JSON que contém uma estrutura GraphQL
+Considerando o Modelo de Maturidade de Richardson, podemos considerar que o GraphQL está no Nível 0:
+
+- não diferentes recursos, apenas uma URI como ponto de entrada para toda a API GraphQL
+- não há a ideia de diferentes verbos HTTP, só é usado POST
+- não há diferentes representações, apenas um JSON que contém uma estrutura GraphQL
 
 Existem várias outras questões que surgem ao estudar o GraphQL:
 
@@ -1618,5 +1720,5 @@ Existem várias outras questões que surgem ao estudar o GraphQL:
 - é possível gerar uma documentação a partir do código para a minha API?
 - vale a pena migrar minha API pra GraphQL?
 - posso fazer uma “casca” GraphQL para uma API REST já existente?
--  como implementar um cliente sem muito trabalho?
+- como implementar um cliente sem muito trabalho?
 - quais os pontos ruins dessa tecnologia e desafios na implementação?
