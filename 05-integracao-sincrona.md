@@ -228,6 +228,7 @@ Alguns dos códigos de status mais comuns:
 - `404 Not Found`: o recurso não existe no servidor.
 - `405 Method Not Allowed`: o cliente usou um método HTTP não suportado pelo recurso solicitado.
 - `406 Not Acceptable`: o servidor não consegue gerar uma representação compatível com nenhum valor do cabeçalho `Accept` do request.
+- `409 Conflict`: o request não pode ser processado por causa de um conflito no estado atual do recurso, como múltiplas atualizações simultâneas.
 - `415 Unsupported Media Type`: o request foi enviado com uma representação, indicada no `Content-type`, não suportada pelo servidor.
 - `429 Too Many Requests`: o cliente enviou requests excessivos em uma determinada fatia de tempo. Usado ao implementar _rate limiting_ com o intuito de previnir contra ataques Denial of Service (DoS).
 
@@ -246,6 +247,281 @@ Alguns dos códigos de status mais comuns:
 ### Links
 
 A Web tem esse nome por ser uma teia de documentos ligados entre si. Links, ou hypertext, são conceitos muito importantes na Web e podem ser usado na integração de sistemas. Veremos como mais adiante.
+
+## REST, o estilo arquitetural da Web
+
+Roy Fielding, um dos autores das especificações do protocolo HTTP e cofundador do Apache HTTP Server, estudou diferentes estilos arquiteturais de Sistemas Distribuídos em sua tese de PhD: [Architectural Styles and the Design of Network-based Software Architectures](https://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm) (FIELDING, 2000).
+
+As restrições e princípios que fundamentam o estilo arquitetural da Web são descrita por Fielding da seguinte maneira:
+
+- _Cliente/Servidor_: a UI é separada do armazenamento dos dados, permitindo a portabilidade para diferentes plataformas e simplificando o Servidor.
+- _Stateless_: cada request do cliente deve conter todos os dados necessários, sem tomar vantagem de nenhum contexto armazenado no servidor. Sessões de usuário devem ser mantidas no cliente. Essa característica melhor: a Escalabilidade, já que não há uso de recursos entre requests diferentes; Confiabilidade, já que torna mais fácil a recuperação de falhas parciais; Visibilidade, já que não há a necessidade de monitorar além de um único request. Como desvantagem, há uma piora na Performance da rede, um aumento de dados repetitivos entre requests e uma dependência da implementação correta dos múltiplos clientes.
+- _Cache_: os requests podem ser classificados como cacheáveis, fazendo com que o cliente possa reusar o response para requests equivalentes. Assim, a Latência é reduzida de maneira a melhorar a Eficiência, Escalabilidade e a Performance percebida pelo usuário. Porém, a Confiabilidade pode ser afetada caso haja aumento siginificante de dados desatualizados.
+- _Interface Uniforme_: URLs, representações, métodos padronizados e links são restrições da Web que simplificam a Arquitetura e aumentam a Visbilidade das interações, encorajando a evolução independente de cada parte. Por outro lado, são menos eficientes que protocolos específicos.
+- _Sistema em Camadas_: cada componente só conhece a camada com a qual interage imediatamente, minimizando a complexidade, aumentando a independência e permitindo intermediários como _load balancers_, _firewalls_ e _caches_. Porém, pode ser adicionada latência.
+- _Code-On-Demand_: os clientes podem estender as funcionalidades por meio da execução de _applets_ e _scripts_, aumentando a Extensibilidade. Por outro lado, a Visibilidade do sistema diminui.
+
+Fielding chama esse estilo arquitetural da Web de Representational State Transfer, ou simplesmente **REST**. Adicionando o sufixo _-ful_, que denota "que possui a característica de" em inglês, podemos chamar serviços que seguem esse estilo arquietural de _RESTful_.
+
+<!--@note
+
+  Alexandre: costumo a lista palavras terminadas com -ful, ressaltando que não é -full (com dois L):
+
+    Beauty - Beatiful
+    Pain - Painful
+    REST - RESTful
+
+-->
+
+Leonard Richardson e Sam Ruby, no livro [RESTful Web Services](https://learning.oreilly.com/library/view/restful-web-services/9780596529260/) (RICHARDSON; RUBY, 2007), contrastam serviços no estilo _Remote Procedure Call_ (RPC) com serviços _Resource-Oriented_.
+
+Um Web Service no estilo RPC expõe operações de uma aplicação. Não há recursos, representações nem métodos. O SOAP é um exemplo de um protocolo nesse estilo RPC: há apenas um recurso com só uma URL (a do Web Service), há apenas uma representação (XML), há apenas um método (POST, em geral). Cada `operation` do Web Service SOAP é exposta num WSDL.
+
+Richardson e Ruby mostram, no livro, uma API de busca do Google implementada com SOAP. Para buscar sobre "REST" deveríamos efetuar o seguinte request:
+
+```txt
+POST http://api.google.com/search/beta2
+Content-Type: application/soap+xml
+```
+
+<!-- separador -->
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <gs:doGoogleSearch xmlns:gs="urn:GoogleSearch">
+      <q>REST</q>
+      ...
+    </gs:doGoogleSearch>
+  </soap:Body>
+</soap:Envelope>
+```
+
+A mesma consulta pode ser feita pela API mais moderna do Google, que expõe um recurso `search` que recebe um parâmetro `q` com o termo a ser consultado:
+
+```txt
+GET http://www.google.com/search?q=REST
+Content-Type: text/html
+```
+
+## O Modelo de Maturidade de Richardson
+
+No post [Richardson Maturity Model](https://martinfowler.com/articles/richardsonMaturityModel.html) (FOWLER, 2010), Martin Fowler explica uma heurística para a maturidade da adoção de REST descrita por Leonard Richardson no "ato 3" de sua palestra [Justice Will Take Us Millions Of Intricate Moves](https://www.crummy.com/writing/speaking/2008-QCon/act3.html) (RICHARDSON, 2008).
+
+O Modelo de Maturidade descrito por Richardson indica uma progressão na adoção das tecnologias da Web.
+
+### Nível 0 - O Pântano do POX
+
+No Nível 0 de Maturidade, o HTTP é usado apenas como um mecanismo de transporte para interações remotas no estilo RPC, sem a filosofia da Web.
+
+Fowler usa o termo Plain Old XML (POX) para descrever APIs que provêem só um endpoint, todas as chamadas usam POST, a única representação é XML. As mensagens de erro contém um status code de sucesso (200) com os detalhes do erro no corpo do response. É o caso de tecnologias como SOAP e XML-RPC.
+
+É importante ressaltar que o uso de XML é apenas um exemplo. Poderiam ser utilizados JSON, YAML ou qualquer outra representação. Esse nível de maturidade trata de uma única representação.
+
+Para ilustrar esse tipo de API, Fowler usa um exemplo de consultas médicas. Por exemplo, para agendar uma consulta:
+
+```txt
+POST /agendamentoService HTTP/1.1
+```
+<!-- separador -->
+
+```xml
+<horariosDisponiveisRequest data="2010-01-04" doutor="huberman"/>
+```
+
+O retorno seria algo como:
+
+```txt
+HTTP/1.1 200 OK
+```
+<!-- separador -->
+
+```xml
+<listaDeHorariosDisponiveis>
+  <horario inicio="14:00" fim="14:50">
+    <doutor id="huberman"/>
+  </horario>
+  <horario inicio="16:00" fim="16:50">
+    <doutor id="huberman"/>
+  </horario>
+</listaDeHorariosDisponiveis>
+```
+
+Para marcar uma consulta:
+
+```txt
+POST /agendamentoService HTTP/1.1
+```
+<!-- separador -->
+
+```xml
+<marcacaoConsultaRequest>
+  <horario doutor="huberman" inicio="14:00" fim="14:50"/>
+  <paciente id="alexandre"/>
+</marcacaoConsultaRequest>
+```
+
+A resposta de sucesso, com a confirmação da consulta, seria algo como:
+
+```txt
+HTTP/1.1 200 OK
+```
+<!-- separador -->
+
+```xml
+<consulta>
+  <horario doutor="huberman" inicio="14:00" fim="14:50"/>
+  <paciente id="alexandre"/>
+</consulta>
+```
+
+Em caso de erro, teríamos uma resposta ainda com o código de status `200`, mas com os detalhes do erro no corpo do response:
+
+```txt
+HTTP/1.1 200 OK
+```
+<!-- separador -->
+
+```xml
+<marcacaoConsultaRequestFailure>
+  <horario doutor="huberman" inicio="14:00" fim="14:50"/>
+  <paciente id="alexandre"/>
+  <motivo>Horário não disponível</motivo>
+</marcacaoConsultaRequestFailure>
+```
+
+Perceba que, no exemplo de Fowler, não foi utilizado SOAP mas uma API que usa HTTP, só que sem os conceitos do protocolo.
+
+### Nível 1 - Recursos
+
+Um primeiro passo, o Nível 1 de Maturidade, é ter diferentes recursos, cada um com sua URL, ao invés de um único endpoint para toda a API.
+
+No exemplo de consultas médicas de Fowler, poderíamos ter um recurso específico para um doutor:
+
+```txt
+POST /doutores/huberman HTTP/1.1
+```
+<!-- separador -->
+
+```xml
+<horariosDisponiveisRequest data="2010-01-04"/>
+```
+
+O response seria semelhante ao anterior, mas com uma maneira de endereçar individualmente cada horário disponível para um doutor específico:
+
+```txt
+HTTP/1.1 200 OK
+```
+<!-- separador -->
+
+```xml
+<listaDeHorariosDisponiveis>
+  <horario id="1234" doutor="huberman" inicio="14:00" fim="14:50"/>
+  <horario id="5678" doutor="huberman" inicio="16:00" fim="16:50"/>
+</listaDeHorariosDisponiveis>
+```
+
+Com um endereço para cada horário, marcar uma consulta seria fazer um `POST` para um recurso específico:
+
+```txt
+POST /horarios/1234 HTTP/1.1
+```
+<!-- separador -->
+
+```xml
+<marcacaoConsultaRequest>
+  <paciente id="alexandre"/>
+</marcacaoConsultaRequest>
+```
+
+O response seria semelhante ao anterior:
+
+```txt
+HTTP/1.1 200 OK
+```
+<!-- separador -->
+
+```xml
+<consulta>
+  <horario id="1234" doutor="huberman" inicio="14:00" fim="14:50"/>
+  <paciente id="alexandre"/>
+</consulta>
+```
+
+### Nível 2 - Verbos HTTP
+
+O segundo passo, o Nível 2 de Maturidade, é utilizar os verbos (ou métodos) HTTP o mais perto o possível de seu intuito original.
+
+Para obter a lista de horários disponíveis, poderíamos usar um `GET`:
+
+```txt
+GET /doutores/huberman/horarios?data=2010-01-04&status=disponivel HTTP/1.1
+```
+
+A resposta seria a mesma de antes:
+
+```txt
+HTTP/1.1 200 OK
+```
+<!-- separador -->
+
+```xml
+<listaDeHorariosDisponiveis>
+  <horario id="1234" doutor="huberman" inicio="14:00" fim="14:50"/>
+  <horario id="5678" doutor="huberman" inicio="16:00" fim="16:50"/>
+</listaDeHorariosDisponiveis>
+```
+
+No Nível 2 de Maturidade, Fowler diz que o uso de `GET` para consultas é crucial. Como o HTTP define o `GET` como uma operação _safe_, isso significa que não há mudanças significativas no estado de nenhum dos dados. Assim, é seguro invocar um `GET` diversas vezes seguidas e obter os mesmos resultados. Uma consequência importante é que é possível fazer _cache_ dos resultados, melhorando a Performance.
+
+Para marcar uma consulta, é necessário um verbo HTTP que permite a mudança de estado. Poderíamos usar um `POST`, da mesma maneira anterior:
+
+```txt
+POST /horarios/1234 HTTP/1.1
+```
+<!-- separador -->
+
+```xml
+<marcacaoConsultaRequest>
+  <paciente id="alexandre"/>
+</marcacaoConsultaRequest>
+```
+
+Uma API de Nível 2 de Maturidade, deve usar os códigos de status e cabeçalhos a seu favor. Para indicar que uma nova consulta foi criada, com o agendamento do paciente naquele horário podemos usar o status `201 Created`. Esse status deve incluir, no response, um cabeçalho `Location` com a URL do novo recurso. Essa nova URL pode ser usada pelo cliente para obter, com um `GET`, mais detalhes sobre o recurso que acabou de ser criado. Portanto, a resposta teria alguns detalhes diferentes da anterior:
+
+```txt
+HTTP/1.1 201 Created
+Location: horarios/1234/consulta
+```
+<!-- separador -->
+
+```xml
+<consulta>
+  <horario id="1234" doutor="huberman" inicio="14:00" fim="14:50"/>
+  <paciente id="alexandre"/>
+</consulta>
+```
+
+No caso de um erro, devem ser usados códigos 4XX ou 5XX. Por exemplo, para indicar que houve uma atualização do recurso por outro cliente, pode ser usado o status `409 Conflict` com uma nova lista de horários disponíveis no corpo do response:
+
+```txt
+HTTP/1.1 409 Conflict
+```
+
+<!-- separador -->
+
+```xml
+<listaDeHorariosDisponiveis>
+  <horario id="5678" doutor="huberman" inicio="16:00" fim="16:50"/>
+</listaDeHorariosDisponiveis>
+```
+
+### Nível 3 - Controles de Hypermedia
+
+Um dos conceitos importantes da Web é o uso de hypertext.
+
+O Nível 3 de Maturidade, o nível final, é atingido quando são utilizados links. Mas falaremos sobre isso mais adiante.
 
 ## Cliente REST com RestTemplate do Spring
 
@@ -660,6 +936,7 @@ public class PagamentoController {
   
   Veja que, depois dessa mudança, o status do pedido fica como **_PAGO_** e não apenas como _REALIZADO_.
 
+
 ## Exercício opcional: Spring HATEOAS e HAL
 
 1. Adicione o Spring HATEOAS como dependência no `pom.xml` de `eats-pagamento-service`:
@@ -982,3 +1259,364 @@ Usei o HAL-FORMS na versão milestone 2.2.0.M2 do Spring Boot no commit abaixo:
 https://github.com/alexandreaquiles/eats/commit/f8ef33b88cd3d96c62627a13b4e8470c9f09ada0#diff-5f414af558500eda821060272d84b8d8
 
 -->
+
+## Para saber mais: Todo o poder emana do cliente - explorando uma API GraphQL
+
+> Texto publicado no blog da Caelum em: https://blog.caelum.com.br/todo-o-poder-emana-do-cliente-explorando-uma-api-graphql/
+
+Esse tal de GraphQL tem causado bastante burburinho. Dizem que é uma alternativa mais flexível e eficiente a APIs REST. Já foi detectado pelo seu radar?
+
+No [episódio 55](http://hipsters.tech/startups-processos-e-mercado-global-hipsters-55/) do Hipsters Ponto Tech, o pessoal da [Pipefy](http://docs.pipefy.apiary.io/) disse que uma API GraphQL no back-end, junto ao React e shadow DOM no front-end, levaram a uma melhoria drástica na performance. Outras empresas brasileiras como a [GetNinjas](https://labs.getninjas.com.br/compartilhando-dados-em-uma-arquitetura-de-microsservicos-usando-graphql-35a5aca4a7dc) e a [Taller](https://blog.taller.net.br/graphql-hoje-usando-apollo-em-aplicacoes-que-utilizam-apis-rest/) também tem usado o GraphQL.
+
+Empresas gringas como a [Shopify](https://help.shopify.com/en/api/storefront-api/reference), [Artsy](https://artsy.github.io/blog/2016/06/19/graphql-for-mobile/) e [Yelp](https://www.yelp.com/developers/graphql/guides/intro) provêem APIs com suporte ao GraphQL. O GitHub [migrou](https://github.blog/2016-09-14-the-github-graphql-api/) sua API de REST para GraphQL.
+
+E claro, o Facebook, que desenvolveu o GraphQL em 2012 para uso interno e o [abriu ao público](https://code.facebook.com/posts/1691455094417024) em 2015.
+
+### Quais as limitações de uma API REST?
+
+Para ilustrar o que pode ser melhorado em uma API REST, vamos utilizar a [versão 3](https://developer.github.com/v3/) da API do GitHub, considerada muito consistente e aderente aos princípios REST.
+
+Queremos uma maneira de avaliar bibliotecas open-source. Para isso, dado um repositório do GitHub, desejamos descobrir:
+
+- o número de stars
+- o número de pull requests abertos
+
+Como exemplo, vamos usar o repositório de uma biblioteca NodeJS muito usada: o framework Web minimalista Express.
+
+### Obtendo detalhes de um repositório
+
+Lendo a documentação da API do GitHub, descobrimos que para [obter detalhes sobre um repositório](https://developer.github.com/v3/repos/#get), devemos enviar uma requisição GET para `/repos/:owner/:repo`. Então, para o repositório do Express, devemos fazer:
+
+```txt
+GET https://api.github.com/repos/expressjs/express
+```
+
+Como resposta, obtemos:
+
+- 2.2 KB _gzipados_ transferidos, incluindo cabeçalhos
+- 6.1 KB de JSON em 110 linhas, quando descompactado
+
+```txtx
+200 OK
+Content-type: application/json; charset=utf-8
+```
+
+<!-- separador -->
+
+```json
+{
+    "id": 237159,
+    "name": "express",
+    "full_name": "expressjs/express",
+    "private": false,
+    "html_url": "https://github.com/expressjs/express",
+    "description": "Fast, unopinionated, minimalist web framework for node.",
+    "fork": false,
+    "issues_url": "https://api.github.com/repos/expressjs/express/issues{/number}",
+    "pulls_url": "https://api.github.com/repos/expressjs/express/pulls{/number}",
+    "stargazers_count": 33508,
+    ... 
+}
+```
+
+O JSON retornado tem diversas informações sobre o repositório do Express. Por meio da propriedade `stargazers_count`, descobrimos que há mais de 33 mil stars.
+
+Porém, **não** temos o número de pull requests abertos.
+
+### Obtendo os pull requests de um repositório
+
+Na propriedade `pulls_url`, temos apenas uma URL: https://api.github.com/repos/expressjs/express/pulls{/number}.
+
+Um bom palpite é que sem esse `{/number}` teremos a lista de todos os pull requests, o que pode ser confirmado na [seção de pull requests](https://developer.github.com/v3/pulls/#list-pull-requests) da documentação da API REST do GitHub.
+
+> O `{/number}` da URL segue o modelo proposto pela [RFC 6570](https://tools.ietf.org/html/rfc6570) (URI Template).
+
+Mas como filtrar apenas pelos pull requests abertos?
+
+Na mesma documentação, verificamos que podemos usar a URL `/repos/:owner/:repo/pulls?state=open` ou simplesmente `/repos/:owner/:repo/pulls`, já que o filtro por pull requests abertos é aplicado por padrão. Em outras palavras, precisamos de outra requisição:
+
+```txt
+GET https://api.github.com/repos/expressjs/express/pulls
+```
+
+A resposta é:
+
+- 54.1 KB _gzipados_ transferidos, incluindo cabeçalhos
+- 514 KB de JSON em 9150 linhas, quando descompactado
+
+```txt
+200 OK
+Content-type: application/json; charset=utf-8
+Link: <https://api.github.com/repositories/237159/pulls?page=2>; rel="next",
+      <https://api.github.com/repositories/237159/pulls?page=2>; rel="last"
+```txt
+
+<!-- separador -->
+
+```json
+[
+    {
+        //um pull request...
+        "url": "https://api.github.com/repos/expressjs/express/pulls/3391",
+        "id": 134639441,
+        "html_url": "https://github.com/expressjs/express/pull/3391",
+        "diff_url": "https://github.com/expressjs/express/pull/3391.diff",
+        "patch_url": "https://github.com/expressjs/express/pull/3391.patch",
+        "issue_url": "https://api.github.com/repos/expressjs/express/issues/3391",
+        "number": 3391,
+        "state": "open",
+        "locked": false,
+        "title": "Update guide to ES6",
+        "user": {
+            "login": "jevtovich",
+            "id": 13847095,
+            "avatar_url": "https://avatars3.githubusercontent.com/u/13847095?v=4",
+            ...
+        },
+        "body": "",
+        "created_at": "2017-08-08T11:40:32Z",
+        "updated_at": "2017-08-08T17:28:01Z",
+        ...
+    },
+    {
+        //outro pull request...
+        "url": "https://api.github.com/repos/expressjs/express/pulls/3390",
+        "id": 134634529,
+        ...
+    },
+    ...
+]
+```
+
+É retornado um array de 30 objetos que representam os pull requests. Cada objeto ocupa uma média de 300 linhas, com informações sobre status, descrição, autores, commits e _diversas_ URLs relacionadas.
+
+Disso tudo, só queremos saber a contagem: 30 pull requests. Não precisamos de **nenhuma** outra informação.
+
+Mas há outra questão: o resultado é paginado com 30 resultados por página, por padrão, conforme descrito na [seção de paginação](https://developer.github.com/v3/#pagination) da documentação da API REST do GitHub.
+
+As URLs das próximas páginas devem ser obtidas a partir do cabeçalho de resposta `Link`, extraindo o `rel` (_link relation_) `next`.
+
+> Os links para as próximas páginas seguem o conceito de hipermídia do REST e foram implementados usando o cabeçalho Link e o formato descrito na [RFC 5988](https://tools.ietf.org/html/rfc5988) (Web Linking). Essa RFC sugere um punhado de link relations padronizados.
+
+Então, a partir do `next`, seguimos para a próxima página:
+
+```txt
+GET https://api.github.com/repositories/237159/pulls?page=2
+```
+
+Temos como resposta:
+
+- 26.9 KB _gzipados_ transferidos, incluindo cabeçalhos
+- 248 KB de JSON em 4394 linhas, quando descompactado
+
+```txt
+200 OK
+Content-type: application/json; charset=utf-8
+Link: <https://api.github.com/repositories/237159/pulls?page=1>; rel="first",
+      <https://api.github.com/repositories/237159/pulls?page=1>; rel="prev"
+```
+
+<!-- separador -->
+
+```json
+[
+  {
+    //um pull request...
+    "url": "https://api.github.com/repos/expressjs/express/pulls/2730",
+    "id": 41965836,
+    ...
+  },
+  {
+    //outro pull request...
+    "url": "https://api.github.com/repos/expressjs/express/pulls/2703",
+    "id": 39735937,
+     ...
+  },
+  ...
+]
+```
+
+O array retornado contabiliza mais 14 objetos representando os pull requests. Dessa vez, não há o link relation next, indicando que é a última página.
+
+Então, sabemos que há 44 (30 + 14) pull requests abertos no repositório do Express.
+
+### Resumindo
+
+No momento da escrita desse artigo, o número de stars do Express no GitHub é 33508 e o de pull requests abertos é 44. Para descobrir isso, tivemos que:
+
+- disparar 3 requisições ao servidor
+-  baixar 83.2 KB de informações gzipadas e cabeçalhos
+- fazer parse de 768.1 KB de JSON ou 13654 linhas
+O
+ que daria pra melhorar? Ir menos vezes ao servidor, baixando menos dados!
+
+Não é um problema com o REST em si, mas uma discrepância entre a modelagem atual da API e as nossas necessidades.
+
+Poderíamos pedir para o GitHub implementar um recurso específico que retornasse somente as informações, tudo em apenas um request.
+
+Mas será que o pessoal do GitHub vai nos atender?
+
+### Mais flexibilidade e eficiência com GraphQL
+
+Numa API GraphQL, o cliente diz exatamente os dados que quer da API, tornando a requisição muito **flexível**.
+
+A API, por sua vez, retorna apenas os dados que o cliente pediu, fazendo com que a transferência da resposta seja bastante **eficiente**.
+
+### Mas afinal de contas, o que é GraphQL?
+
+GraphQL _não_ é um banco de dados, _não_ é um substituto do SQL, _não_ é uma ferramenta do lado do servidor e _não_ é específico para React (apesar de muito usado por essa comunidade).
+
+Um servidor que aceita requisições GraphQL poderia ser implementado em _qualquer_ linguagem usando qualquer banco de dados. Há várias [bibliotecas](https://graphql.org/code/#server-libraries) de diferentes plataformas que ajudam a implementar esse servidor.
+
+Clientes que enviam requisições GraphQL também poderiam ser implementados em qualquer tecnologia: web, mobile, desktop, etc. Diversas [bibliotecas](https://graphql.org/code/#graphql-clients) auxiliam nessa tarefa.
+
+GraphQL é uma **query language para APIs** que foi [especificada](https://graphql.github.io/graphql-spec/) pelo Facebook.
+
+A _query language_ do GraphQL é **fortemente tipada** e descreve, através de um _schema_, o modelo de dados oferecido pelo serviço. Esse schema pode ser usado para verificar se uma dada requisição é válida e, caso seja, executar as tarefas no back-end e estruturar os dados da resposta.
+
+Um cliente pode enviar 3 tipos de requisições GraphQL, os _root types_:
+
+- _query_, para consultas;
+- _mutation_, para enviar dados;
+- _subscription_, para comunicação baseada em eventos.
+
+### Montando uma consulta GraphQL
+
+A [versão 4](https://developer.github.com/v4/) da API do GitHub, a mais recente, dá suporte a requisições GraphQL.
+
+Para fazer nossa consulta às stars e aos pull requests abertos do repositório do Express usando a API GraphQL do GitHub, devemos começar com a query:
+
+```graphql
+query {
+}
+```
+
+Vamos usar o campo `repository` da query, que recebe os argumentos `owner` e `name`, ambos obrigatórios e do tipo String. Para buscar pelo Express, devemos fazer:
+
+```graphql
+query {
+  repository (owner: "expressjs", name: "express") {
+  }
+}
+```
+
+A partir do objeto `repository`, podemos descobrir o número de stars por meio do campo `stargazers`, que é uma connection do tipo `StargazerConnection`. Como queremos apenas a quantidade de itens, só precisamos obter propriedade `totalCount` dessa connection.
+
+```graphql
+query {
+  repository (owner: "expressjs", name: "express") {
+    stargazers {
+      totalCount
+    }
+  }
+}
+```
+
+Para encontrarmos o número de pull requests abertos, basta usarmos o campo `pullRequests` do `repository`, uma connection do tipo `PullRequestConnection`. O filtro por pull requests abertos não é aplicado por padrão. Por isso, usaremos o argumento `states`. Da connection, obteremos apenas o `totalCount`.
+
+```graphql
+query { 
+  repository(owner: "expressjs", name: "express") {
+    stargazers {
+      totalCount
+    }
+    pullRequests(states: OPEN) {
+      totalCount
+    }
+  } 
+}
+```
+
+Basicamente, é essa a nossa consulta! Bacana, não?
+
+Uma maneira de “rascunhar” consultas GraphQL é usar a ferramenta [GraphiQL](https://github.com/graphql/graphiql), que permite explorar APIs pelo navegador. Há até code completion! Boa parte das APIs GraphQL dá suporte, incluindo [a do GitHub](https://developer.github.com/v4/explorer/).
+
+### Tá, mas como enviar a consulta para a API?
+
+A maneira mais comum de publicar APIs GraphQL é usar a boa e velha Web, com seu protocolo HTTP.
+
+> Apesar do HTTP ser o mais usado para publicar APIs GraphQL, teoricamente não há limitações em usar outros protocolos.
+
+Uma API GraphQL possui apenas um _endpoint_ e, consequentemente, só uma URL.
+
+É possível enviar requisições GraphQL usando o método `GET` do HTTP, com a consulta como um parâmetro na URL. Porém, como as consultas são relativamente grandes e requisições `GET` tem um limite de tamanho, o método mais utilizado pelas APIs GraphQL é o `POST`, com a consulta no corpo da requisição.
+
+No caso do GitHub a URL do endpoint GraphQL é: https://api.github.com/graphql
+
+O GitHub só dá suporte ao método `POST` e o corpo da requisição deve ser um JSON cuja propriedade `query` conterá uma String com a nossa consulta.
+
+Mesmo para consultas a repositórios públicos, a API GraphQL do GitHub precisa de um token de autorização.
+
+```txt
+POST https://api.github.com/graphql
+Content-type: application/json
+Authorization: bearer f023615deb415e...
+```
+
+<!-- separador -->
+
+```json
+{
+"query":    "query {
+                repository(owner: \"expressjs\", name: \"express\") { 
+                    stargazers {
+                        totalCount
+                    } 
+                    pullRequests(states: OPEN) {
+                        totalCount
+                    }
+                }
+            }"
+}
+```
+
+O retorno será um JSON em que os dados estarão na propriedade `data`:
+
+```json
+{
+    "data": {
+        "repository": {
+            "stargazers": {
+                "totalCount": 33508
+            },
+            "pullRequests": {
+                "totalCount": 44
+            }
+        }
+    }
+}
+```
+
+> Na verdade, os JSONs de requisição e resposta ficam em apenas 1 linha. Formatamos o código anterior em várias linhas para melhor legibilidade.
+
+Repare que os campos da consulta, dentro da `query`, tem exatamente a mesma estrutura do retorno da API. É como se a resposta fosse a própria consulta, mas com os valores preenchidos. Por isso, montar consultas com GraphQL é razoavelmente intuitivo.
+
+### Resumindo
+
+Obtivemos os mesmos resultados: 33508 stars e 44 pull requests. Para isso, tivemos que:
+
+- disparar apenas 1 requisição ao servidor
+- baixar somente 996 bytes de informações _gzipadas_, incluindo cabeçalhos
+- fazer parse só de 93 bytes de JSON
+
+São 66,67% requisições a menos, 98,82% menos dados e cabeçalhos trafegados e 99,99% menos JSON a ser “parseado”. Ou seja, **MUITO mais rápido**.
+
+### Considerações finais
+
+Poderíamos buscar outros dados da API do GitHub: o número de issues abertas, a data da última release, informações sobre o último commit, etc.
+
+Uma coisa é certa: com uma consulta GraphQL, eu faria menos requisições e receberia menos dados desnecessários. Mais flexibilidade e mais eficiência.
+
+> Considerando o Modelo de Maturidade de Richardson, podemos considerar que o GraphQL está no Nível 0:
+> - não diferentes recursos, apenas uma URI como ponto de entrada para toda a API GraphQL
+> - não há a ideia de diferentes verbos HTTP, só é usado POST
+> - não há diferentes representações, apenas um JSON que contém uma estrutura GraphQL
+
+Existem várias outras questões que surgem ao estudar o GraphQL:
+
+- como fazer um servidor que atenda a toda essa flexibilidade?
+- é possível gerar uma documentação a partir do código para a minha API?
+- vale a pena migrar minha API pra GraphQL?
+- posso fazer uma “casca” GraphQL para uma API REST já existente?
+-  como implementar um cliente sem muito trabalho?
+- quais os pontos ruins dessa tecnologia e desafios na implementação?

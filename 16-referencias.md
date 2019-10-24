@@ -40,11 +40,15 @@ EVANS, Eric. _Domain-Driven Design: Tackling Complexity in the Heart of Software
 
 FEATHERS, Michael. _Microservices Until Macro Complexity._ 2014. Em: https://michaelfeathers.silvrback.com/microservices-until-macro-complexity
 
+FIELDING, Roy. _Architectural Styles and the Design of Network-based Software Architectures._ 2000. Em: https://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm
+
 FOOTE, Brian; YODER, Joseph. _Big Ball Of Mud._ 1999. Em: http://www.laputan.org/mud/mud.html
 
 FOWLER, Martin. _Patterns of Enterprise Application Architecture._ Addison-Wesley Professional, 2002. 560 p. Em: https://www.amazon.com/Patterns-Enterprise-Application-Architecture-Martin/dp/0321127420
 
 FOWLER, Martin. _StranglerFigApplication._ 2004. Em: https://martinfowler.com/bliki/StranglerFigApplication.html
+
+FOWLER, Martin. _Richardson Maturity Model._ 2010. Em: https://martinfowler.com/articles/richardsonMaturityModel.html
 
 FOWLER, Martin; LEWIS, James. _Microservices: a definition of this new technical term._ 2014. Em: https://martinfowler.com/articles/microservices.html
 
@@ -95,6 +99,10 @@ RICHARDSON, Chris. _Microservice Patterns._ Manning Publications, 2018a. 520 p. 
 RICHARDSON, Chris. _Pattern: Shared Database._ 2018b. Em: https://microservices.io/patterns/data/shared-database.html
 
 RICHARDSON, Chris. _Pattern: Database per Service._ 2018c. Em: https://microservices.io/patterns/data/database-per-service.html
+
+RICHARDSON, Leonard;  RUBY, Sam. _RESTful Web Services: Web Services for the Real World._ O'Reilly, 2007. 448 p. Em: https://learning.oreilly.com/library/view/restful-web-services/9780596529260/
+
+RICHARDSON, Leonard. _Justice Will Take Us Millions Of Intricate Moves - Act Three: The Maturity Heuristic._ 2008. Em: https://www.crummy.com/writing/speaking/2008-QCon/act3.html
 
 RUBEY, Raymond J. _Pasta Theory of Software._ 1992. Em: https://www.gnu.org/fun/jokes/pasta.code.html
 
