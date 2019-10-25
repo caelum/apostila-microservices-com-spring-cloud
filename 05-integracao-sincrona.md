@@ -112,44 +112,6 @@ Entre os Media Types comuns, estão:
 - `application/vnd.amazon.mobi8-ebook` para ebooks MOBI
 - `application/vnd.ms-excel` para arquivos `.xls` do Microsoft Excel
 
-### Cabeçalhos
-
-Tanto um request como um response HTTP podem ter, além de um corpo, metadados nos **Cabeçalhos** HTTP. Os cabeçalhos possíveis são especificados por RFCs na IETF e atualizados pela IANA. Alguns dos cabeçalhos mais utilizados:
-
-- `Accept`: usado no request para indicar qual representação (Media Type) é aceito no response
-- `Access-Control-Allow-Origin`: usado no response por chamadas CORS para indicar quais origins podem acessar um recurso
-- `Authorization`: usado no request para passar credenciais de autenticação
-- `Content-type`: a representação (Media Type) usado no request ou no response
-- `ETag`: usado no response para indicar a versão de um recurso
-- `If-None-Match`: usado no request com um ETag de um recurso, permitindo _caching_
-- `Location`: usado no response para indicar uma URL de redirecionamento ou o endereço de um novo recurso
-
-Os cabeçalhos HTTP `Accept` e `Content-type` permitem a **Content negotiation** (negociação de conteúdo), em que um cliente pode negociar com um servidor Web representações aceitáveis.
-
-Por exemplo, um cliente pode indicar no request que aceita JSON e XML como representações, com seguinte cabeçalho:
-
-```txt
-Accept: application/json, application/xml
-```
-
-O servidor Web pode escolher entre essas duas representações. Se entre os formatos suportados pelo servidor não estiver JSON mas apenas XML, o response teria o cabeçalho:
-
-```txt
-Content-type: application/xml
-```
-
-No corpo do response, estaria um XML representado os dados do recurso.
-
-> Um navegador sempre usa o cabeçalho `Accept` em seus requests. Por exemplo, no Mozilla Firefox:
->
-> ```txt
-> Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
-> ```
->
-> O cabeçalho anterior indica que o navegador Mozilla Firefox aceita do servidor as representações HTML, XHTML ou XML, nessa ordem. Se nenhuma dessas estiver disponível, pode ser enviada qualquer representação, indicada pelo `*/*`.
->
-> O parâmetro `q` utilizado no cabeçalho anterior é um _relative quality factor_, ou fator relativo de qualidade, que indica a preferência por uma representação. O valor varia entre `0`, indicando menor preferência, e `1`, o valor padrão que indica uma maior preferência. No cabeçalho `Accept` anterior, o HTML e XHTML tem valor `1`, XML tem valor `0.9` e qualquer outra representação com valor `0.8`.
-
 ### Métodos
 
 Para indicar uma ação a ser efetuada em um determinado recurso, o HTTP define os **métodos**. Se os recursos são os substantivos, os métodos são os verbos, como são comumente chamados.
@@ -195,6 +157,45 @@ Resumindo:
 - métodos nem safe nem idempotentes: POST, CONNECT e PATCH
 
 É importante notar que apenas esses 9 métodos, ou até um subconjunto deles, são suficientes para a maioria das aplicações distribuídas. Geralmente são descritos como uma **interface uniforme**.
+
+### Cabeçalhos
+
+Tanto um request como um response HTTP podem ter, além de um corpo, metadados nos **Cabeçalhos** HTTP. Os cabeçalhos possíveis são especificados por RFCs na IETF e atualizados pela IANA. Alguns dos cabeçalhos mais utilizados:
+
+- `Accept`: usado no request para indicar qual representação (Media Type) é aceito no response
+- `Access-Control-Allow-Origin`: usado no response por chamadas CORS para indicar quais origins podem acessar um recurso
+- `Authorization`: usado no request para passar credenciais de autenticação
+- `Allow`: usado no response para indicar os métodos HTTP válidos para o recurso
+- `Content-type`: a representação (Media Type) usada no request ou no response
+- `ETag`: usado no response para indicar a versão de um recurso
+- `If-None-Match`: usado no request com um ETag de um recurso, permitindo _caching_
+- `Location`: usado no response para indicar uma URL de redirecionamento ou o endereço de um novo recurso
+
+Os cabeçalhos HTTP `Accept` e `Content-type` permitem a **Content negotiation** (negociação de conteúdo), em que um cliente pode negociar com um servidor Web representações aceitáveis.
+
+Por exemplo, um cliente pode indicar no request que aceita JSON e XML como representações, com seguinte cabeçalho:
+
+```txt
+Accept: application/json, application/xml
+```
+
+O servidor Web pode escolher entre essas duas representações. Se entre os formatos suportados pelo servidor não estiver JSON mas apenas XML, o response teria o cabeçalho:
+
+```txt
+Content-type: application/xml
+```
+
+No corpo do response, estaria um XML representado os dados do recurso.
+
+> Um navegador sempre usa o cabeçalho `Accept` em seus requests. Por exemplo, no Mozilla Firefox:
+>
+> ```txt
+> Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+> ```
+>
+> O cabeçalho anterior indica que o navegador Mozilla Firefox aceita do servidor as representações HTML, XHTML ou XML, nessa ordem. Se nenhuma dessas estiver disponível, pode ser enviada qualquer representação, indicada pelo `*/*`.
+>
+> O parâmetro `q` utilizado no cabeçalho anterior é um _relative quality factor_, ou fator relativo de qualidade, que indica a preferência por uma representação. O valor varia entre `0`, indicando menor preferência, e `1`, o valor padrão que indica uma maior preferência. No cabeçalho `Accept` anterior, o HTML e XHTML tem valor `1`, XML tem valor `0.9` e qualquer outra representação com valor `0.8`.
 
 ### Códigos de Status
 
@@ -1048,7 +1049,7 @@ Em um XML, podemos usar o elemento `<link>`, que é usado em um HTML para inclui
 </pagamento>
 ```
 
-E para JSON? Poderíamos criar a nossa própria representação de links, mas já existe o HAL, ou _JSON Hypertext Application Language_, descrita por Mike Kelly na especificação preliminar (Internet-Draft) [draft-kelly-json-hal-00](https://tools.ietf.org/html/draft-kelly-json-hal-00) (KELLY, 2012) da IETF. Apesar do status preliminar, a especificação é usada em diferentes tecnologias e frameworks.
+E para JSON? Poderíamos criar a nossa própria representação de links, mas já existe o HAL, ou _JSON Hypertext Application Language_, descrita por Mike Kelly na especificação preliminar (Internet-Draft) [draft-kelly-json-hal-00](https://tools.ietf.org/html/draft-kelly-json-hal-00) (KELLY, 2012) da IETF. Apesar do status preliminar, a especificação é usada em diferentes tecnologias e frameworks. O media type associado ao HAL é `application/hal+json`. Em teoria, seria possível definir um HAL expressado numa representação XML.
 
 No HAL, é adicionado ao JSON da aplicação uma propriedade `_links` que é um objeto contendo uma propriedade para cada link relation. Os links relations são definidos como objetos cujo link está na propriedade `href`. Por exemplo, para um pagamento:
 
@@ -1148,7 +1149,7 @@ Fowler menciona a ideia de Ian Robinson de que o Modelo de Maturidade de Richard
 
 - O Nível 1 trata de como lidar com a complexidade usando "dividir e conquistar", dividindo um grande endpoint para o serviço todo em vários recursos. 
 - O Nível 2 adiciona os métodos HTTP como um padrão, de maneira que possamos lidar com situações semelhantes da mesma maneira, evitando variações desnecessárias.
-- O Nível 3 introduz a capacidade de descoberta, fornecendo uma maneira de tornar o protocolo auto-documentado.
+- O Nível 3 introduz a capacidade de descoberta (em inglês, _Discoverability_), fornecendo uma maneira de tornar o protocolo auto-documentado.
 
 ## Exercício opcional: Spring HATEOAS e HAL
 
@@ -1343,19 +1344,79 @@ Fowler menciona a ideia de Ian Robinson de que o Modelo de Maturidade de Richard
 
 5. Faça um novo pedido e efetue um pagamento. Deve continuar funcionando!
 
+## HATEOAS e Métodos HTTP
 
-<!-- TODO: 
+Observe o JSON com a representação de um pagamento retornado pelo serviço de Pagamentos:
 
-Fomentar a discussão sobre links e métodos HTTP
-Mostrar solução da PayPal e outras soluções
-Mencionar HAL-FORMS
+```json
+  {
+    "id":1,
+    "valor":51.80,
+    ...
+    "_links":{
+      "self":{
+        "href":"http://localhost:8081/pagamentos/1"
+      },
+      "confirma":{
+        "href":"http://localhost:8081/pagamentos/1"
+      },
+      "cancela":{
+        "href":"http://localhost:8081/pagamentos/1"
+      }
+    }
+  }
+  ```
 
-Spring DATA REST
-https://spring.io/guides/gs/accessing-data-rest/
+Há links, cada um com seu link relation distinto: `self`, `confirma` e `cancela`.
 
-gRPC
+Mas um detalhe importante é que todos os links são iguais! Tanto para confirmar como para cancelar o pagamento do JSON anterior, o link é: http://localhost:8081/pagamentos/1
 
--->
+Além de saber sobre o significado de cada link relation (em outros termos, sua semântica), um cliente dessa API deve saber qual método HTTP utilizar para efetuar a confirmação ou cancelamento do pagamento.
+
+Essa necessidade de um conhecimento prévio do cliente sobre o método HTTP a ser utilizado diminui a Discoverability da API.
+
+Há [bastante](https://stackoverflow.com/questions/25513781/adding-http-method-to-spring-hateoas-links) [discussão](https://stackoverflow.com/questions/19959284/where-in-a-hateoas-architecture-do-you-specify-the-http-verbs) sobre o fato de se o método HTTP deve ser associado a um link relation.
+
+Uma visão mais purista diria que não devemos associar link relations a métodos HTTP.
+
+Poderíamos utilizar uma chamada `OPTIONS` na URL do `href` do link relation e descobrir pelo cabeçalho `Allow` quais os métodos permitidos. Isso levaria a mais uma chamada pela rede entre o cliente e o servidor, impactando negativamente a Performance da aplicação.
+
+Uma outra ideia é que poderíamos usar sempre o método `PUT`, passando o `status` desejado (_CONFIRMADO_ ou _CANCELADO_) no corpo da requisição.
+
+Uma visão mais pragmática é usada na [API do PayPal](https://developer.paypal.com/docs/api/payments/v2/), em que um atribudo `method` é associado ao link relation:
+
+```json
+{
+  "id": "8AA831015G517922L",
+  "status": "CREATED",
+  "links": [
+    {
+      "rel": "self",
+      "method": "GET",
+      "href": "https://api.paypal.com/v2/payments/authorizations/8AA831015G517922L"
+    },
+    {
+      "rel": "capture",
+      "method": "POST",
+      "href": "https://api.paypal.com/v2/payments/authorizations/8AA831015G517922L/capture"
+    },
+    {
+      "rel": "void",
+      "method": "POST",
+      "href": "https://api.paypal.com/v2/payments/authorizations/8AA831015G517922L/void"
+    },
+    {
+      "rel": "reauthorize",
+      "method": "POST",
+      "href": "https://api.paypal.com/v2/payments/authorizations/8AA831015G517922L/reauthorize"
+    }
+  ]
+}
+```
+
+_Note que a API do PayPal não usa HAL: os links ficam no atributo `links`, e não `_links`, que é um array, e não um objeto._
+
+Podemos nos inspirar na API do PayPal e adicionar um atributo `method` em cada link.
 
 ## Exercício opcional: Estendendo o Spring HATEOAS
 
@@ -1473,13 +1534,81 @@ gRPC
 
 4. (desafio) Modifique o `PagamentoController` para usar HAL-FORMS, disponível nas últimas versões do Spring HATEOAS.
 
-<!--@note
+## Para saber mais: HAL-FORMS
 
-Alexandre (BSB): HAL-FORMS é uma das ideias de especificação de Hypermedia de Mike Amundsen, autor de diversos livros sobre REST na editor O'Reilly (aquela dos bichos na capa). 
+[HAL-FORMS](https://rwcbook.github.io/hal-forms/) (AMUNDSEN, 2016) é uma extensão do HAL especificada por Mike Amundsen que adiciona um atributo `_templates`, permitindo atribuir um método HTTP e outras propriedades a um link. O media type proposto é `application/prs.hal-forms+json`.
+
+Um exemplo de response HAL-FORMS com os dados de uma pessoa:
+
+```json
+{
+  "id" : 1,
+  "firstName" : "Frodo",
+  "lastName" : "Baggins",
+  "role" : "ring bearer",
+  "_links" : {
+    "self" : {
+      "href" : "http://localhost:8080/employees/1"
+    },
+    "employees" : {
+      "href" : "http://localhost:8080/employees"
+    }
+  },
+  "_templates" : {
+    "default" : {
+      "title" : null,
+      "method" : "put",
+      "contentType" : "",
+      "properties" : [ {
+        "name" : "firstName",
+        "required" : true
+      }, {
+        "name" : "id",
+        "required" : true
+      }, {
+        "name" : "lastName",
+        "required" : true
+      }, {
+        "name" : "role",
+        "required" : true
+      } ]
+    },
+    "deleteEmployee" : {
+      "title" : null,
+      "method" : "delete",
+      "contentType" : "",
+      "properties" : [ ]
+    }
+  }
+}
+```
+
+O template `default` do HAL-FORMS presume que o recurso será editado por meio de um `PUT` na URL do link relation `self` e as propriedades associadas: `id`, `firstName`, `lastName` e `role`, todas obrigatórias nesse exemplo. Os dados desse template pode ser usados, por exemplo, para construir um `<form>` no front-end.
+
+Já o template `deleteEmployee` tem associado o método `DELETE`, sem nenhuma propriedade.
+
+O Spring HATEOAS na versão `1.0.0.RELEASE` contém suporte a HAL-FORMS, que pode ser habilitado com a anotação `@EnableHypermediaSupport(type = HypermediaType.HAL_FORMS)`.
+
+Além disso, há suporte a [Uniform Basis for Exchanging Representations](https://rawgit.com/uber-hypermedia/specification/master/uber-hypermedia.html) (UBER), [Collection+JSON](http://amundsen.com/media-types/collection/) e [Application-Level Profile Semantics](https://tools.ietf.org/html/draft-amundsen-richardson-foster-alps-01) (ALPS), todos trabalhos experimentais de Mike Amundsen focados em hypermedia e que compõe a Affordance API do Spring HATEOAS.
+
+
+
+<!--@note
 
 Usei o HAL-FORMS na versão milestone 2.2.0.M2 do Spring Boot no commit abaixo:
 
 https://github.com/alexandreaquiles/eats/commit/f8ef33b88cd3d96c62627a13b4e8470c9f09ada0#diff-5f414af558500eda821060272d84b8d8
+
+-->
+
+
+<!-- TODO: 
+
+
+Spring DATA REST
+https://spring.io/guides/gs/accessing-data-rest/
+
+gRPC
 
 -->
 

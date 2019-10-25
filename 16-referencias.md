@@ -4,6 +4,8 @@ ABADI, Daniel J. _Consistency Tradeoffs in Modern Distributed Database System De
 
 AMARAL, Mario et al. _Estratégias de migração de dados no Elo7 – Hipsters On The Road #07._ 2019. Em: https://hipsters.tech/estrategias-de-migracao-de-dados-no-elo7-hipsters-on-the-road-07/
 
+AMUNDSEN, Mike. _The HAL-FORMS Media Type._ 2016. Em: https://rwcbook.github.io/hal-forms/
+
 AQUILES, Alexandre. _Todo o poder emana do cliente: explorando uma API GraphQL._ 2017. Em: https://blog.caelum.com.br/todo-o-poder-emana-do-cliente-explorando-uma-api-graphql/
 
 ASERG-UFMG, Applied Software Engineering Research Group. _Does Conway’s Law apply to Linux?_ 2017. Em: https://medium.com/@aserg.ufmg/does-conways-law-apply-to-linux-6acf23c1ef15
