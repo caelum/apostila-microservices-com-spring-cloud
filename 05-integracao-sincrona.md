@@ -1145,6 +1145,8 @@ Location: horarios/1234/consulta
 
 Assim, as URLs podem ser modificadas sem que o código dos clientes quebre. Um benefício adicional é que os clientes podem conhecer e explorar os próximos passos.
 
+> Idealmente, um cliente deveria depender apenas da URL raiz de uma API e, a partir dela, navegar pelos links, descobrindo o que pode ser feito com a API.
+
 Fowler menciona a ideia de Ian Robinson de que o Modelo de Maturidade de Richardson está relacionado com técnicas comuns de design: 
 
 - O Nível 1 trata de como lidar com a complexidade usando "dividir e conquistar", dividindo um grande endpoint para o serviço todo em vários recursos. 
@@ -1601,14 +1603,257 @@ https://github.com/alexandreaquiles/eats/commit/f8ef33b88cd3d96c62627a13b4e8470c
 
 -->
 
+## Para saber mais: Spring Data REST
+
+O Spring Data REST parte do Spring Data para expor entidades e repositórios como recursos REST, utilizando hypermedia  e HAL como representação. Os mecanismos de persistência suportados são BDs relacionais com JPA, MongoDB, Neo4j e Gemfire.
+
+Para utilizá-lo, basta incluir o starter no `pom.xml` da aplicação:
+
+```xml
+<dependency>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-data-rest</artifactId>
+</dependency>
+```
+
+Se utilizar MySQL como BD, também precisamos incluir o Spring Data JPA e o driver do MySQL. Além disso, são necessárias as configurações de data sources no `application.properties`.
+
+Vamos definir, como exemplo, uma entidade `Pessoa`:
+
+```java
+@Entity
+@Data
+public class Pessoa {
+
+  @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
+  private Long id;
+  private String nome;
+  private String sobrenome;
+
+}
+```
+
+O `@Data` do Lombok provê getters e setters para cada atributo, além de implementações para `equals`, `hashcode` e `toString`.
+
+Também deve ser definido um repository:
+
+```java
+public interface PessoaRepository extends JpaRepository<Pessoa, Long> {
+
+  List<Pessoa> findBySobrenome(@Param("sobrenome") String sobrenome);
+
+}
+```
+
+E pronto! Ao subirmos a aplicação já temos uma API RESTful com hypermedia!
+
+A raiz da API provê links para as entidades expostas:
+
+```txt
+GET http://localhost:8080
+```
+
+A resposta é:
+
+```
+200 OK
+Content-Type: application/hal+json
+```
+
+<!-- separador -->
+
+```json
+{
+  "_links" : {
+    "pessoas" : {
+      "href" : "http://localhost:8080/pessoas{?page,size,sort}",
+      "templated" : true
+    },
+    "profile" : {
+      "href" : "http://localhost:8080/profile"
+    }
+  }
+}
+```
+
+Note que o response é um HAL com o link relation `pessoas`.
+
+O link relation `profile` está associada a especificação ALPS, que provê uma maneira de descrever os links, classificando-os em safe, idempotente, entre outros.
+
+O recurso `pessoas` já é paginado, já que um `JpaRepository` extende a interface `PagingAndSortingRepository` do Spring Data Core.
+
+Podemos criar uma nova pessoa fazendo o seguinte request ao recurso `pessoas`:
+
+```txt
+POST http://localhost:8080/pessoas
+Content-Type: application/json
+```
+
+Com o payload:
+
+```json
+{
+  "nome": "Alexandre",
+  "sobrenome": "Aquiles"
+}
+```
+
+Como response, teremos:
+
+```txt
+201 Created
+Content-Type: application/json
+Location: http://localhost:8080/pessoas/3
+```
+
+<!-- separador -->
+
+```json
+{
+  "nome": "Alexandre",
+  "sobrenome": "Aquiles",
+  "_links": {
+    "self": {
+      "href": "http://localhost:8080/pessoas/3"
+    },
+    "pessoa": {
+      "href": "http://localhost:8080/pessoas/3"
+    }
+  }
+}
+```
+
+Perceba que é retornado o status `201` com a URL do novo recurso no cabeçalho `Location`.
+
+No corpo do response, são retornados os dados do recurso criado junto aos links.
+
+Se dispararmos um `GET` ao `href` do link relation `self`, a URL `http://localhost:8080/pessoas/3`, teremos um payload semelhante ao anterior.
+
+Podemos editar um recurso com um `PUT`, que sobreescreeve os dados do recurso com a representação passada no request. Os atributos omitidos ficarão como nulos.
+
+Se quisermos passar apenas um subconjunto dos dados, podemos usar um `PATCH`.
+
+Para remover um recurso, podemos usar um `DELETE`.
+
+Para listarmos todas as pessoas, podemos consultar o recurso do link relation `pessoas` da raiz da API:
+
+```txt
+GET http://localhost:8080/pessoas
+```
+
+O response será paginado, com
+
+```json
+{
+  "_embedded" : {
+    "pessoas" : [ {
+      "nome" : "Anderson",
+      "sobrenome" : "da Silva",
+      "_links" : {
+        "self" : {
+          "href" : "http://localhost:8080/pessoas/2"
+        },
+        "pessoa" : {
+          "href" : "http://localhost:8080/pessoas/2"
+        }
+      }
+    }, {
+      "nome" : "Alexandre",
+      "sobrenome" : "Aquiles",
+      "_links" : {
+        "self" : {
+          "href" : "http://localhost:8080/pessoas/3"
+        },
+        "pessoa" : {
+          "href" : "http://localhost:8080/pessoas/3"
+        }
+      }
+    } ]
+  },
+  "_links" : {
+    "self" : {
+      "href" : "http://localhost:8080/pessoas{?page,size,sort}",
+      "templated" : true
+    },
+    "profile" : {
+      "href" : "http://localhost:8080/profile/pessoas"
+    },
+    "search" : {
+      "href" : "http://localhost:8080/pessoas/search"
+    }
+  },
+  "page" : {
+    "size" : 20,
+    "totalElements" : 2,
+    "totalPages" : 1,
+    "number" : 0
+  }
+}
+```
+
+Os itens da lista ficam no atributo `_embedded`. Cada item contém seus dados e links.
+
+Há dados de paginação: o `size` indica o tamanho máximo de elementos de uma página, 20 é o padrão mas pode ser alterado com o parâmetro `size`; `number` indica o número da página atual; `totalPages`, o número de páginas; e `totalElements`, o número total de elementos cadastrados.
+
+Há os links da própria lista. Se houver mais de uma página, teremos os link relations `next` e `last`.
+
+Ao seguirmos o link relation `search`, são exibidas as consultas possíveis:
+
+```txt
+GET http://localhost:8080/pessoas/search
+```
+
+<!-- separador -->
+
+```json
+{
+  "_links" : {
+    "findBySobrenome" : {
+      "href" : "http://localhost:8080/pessoas/search/findBySobrenome{?sobrenome}",
+      "templated" : true
+    },
+    "self" : {
+      "href" : "http://localhost:8080/pessoas/search"
+    }
+  }
+}
+```
+
+Podemos usar o link relation `findBySobrenome`, para buscar todas as pessoas com sobrenome `Aquiles`:
+
+```txt
+GET http://localhost:8080/pessoas/search/findBySobrenome?sobrenome=Aquiles
+```
+
+Obteremos no response:
+
+```json
+{
+  "_embedded" : {
+    "pessoas" : [ {
+      "nome" : "Alexandre",
+      "sobrenome" : "Aquiles",
+      "_links" : {
+        "self" : {
+          "href" : "http://localhost:8080/pessoas/3"
+        },
+        "pessoa" : {
+          "href" : "http://localhost:8080/pessoas/3"
+        }
+      }
+    } ]
+  },
+  "_links" : {
+    "self" : {
+      "href" : "http://localhost:8080/pessoas/search/findBySobrenome?sobrenome=Aquiles"
+    }
+  }
+}
+```
 
 <!-- TODO: 
 
-
-Spring DATA REST
-https://spring.io/guides/gs/accessing-data-rest/
-
-gRPC
+## Para saber mais: gRPC
 
 -->
 
