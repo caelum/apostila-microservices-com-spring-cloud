@@ -888,7 +888,7 @@ Extraímos nosso primeiro serviço do monólito. A evolução do código de paga
 
 ![Serviço de pagamentos extraído do monólito {w=55}](imagens/03-extraindo-servicos/pagamento-service-extraido.png)
 
-## Exercício: Testando o novo serviço de pagamentos
+## Exercício: Executando o novo serviço de pagamentos
 
 1. Abra um Terminal e, no Desktop, clone o projeto com o código do serviço de pagamentos:
 
@@ -1335,7 +1335,7 @@ Ufa! Mais um serviço extraído do monólito. Em um projeto real, isso seria fei
 ![Serviço de distância extraído do monólito {w=73}](imagens/03-extraindo-servicos/distancia-service-extraido.png)
 
 
-## Exercício: Testando o novo serviço de distância
+## Exercício: Executando o novo serviço de distância
 
 1. Em um Terminal, clone o projeto do serviço de distância para o seu Desktop:
 

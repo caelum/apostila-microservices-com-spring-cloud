@@ -111,7 +111,7 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
 
 -->
 
-## Exercício: Testando o Circuit Breaker com Hystrix
+## Exercício: Circuit Breaker com Hystrix
 
 1. Mude para a branch `cap10-circuit-breaker-com-hystrix` do projeto `fj33-api-gateway`:
 
@@ -206,7 +206,7 @@ import java.util.HashMap;
 
 Observação: uma solução interessante seria manter um cache das distâncias entre CEPs e restaurantes e usá-lo como fallback, se possível. Porém, a _hit ratio_, a taxa de sucesso das consultas ao cache, deve ser baixa, já que os CEPs dos clientes mudam bastante.
 
-## Exercício: Testando o Fallback com Hystrix
+## Exercício: Fallback com Hystrix
 
 1. Acesse repetidas vezes, em um navegador, a URL a seguir:
 
@@ -316,7 +316,7 @@ feign.hystrix.enabled=true
 
 A integração entre o Feign e o Hystrix vem desabilitada por padrão, nas versões mais recentes. Por isso, é necessário habilitá-la.
 
-## Exercício: Testando a integração entre Hystrix e Feign
+## Exercício: Integração entre Hystrix e Feign
 
 1. Faça o checkout da branch `cap10-circuit-breaker-com-hystrix-no-feign` do projeto `fj33-api-gateway`:
 
@@ -394,7 +394,7 @@ interface RestauranteRestClient {
 }
 ```
 
-## Exercício: Testando o Fallback do Feign
+## Exercício: Fallback com Feign
 
 1. Vá até a branch `cap10-fallback-com-feign` do projeto `fj33-api-gateway`:
 
@@ -551,7 +551,7 @@ Certifique-se que o import correto foi realizado:
 import org.springframework.retry.annotation.Retryable;
 ```
 
-## Exercício: Testando o Spring Retry
+## Exercício: Spring Retry
 
 1. Faça o checkout da branch `cap10-retry` do monólito:
 
@@ -607,7 +607,7 @@ O import a seguir deve ser adicionado:
 import org.springframework.retry.annotation.Backoff;
 ```
 
-## Exercício: Testando o Exponential Backoff
+## Exercício: Exponential Backoff com Spring Retry
 
 1. Vá até a branch `cap10-backoff` do projeto `fj33-eats-monolito-modular`:
 

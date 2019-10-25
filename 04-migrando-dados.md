@@ -999,7 +999,7 @@ O database padrão do MongoDB é `test`. A porta padrão é `27017`.
 
 Para saber sobre outras propriedades, consulte: https://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
 
-## Exercício: Testando a migração dos dados de distância para o MongoDB
+## Exercício: Migrando dados de distância para o MongoDB
 
 1. Interrompa o serviço de distância.
 

@@ -277,7 +277,7 @@ spring.application.name=apigateway
 eureka.client.serviceUrl.defaultZone=${EUREKA_URI:http://localhost:8761/eureka/}
 ```
 
-## Exercício: Testando self registration no Eureka Server
+## Exercício: Sself registration no Eureka Server
 
 1. Interrompa a execução do monólito, dos serviços de pagamentos e distância e do API Gateway.
 
@@ -380,7 +380,7 @@ d̶i̶s̶t̶a̶n̶c̶i̶a̶.̶r̶i̶b̶b̶o̶n̶.̶l̶i̶s̶t̶O̶f̶S̶e̶r̶v�
 r̶i̶b̶b̶o̶n̶.̶e̶u̶r̶e̶k̶a̶.̶e̶n̶a̶b̶l̶e̶d̶=̶f̶a̶l̶s̶e̶
 ```
 
-## Exercício: Testando Client Side Discovery com Eureka Client
+## Exercício: Client Side Discovery com Eureka Client
 
 1. Pare o monólito, o serviço de pagamentos e o API Gateway.
 

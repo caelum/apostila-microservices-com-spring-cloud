@@ -749,7 +749,7 @@ class RestauranteController {
 
 Observação: pensando em design de código, será que os métodos auxiliares `tipoDeCozinhaDiferente` e `cepDiferente` deveriam ficar em `RestauranteController` mesmo?
 
-## Exercício: Testando a integração entre o módulo de restaurantes do monólito e o serviço de distância
+## Exercício: Integrando o módulo de restaurantes ao serviço de distância com RestTemplate
 
 1. Interrompa o monólito e o serviço de distância.
 
@@ -916,7 +916,7 @@ public class PagamentoController {
 }
 ```
 
-## Exercício: Testando a integração entre o serviço de pagamento e o módulo de pedidos do monólito
+## Exercício: Integrando o serviço de pagamentos e o módulo de pedidos com Feign
 
 1. Interrompa o monólito e o serviço de pagamentos.
 

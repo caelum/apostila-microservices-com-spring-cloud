@@ -211,7 +211,7 @@ Lembrando que o import correto é:
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 ```
 
-## Exercício: Testando o client side load balancing no RestTemplate do monólito com Ribbon
+## Exercício: Client side load balancing no RestTemplate do monólito com Ribbon
 
 1. Interrompa o monólito e o API Gateway.
 
