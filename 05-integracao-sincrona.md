@@ -273,7 +273,7 @@ Fielding chama esse estilo arquitetural da Web de Representational State Transfe
 
 -->
 
-> Um excelente resumo de boas práticas e princípios de uma API RESTful podem ser encontrado no blog da Caelum, no post [REST: Princípios e boas práticas](https://blog.caelum.com.br/rest-principios-e-boas-praticas) (FERREIRA, 2017)
+> Um excelente resumo de boas práticas e princípios de uma API RESTful podem ser encontrado no blog da Caelum, no post [REST: Princípios e boas práticas](https://blog.caelum.com.br/rest-principios-e-boas-praticas) (FERREIRA, 2017), disponível em: https://blog.caelum.com.br/rest-principios-e-boas-praticas
 
 Leonard Richardson e Sam Ruby, no livro [RESTful Web Services](https://learning.oreilly.com/library/view/restful-web-services/9780596529260/) (RICHARDSON; RUBY, 2007), contrastam serviços no estilo _Remote Procedure Call_ (RPC) com serviços _Resource-Oriented_.
 
@@ -358,10 +358,10 @@ POST /agendamentoService HTTP/1.1
 <!-- separador -->
 
 ```xml
-<marcacaoConsultaRequest>
+<agendamentoConsultaRequest>
   <horario doutor="huberman" inicio="14:00" fim="14:50"/>
   <paciente id="alexandre"/>
-</marcacaoConsultaRequest>
+</agendamentoConsultaRequest>
 ```
 
 A resposta de sucesso, com a confirmação da consulta, seria algo como:
@@ -386,11 +386,11 @@ HTTP/1.1 200 OK
 <!-- separador -->
 
 ```xml
-<marcacaoConsultaRequestFailure>
+<agendamentoConsultaRequestFailure>
   <horario doutor="huberman" inicio="14:00" fim="14:50"/>
   <paciente id="alexandre"/>
   <motivo>Horário não disponível</motivo>
-</marcacaoConsultaRequestFailure>
+</agendamentoConsultaRequestFailure>
 ```
 
 Perceba que, no exemplo de Fowler, não foi utilizado SOAP mas uma API que usa HTTP, só que sem os conceitos do protocolo.
@@ -432,9 +432,9 @@ POST /horarios/1234 HTTP/1.1
 <!-- separador -->
 
 ```xml
-<marcacaoConsultaRequest>
+<agendamentoConsulta>
   <paciente id="alexandre"/>
-</marcacaoConsultaRequest>
+</agendamentoConsulta>
 ```
 
 O response seria semelhante ao anterior:
@@ -485,9 +485,9 @@ POST /horarios/1234 HTTP/1.1
 <!-- separador -->
 
 ```xml
-<marcacaoConsultaRequest>
+<agendamentoConsulta>
   <paciente id="alexandre"/>
-</marcacaoConsultaRequest>
+</agendamentoConsulta>
 ```
 
 Uma API de Nível 2 de Maturidade, deve usar os códigos de status e cabeçalhos a seu favor. Para indicar que uma nova consulta foi criada, com o agendamento do paciente naquele horário podemos usar o status `201 Created`. Esse status deve incluir, no response, um cabeçalho `Location` com a URL do novo recurso. Essa nova URL pode ser usada pelo cliente para obter, com um `GET`, mais detalhes sobre o recurso que acabou de ser criado. Portanto, a resposta teria alguns detalhes diferentes da anterior:
@@ -1010,7 +1010,9 @@ Para um cliente HTTP fazer essa transição de estados, seu programador deve sab
 
 Poderíamos tornar o cliente HTTP mais flexível se representássemos as transições de estados possíveis por meio de links. Essa ideia é comumente chamada de **Hypermedia As The Engine Of Application State (HATEOAS)**.
 
-Ainda teríamos que saber a utilidade de cada link. Para isso, temos o _link relation_, uma descrição do link que, em geral, é definida em um atributo `rel` associado ao link.
+Para a transição de estados de um pagamento, poderíamos ter um link de confirmação e um link de cancelamento.
+
+Ainda teríamos que saber a utilidade de cada link. Para isso, temos o _link relation_, uma descrição definida em um atributo `rel` associado ao link.
 
 Há um [padrão de link relations](https://www.iana.org/assignments/link-relations/link-relations.xhtml) mantido pela IANA. Alguns deles:
 
@@ -1021,30 +1023,132 @@ Há um [padrão de link relations](https://www.iana.org/assignments/link-relatio
 - `first`: um link para o primeiro recurso de uma série. Comumente usado em paginação.
 - `last`:um link para o último recurso de uma série. Comumente usado em paginação.
 
+Podemos criar os nossos próprios link relations. Podemos associar o link de confirmação ao link relation `confirma` e o de cancelamento ao `cancela`.
 
-<!-- TODO: 
+### Representando Links
 
-fundamentar HATEOAS
+Como representar esse links? 
 
-https://softwareengineering.stackexchange.com/questions/307446/in-rest-is-hateoas-really-about-self-discovery-or-about-navigation
+Em um XML, podemos usar o elemento `<link>`, que é usado em um HTML para incluir um CSS em uma página. Por exemplo, para o pagamento:
 
-https://www.ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm#sec_5_2
+```xml
+<pagamento>
+  <id>1</id>
+  <valor>51.8</valor>
+  <nome>ANDERSON DA SILVA</nome>
+  <numero>1111 2222 3333 4444</numero>
+  <expiracao>2022-07</expiracao>
+  <codigo>123</codigo>
+  <status>CRIADO</status>
+  <formaDePagamentoId>2</formaDePagamentoId>
+  <pedidoId>1</pedidoId>
+  <link rel="self" href="http://localhost:8081/pagamentos/1" />
+  <link rel="confirma" href="http://localhost:8081/pagamentos/1" />
+  <link rel="cancela" href="http://localhost:8081/pagamentos/1" />
+</pagamento>
+```
 
-exemplo de links em XML e JSON
+E para JSON? Poderíamos criar a nossa própria representação de links, mas já existe o HAL, ou _JSON Hypertext Application Language_, descrita por Mike Kelly na especificação preliminar (Internet-Draft) [draft-kelly-json-hal-00](https://tools.ietf.org/html/draft-kelly-json-hal-00) (KELLY, 2012) da IETF. Apesar do status preliminar, a especificação é usada em diferentes tecnologias e frameworks.
 
-falar sobre HAL
+No HAL, é adicionado ao JSON da aplicação uma propriedade `_links` que é um objeto contendo uma propriedade para cada link relation. Os links relations são definidos como objetos cujo link está na propriedade `href`. Por exemplo, para um pagamento:
 
+```json
+{
+  "id":1,
+  "valor":51.80,
+  "nome":"ANDERSON DA SILVA",
+  "numero":"1111 2222 3333 4444",
+  "expiracao":"2022-07",
+  "codigo":"123",
+  "status":"CRIADO",
+  "formaDePagamentoId":2,
+  "pedidoId":1,
+  "_links":{
+    "self":{
+      "href":"http://localhost:8081/pagamentos/1"
+    },
+    "confirma":{
+      "href":"http://localhost:8081/pagamentos/1"
+    },
+    "cancela":{
+      "href":"http://localhost:8081/pagamentos/1"
+    }
+  }
+}
+```
 
-Modelo de Maturidade do Richardson - nível 3
-https://martinfowler.com/articles/richardsonMaturityModel.html
+A representação HAL de um recurso pode ter outros recursos embutidos, descritos na propriedade `_embedded`. Por exemplo, um pedido poderia ter uma lista de itens embutida, com representações e links para cada item.
 
-Spring DATA REST
-https://spring.io/guides/gs/accessing-data-rest/
+### Revisitando o Modelo de Maturidade de Richardson
 
-gRPC
+Quando falamos sobre o Nível 3, o máximo, do Modelo de Maturidade de Leonard Richardson descrito por Martin Fowler no post [Richardson Maturity Model](https://martinfowler.com/articles/richardsonMaturityModel.html) (FOWLER, 2010), apenas mencionamos que links são importantes.
 
--->
+Agora, sabemos que links podem ser usados para descrever a transição de estados da aplicação, o que chamamos de HATEOAS.
 
+Voltando ao exemplo de consultas médicas, cada horário da lista de horários disponíveis pode conter um link de agendamento:
+
+```txt
+GET /doutores/huberman/horarios?data=2010-01-04&status=disponivel HTTP/1.1
+```
+
+A resposta seria a mesma de antes:
+
+```txt
+HTTP/1.1 200 OK
+```
+<!-- separador -->
+
+```xml
+<listaDeHorariosDisponiveis>
+  <horario id="1234" doutor="huberman" inicio="14:00" fim="14:50">
+    <link rel="agendamento" href="/horarios/1234">
+  </horario>
+  <horario id="5678" doutor="huberman" inicio="16:00" fim="16:50">
+    <link rel="agendamento" href="/horarios/5678">
+  </horario>
+</listaDeHorariosDisponiveis>
+```
+
+Os links descrevem o que pode ser feito a seguir e as URLs que precisam ser manipuladas. 
+
+Seguindo o link de agendamento, o `POST` para marcar uma consulta seria feito da mesma maneira anterior:
+
+```txt
+POST /horarios/1234 HTTP/1.1
+```
+<!-- separador -->
+
+```xml
+<agendamentoConsulta>
+  <paciente id="alexandre"/>
+</agendamentoConsulta>
+```
+
+O resultado poderia conter links para diferentes possibilidades:
+
+```txt
+HTTP/1.1 201 Created
+Location: horarios/1234/consulta
+```
+<!-- separador -->
+
+```xml
+<consulta>
+  <horario id="1234" doutor="huberman" inicio="14:00" fim="14:50"/>
+  <paciente id="alexandre"/>
+  <link rel="agendamentoExame" href="/horarios/1234/consulta/exames">
+  <link rel="cancelamento" href="/horarios/1234/consulta">
+  <link rel="mudancaHorario" href="/doutor/huberman/horarios?data=2010-01-04&status=disponivel">
+</consulta>
+```
+
+Assim, as URLs podem ser modificadas sem que o código dos clientes quebre. Um benefício adicional é que os clientes podem conhecer e explorar os próximos passos.
+
+Fowler menciona a ideia de Ian Robinson de que o Modelo de Maturidade de Richardson está relacionado com técnicas comuns de design: 
+
+- O Nível 1 trata de como lidar com a complexidade usando "dividir e conquistar", dividindo um grande endpoint para o serviço todo em vários recursos. 
+- O Nível 2 adiciona os métodos HTTP como um padrão, de maneira que possamos lidar com situações semelhantes da mesma maneira, evitando variações desnecessárias.
+- O Nível 3 introduz a capacidade de descoberta, fornecendo uma maneira de tornar o protocolo auto-documentado.
 
 ## Exercício opcional: Spring HATEOAS e HAL
 
@@ -1239,6 +1343,20 @@ gRPC
 
 5. Faça um novo pedido e efetue um pagamento. Deve continuar funcionando!
 
+
+<!-- TODO: 
+
+Fomentar a discussão sobre links e métodos HTTP
+Mostrar solução da PayPal e outras soluções
+Mencionar HAL-FORMS
+
+Spring DATA REST
+https://spring.io/guides/gs/accessing-data-rest/
+
+gRPC
+
+-->
+
 ## Exercício opcional: Estendendo o Spring HATEOAS
 
 1. Crie uma classe `LinkWithMethod` que estende o `Link` do Spring HATEOAS e define um atributo adicional chamado `method`, que armazenará o método HTTP dos links. Defina um construtor que recebe um `Link` e uma `String` com o método HTTP:
@@ -1357,11 +1475,7 @@ gRPC
 
 <!--@note
 
----------------
-Alexandre (BSB)
----------------
-
-HAL-FORMS é uma das ideias de especificação de Hypermedia de Mike Amundsen, autor de diversos livros sobre REST na editor O'Reilly (aquela dos bichos na capa).
+Alexandre (BSB): HAL-FORMS é uma das ideias de especificação de Hypermedia de Mike Amundsen, autor de diversos livros sobre REST na editor O'Reilly (aquela dos bichos na capa). 
 
 Usei o HAL-FORMS na versão milestone 2.2.0.M2 do Spring Boot no commit abaixo:
 
@@ -1371,7 +1485,7 @@ https://github.com/alexandreaquiles/eats/commit/f8ef33b88cd3d96c62627a13b4e8470c
 
 ## Para saber mais: Todo o poder emana do cliente - explorando uma API GraphQL
 
-> O texto dessa seção é baseado no post [Todo o poder emana do cliente: explorando uma API GraphQL](https://blog.caelum.com.br/todo-o-poder-emana-do-cliente-explorando-uma-api-graphql/) (AQUILES, 2017) do blog da Caelum.
+> O texto dessa seção é baseado no post [Todo o poder emana do cliente: explorando uma API GraphQL](https://blog.caelum.com.br/todo-o-poder-emana-do-cliente-explorando-uma-api-graphql) (AQUILES, 2017) do blog da Caelum, disponível em: https://blog.caelum.com.br/todo-o-poder-emana-do-cliente-explorando-uma-api-graphql
 
 ### Quais as limitações de uma API REST?
 
