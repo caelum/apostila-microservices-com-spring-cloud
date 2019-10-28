@@ -1879,7 +1879,7 @@ Obteremos no response:
 
 ## Formatos e Protocolos Binários
 
-Na palestra [PB vs. Thrift vs. Avro](https://pt.slideshare.net/IgorAnishchenko/pb-vs-thrift-vs-avro) (ANISHCHENKO, 2012), Igor Anishchenko demonstra que o protocolo HTTP com representações como XML e JSON pode ser ineficiente se comparado com alternativas binárias como:
+Na palestra [PB vs. Thrift vs. Avro](https://pt.slideshare.net/IgorAnishchenko/pb-vs-thrift-vs-avro) (ANISHCHENKO, 2012), Igor Anishchenko demonstra que o protocolo HTTP/1.1 com representações como XML e JSON pode ser ineficiente se comparado com alternativas binárias como:
 
 - RMI
 - Apache Thrift, usado no Facebook e em projetos com o Hadoop
@@ -1936,6 +1936,8 @@ Outra alternativa mencionada por Anishchenko é o Apache Avro, usado pelo Apache
 Em alguns cenários de aplicação Mobile, um formato de serialização mais compacto e com menos processamento no cliente pode ser interessante já que há limitações de CPU, bateria e banda de rede.
 
 Nada impede que Protocol Buffers ou Apache Thrift sejam usados apenas como formato de serialização de dados, usando um transporte HTTP. Mas o protocolo HTTP/1.1 em si é ineficiente por ser baseado em texto com diversos cabeçalhos a cada request e response.
+
+O protocolo HTTP/2 aproveita melhor as conexões TCP sobre as quais é construído, codificando e comprimindo os dados em _frames_ binários. Há ainda a possibilidade de _streams_ múltiplas, iniciadas pelo cliente ou pelo servidor.
 
 <!--
 
