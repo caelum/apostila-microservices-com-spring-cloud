@@ -530,6 +530,14 @@ O Nível 3, o nível final, de Maturidade de uma API RESTful é atingido quando 
 
 ## Cliente REST com RestTemplate do Spring
 
+Precisamos de que o módulo de Restaurante do Monólito avise ao serviço de Distância que novos restaurantes foram aprovados e que houve atualização no cep e/ou tipo de cozinha de restaurantes já cadastrados no BD de Distância.
+
+Para isso, vamos expandir a API RESTful do serviço de Distância para que receba novos restaurantes aprovados e os insira no BD de Distância e atualize dados alterados de restaurantes existentes.
+
+O serviço de Distância será o servidor e o módulo de Restaurante do Monólito terá o código do cliente REST. Para implementarmos esse cliente, usaremos a classe `RestTemplate` do Spring.
+
+![Módulo de Restaurante faz chamada HTTP ao serviço de Distância {w=49}](imagens/05-integracao-sincrona/modulo-de-restaurante-chama-distancia.png)
+
 No `eats-distancia-service`, crie um Controller chamado `RestaurantesController` no pacote `br.com.caelum.eats.distancia` com um método que insere um novo restaurante e outro que atualiza um restaurante existente. Defina mensagens de log em cada método.
 
 ####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RestaurantesController.java
@@ -794,6 +802,14 @@ Observação: pensando em design de código, será que os métodos auxiliares `t
   ```
 
 ## Cliente REST declarativo com Feign
+
+Depois de confirmar um pagamento, o status do pedido ainda permanece como _REALIZADO_. Precisamos implementar uma maneira do serviço de Pagamentos avisar que um determinado pedido foi pago.
+
+Para isso, vamos acrescentar à API RESTful do módulo de Pedido do Monólito um recurso para notificar o pagamento de um pedido.
+
+O módulo de Pedido será o servidor, enquanto o cliente REST será o serviço de Pagamentos. Faremos a implementação de maneira declarativa com o Feign.
+
+![Serviço de Pagamentos chama módulo de Pedido do Monólito {w=49}](imagens/05-integracao-sincrona/pagamentos-chamando-modulo-de-pedido.png)
 
 Adicione ao `PedidoController`, do módulo `eats-pedido` do monólito, um método que muda o status do pedido para _PAGO_:
 
@@ -1861,10 +1877,75 @@ Obteremos no response:
 }
 ```
 
-<!-- TODO: 
+## Formatos e Protocolos Binários
 
-## Para saber mais: gRPC
+Na palestra [PB vs. Thrift vs. Avro](https://pt.slideshare.net/IgorAnishchenko/pb-vs-thrift-vs-avro) (ANISHCHENKO, 2012), Igor Anishchenko demonstra que o protocolo HTTP com representações como XML e JSON pode ser ineficiente se comparado com alternativas binárias como:
 
+- RMI
+- Apache Thrift, usado no Facebook e em projetos com o Hadoop
+- Protocol Buffers, usado na Google
+
+Anishchenko, ao serializar um objeto Curso com 5 objetos Pessoa e um Telefone associados, mostra o tamanho:
+
+- Protocol Buffers: 250
+- Thrift TCompactProcotol: 278
+- Thrift TBinaryProtocol: 460
+- HTTP/JSON: 559
+- HTTP/XML: 836
+- RMI: 905
+
+O protocolo Thrift TBinaryProtocol é otimizado em termos de processamento e o Thrift TCompactProcotol, em tamanho.
+
+É interessante notar que a serialização RMI foi a menos eficiente em termos de tamanho. Não é um formato otimizado.
+
+Os formatos binários Thrift TCompactProcotol e Protocol Buffers apresentam um tamanho de cerca de metade do HTTP/JSON para esse caso simples.
+
+Então, Anishchenko compara 10000 chamadas de uma busca por uma listagem de códigos de Curso e, em seguida, os dados do Curso associado a esse código. São avaliados o tempo de resposta, porcentagem de uso de CPU no servidor e no cliente.
+
+Os resultados para o tempo de resposta:
+
+- Thrift TCompactProcotol: 01 min 05 s
+- Thrift TBinaryProtocol: 01 min 13 s
+- Protocol Buffers: 01 min 19 s
+- RMI: 02 min 14 s
+- HTTP/JSON: 04 min 44 s
+- HTTP/XML: 05 min 27 s
+
+Os resultados para porcentagem de uso de CPU do servidor:
+
+- Thrift TBinaryProtocol: 33 %
+- Thrift TCompactProcotol: 30 %
+- Protocol Buffers: 30 %
+- HTTP/JSON: 20 %
+- RMI: 16 %
+- HTTP/XML: 12 %
+
+Os resultados para CPU do cliente:
+
+- Thrift TCompactProcotol: 22.5 %
+- Thrift TBinaryProtocol: 21 %
+- Protocol Buffers: 37.75 %
+- RMI: 46.5 %
+- HTTP/JSON: 75 %
+- HTTP/XML: 80.75 %
+
+Pelos dados de Anishchenko, Thrift toma mais processamento do servidor, suavizando o processamento no cliente.
+
+Outra alternativa mencionada por Anishchenko é o Apache Avro, usado pelo Apache Kafka, entre outros projetos.
+
+Em alguns cenários de aplicação Mobile, um formato de serialização mais compacto e com menos processamento no cliente pode ser interessante já que há limitações de CPU, bateria e banda de rede.
+
+Nada impede que Protocol Buffers ou Apache Thrift sejam usados apenas como formato de serialização de dados, usando um transporte HTTP. Mas o protocolo HTTP/1.1 em si é ineficiente por ser baseado em texto com diversos cabeçalhos a cada request e response.
+
+<!--
+
+## gRPC
+
+CORBA
+
+Stubby -> RPC
+
+proto buffers
 -->
 
 ## Para saber mais: Todo o poder emana do cliente - explorando uma API GraphQL
@@ -2202,6 +2283,8 @@ São 66,67% requisições a menos, 98,82% menos dados e cabeçalhos trafegados e
 
 ### Considerações finais
 
+O GraphQL dá bastante poder ao cliente. Isso é especialmente útil quando a equipe que implementa o cliente é totalmente separada da que implementa o servidor. Mas há casos mais simples, em que as equipes do cliente e servidor trabalham juntas. Então, não haveria tanta dificuldade em manter uma API RESTful customizada para o cliente.
+
 Poderíamos buscar outros dados da API do GitHub: o número de issues abertas, a data da última release, informações sobre o último commit, etc.
 
 Uma coisa é certa: com uma consulta GraphQL, eu faria menos requisições e receberia menos dados desnecessários. Mais flexibilidade e mais eficiência.
@@ -2220,3 +2303,60 @@ Existem várias outras questões que surgem ao estudar o GraphQL:
 - posso fazer uma “casca” GraphQL para uma API REST já existente?
 - como implementar um cliente sem muito trabalho?
 - quais os pontos ruins dessa tecnologia e desafios na implementação?
+
+## Para saber mais: Field Selectors
+
+Um maneira de otimizar uma API REST já existente é implementar um mecanismo de obter um subconjunto das representações de um recurso.
+
+A API do Linkedin, por exemplo, implementa [field projections](https://docs.microsoft.com/en-us/linkedin/shared/api-guide/concepts/projections?context=linkedin/context), que permitem selecionar os campos retornados. Por exemplo:
+
+```txt
+GET https://api.linkedin.com/v2/people/id=-f_Ut43FoQ?projection=(id,localizedFirstName,localizedLastName)
+```
+
+```json
+{
+  "id": "-f_Ut43FoQ",
+  "localizedFirstName": "Dwight",
+  "localizedLastName": "Schrute"
+}
+```
+
+A Graph API do Facebook é uma API REST (não GraphQL!) que permite que programadores interajam com a plataforma do Facebook para ler ou enviar dados de usuário, páginas, fotos, entre outros. Essa API implementa field expansions uma maneira de retornar [apenas os campos ](https://developers.facebook.com/docs/graph-api/using-graph-api?locale=en_US#field-expansion):
+
+```txt
+https://graph.facebook.com/{your-user-id}?fields=birthday,email,hometown&access_token={your-user-access-token}
+```
+
+```json
+{
+  "hometown": "Your, Hometown",
+  "birthday": "01/01/1985",
+  "email": "your-email@email.addresss.com",
+  "id": "{your-user-id}"
+}
+```
+
+Diversas APIs do Google permitem [partial responses](https://developers.google.com/url-shortener/v1/performance#partial-response), em que apenas os campos necessários são retornados:
+
+```txt
+GET https://www.googleapis.com/demo/v1?fields=kind,items(title,characteristics/length)
+```
+
+```json
+{
+  "kind": "demo",
+  "items": [{
+    "title": "First title",
+    "characteristics": {
+      "length": "short"
+    }
+  }, {
+    "title": "Second title",
+    "characteristics": {
+      "length": "long"
+    }
+  },
+  ]
+}
+```
