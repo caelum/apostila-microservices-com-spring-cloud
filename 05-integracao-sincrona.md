@@ -274,6 +274,8 @@ Fielding chama esse estilo arquitetural da Web de Representational State Transfe
 
 -->
 
+<!-- separador -->
+
 > Um excelente resumo de boas práticas e princípios de uma API RESTful podem ser encontrado no blog da Caelum, no post [REST: Princípios e boas práticas](https://blog.caelum.com.br/rest-principios-e-boas-praticas) (FERREIRA, 2017), disponível em: https://blog.caelum.com.br/rest-principios-e-boas-praticas
 
 Leonard Richardson e Sam Ruby, no livro [RESTful Web Services](https://learning.oreilly.com/library/view/restful-web-services/9780596529260/) (RICHARDSON; RUBY, 2007), contrastam serviços no estilo _Remote Procedure Call_ (RPC) com serviços _Resource-Oriented_.
@@ -1079,6 +1081,14 @@ No HAL, é adicionado ao JSON da aplicação uma propriedade `_links` que é um 
 ```
 
 A representação HAL de um recurso pode ter outros recursos embutidos, descritos na propriedade `_embedded`. Por exemplo, um pedido poderia ter uma lista de itens embutida, com representações e links para cada item.
+
+Na [RFC 5988](https://tools.ietf.org/html/rfc5988) (NOTTINGHAM, 2010) da IETF é definido um cabeçalho `Link` e uma série de link relations padronizados. A paginação da API do GitHub segue esse padrão:
+
+```txt
+Link: <https://api.github.com/repositories/237159/pulls?page=2>; rel="next", <https://api.github.com/repositories/237159/pulls?page=2>; rel="last"
+```
+
+A classe [Link](https://docs.oracle.com/javaee/7/api/javax/ws/rs/core/Link.html), disponível a partir da especificação JAX-RS 2.0 do Java EE 7, usa o cabeçalho `Link` como formato de hypermedia.
 
 ### Revisitando o Modelo de Maturidade de Richardson
 
@@ -1938,7 +1948,7 @@ A resposta é:
 Content-type: application/json; charset=utf-8
 Link: <https://api.github.com/repositories/237159/pulls?page=2>; rel="next",
       <https://api.github.com/repositories/237159/pulls?page=2>; rel="last"
-```txt
+```
 
 <!-- separador -->
 
