@@ -14,6 +14,8 @@ ASERG-UFMG, Applied Software Engineering Research Group. _Does Conway’s Law ap
 
 BARR, Jeff. _Migration Complete – Amazon’s Consumer Business Just Turned off its Final Oracle Database._ 2019. Em: https://aws.amazon.com/pt/blogs/aws/migration-complete-amazons-consumer-business-just-turned-off-its-final-oracle-database
 
+BELSHE, Mike et al. _Hypertext Transfer Protocol Version 2 (HTTP/2)._ Internet Engineering Task Force (IETF), 2015. Em: https://tools.ietf.org/html/rfc7540
+
 BERNERS-LEE, Tim et al. _Uniform Resource Locators (URL)._ Internet Engineering Task Force (IETF), 1994. Em: https://tools.ietf.org/html/rfc1738
 
 BERNERS-LEE, Tim et al. _Hypertext Transfer Protocol -- HTTP/1.0._ Internet Engineering Task Force (IETF), 1996. Em: https://tools.ietf.org/html/rfc1945
@@ -72,11 +74,13 @@ FOWLER, Martin. _MicroservicePremium._ 2015b. Em: https://martinfowler.com/bliki
 
 FOWLER, Martin. _MonolithFirst._ 2015c. Em: https://martinfowler.com/bliki/MonolithFirst.html
 
-JACOBSON, Ivar. _Object Oriented Software Engineering: A Use-Case Driven Approach._ Addison-Wesley Professional. 1992. 552 p. Em: https://www.amazon.com/Object-Oriented-Software-Engineering-Approach/dp/0201544350
+GRIGORIK, Ilya. _High Performance Browser Networking._ O'Reilly, 2013. 400 p. Em: https://hpbn.co/
+
+JACOBSON, Ivar. _Object Oriented Software Engineering: A Use-Case Driven Approach._ Addison-Wesley Professional, 1992. 552 p. Em: https://www.amazon.com/Object-Oriented-Software-Engineering-Approach/dp/0201544350
 
 KELLY, Mike. _JSON Hypertext Application Language_. Internet Engineering Task Force (IETF) Internet-Draft, 2012. Em: https://tools.ietf.org/html/draft-kelly-json-hal-00
 
-KNOERNSCHILD, Kirk. _Java Application Architecture: Modularity Patterns with Examples Using OSGi._ Prentice Hall. 2012. 384 p. Em: https://www.amazon.com.br/Java-Application-Architecture-Modularity-Patterns/dp/0321247132.
+KNOERNSCHILD, Kirk. _Java Application Architecture: Modularity Patterns with Examples Using OSGi._ Prentice Hall, 2012. 384 p. Em: https://www.amazon.com.br/Java-Application-Architecture-Modularity-Patterns/dp/0321247132.
 
 KRIENS, Peter. _µServices._ 2010. Em: https://blog.osgi.org/2010/03/services.html
 
@@ -133,6 +137,8 @@ SIMONS, Matthew; LEROY, Jonny. _Contending with Creaky Platforms CIO._ Cutter IT
 SPOLSKY, Joel. _Things You Should Never Do, Part I._ 2000. Em: https://www.joelonsoftware.com/2000/04/06/things-you-should-never-do-part-i/
 
 SRINIVAS, Prashanth Nuggehalli. _Strangler fig inside (licença GFDL)_ 2010. Em: https://en.wikipedia.org/wiki/File:Strangler_fig_inside.jpg 
+
+TALWAR, Varun. _gRPC: a true internet-scale RPC framework is now 1.0 and ready for production deployments._ 2016. Em: https://cloud.google.com/blog/products/gcp/grpc-a-true-internet-scale-rpc-framework-is-now-1-and-ready-for-production-deployments
 
 TILKOV, Stefan. _Don't start with a monolith: ... when your goal is a microservices architecture._ 2015. Em: https://martinfowler.com/articles/dont-start-monolith.html
 

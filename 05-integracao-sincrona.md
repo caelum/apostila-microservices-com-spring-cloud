@@ -1881,11 +1881,11 @@ Obteremos no response:
 
 Na palestra [PB vs. Thrift vs. Avro](https://pt.slideshare.net/IgorAnishchenko/pb-vs-thrift-vs-avro) (ANISHCHENKO, 2012), Igor Anishchenko demonstra que o protocolo HTTP/1.1 com representações como XML e JSON pode ser ineficiente se comparado com alternativas binárias como:
 
-- RMI
 - Apache Thrift, usado no Facebook e em projetos com o Hadoop
 - Protocol Buffers, usado na Google
+- RMI, que é parte da plataforma Java
 
-Anishchenko, ao serializar um objeto Curso com 5 objetos Pessoa e um Telefone associados, mostra o tamanho:
+Anishchenko, ao serializar um objeto Curso com 5 objetos Pessoa e com um objeto Telefone associados, mostra o tamanho:
 
 - Protocol Buffers: 250
 - Thrift TCompactProcotol: 278
@@ -1894,7 +1894,7 @@ Anishchenko, ao serializar um objeto Curso com 5 objetos Pessoa e um Telefone as
 - HTTP/XML: 836
 - RMI: 905
 
-O protocolo Thrift TBinaryProtocol é otimizado em termos de processamento e o Thrift TCompactProcotol, em tamanho.
+O protocolo Thrift TBinaryProtocol é otimizado em termos de processamento e o Thrift TCompactProcotol, em tamanho. 
 
 É interessante notar que a serialização RMI foi a menos eficiente em termos de tamanho. Não é um formato otimizado.
 
@@ -1929,27 +1929,328 @@ Os resultados para CPU do cliente:
 - HTTP/JSON: 75 %
 - HTTP/XML: 80.75 %
 
+
 Pelos dados de Anishchenko, Thrift toma mais processamento do servidor, suavizando o processamento no cliente.
+
+> É preciso tomar cuidado com microbenchmarks desse tipo. Os resultados podem ser enganosos. Meça você mesmo!
+
+Uma diferença importante entre o Thrift e Protocol Buffers é que, apesar de ambos oferecerem maneira de definir interfaces de serviços, apenas o Thrift fornece implementações de clientes e servidores. Ao usar Protocol Buffers, é necessário implementar manualmente o servidor e o cliente. Recentemente, o Google abriu o código de um projeto que já fornece essas implementações, que veremos logo adiante.
 
 Outra alternativa mencionada por Anishchenko é o Apache Avro, usado pelo Apache Kafka, entre outros projetos.
 
+### Quando usar procotolos binários?
+
+Grandes empresas como Facebook, Google, Twitter e Linkedin expõe APIs RESTful para uso externo. Dentro de seus datacenters, porém, usam protocolos binários para aumentar a eficiência na comunicação entre serviços.
+
 Em alguns cenários de aplicação Mobile, um formato de serialização mais compacto e com menos processamento no cliente pode ser interessante já que há limitações de CPU, bateria e banda de rede.
 
-Nada impede que Protocol Buffers ou Apache Thrift sejam usados apenas como formato de serialização de dados, usando um transporte HTTP. Mas o protocolo HTTP/1.1 em si é ineficiente por ser baseado em texto com diversos cabeçalhos a cada request e response.
+## HTTP/2
 
-O protocolo HTTP/2 aproveita melhor as conexões TCP sobre as quais é construído, codificando e comprimindo os dados em _frames_ binários. Há ainda a possibilidade de _streams_ múltiplas, iniciadas pelo cliente ou pelo servidor.
+Nada impede que formatos binários de serialização de dados sejam usados com um transporte HTTP. Mas o protocolo HTTP/1.1 em si é ineficiente por ser baseado em texto, com diversos cabeçalhos e uma conexão TCP a cada request/response.
 
-<!--
+Ilya Grigorik, no livro [High Performance Browser Networking](https://hpbn.co/) (GRIGORIK, 2013), descreve o trabalho de desenvolvedores do Google em um protocolo experimental com o objetivo de reduzir em 50% o tempo de carregamento de páginas. O resultado desse experimento foi o protocolo SPDY, que foi progressivamente adotado por diferentes empresas.
+
+Grigorik relata que, em 2012, o HTTP Working Group da IETF começou a trabalhar num draft inspirado no SPDY. Em 2015, foi publicada a [RFC 7540](https://tools.ietf.org/html/rfc7540) (BELSHE et al., 2015), que especifica o HTTP/2.
+
+O protocolo HTTP/2 aproveita melhor as conexões TCP sobre as quais é construído, codificando e comprimindo os dados em _frames_ binários, que contém os cabeçalhos separados dos dados. Há ainda a possibilidade de _streams_ múltiplas, iniciadas pelo cliente ou pelo servidor.
+
+Grigorik descreve a terminologia do HTTP/2:
+
+- Stream: um fluxo bidirecional de bytes em uma mesma conexão, que pode transportar uma ou mais mensagens.
+- Mensagem: uma sequência completa de frames que equivalem a um request ou response.
+- Frame: a menor unidade de comunicação do HTTP/2, transporta um tipo específico de dados, como cabeçalhos HTTP, o payload, etc. Cada frame tem no mínimo um cabeçalho que identifica a qual stream pertence.
+
+No HTTP/1.x, era possível realizar múltiplos requests paralelos, cada um em uma conexão TCP diferente, mas apenas um response poderia ser entregue por vez. Com o HTTP/2, é possível, na mesma conexão TCP, obter frames independentes intercalados que são remontados do lado de quem recebe os dados, no cliente ou no servidor. Isso é chamado de _multiplexing_.
+
+Um servidor HTTP/2 pode fazer um _server push_, enviando múltiplos frames em resposta a um mesmo request do cliente. Dessa maneira, como resposta a um request de um HTML, o servidor poderia enviar, além do HTML, todos os JS e CSS associados em diferentes frames. Assim, não há a necessidade de concatenação, como havia no HTTP/1.x.
+
+No livro, Grigorik diz que, apesar do HTTP/2 não requerer o uso de conexões seguras, TLS é o mecanismo mais confiável e eficiente para HTTP/2, eliminando a necessidade de latência ou roundtrips extras. Além disso, os navegadores adicionam a restrição de só habilitar HTTP/2 sobre uma conexão TLS.
+
+Os recursos, URLs, métodos, cabeçalhos e códigos de status são mantidos no HTTP/2. Porém, como há uma nova codificação binária, tanto o servidor como o cliente precisam ser compatíveis com o HTTP/2.
 
 ## gRPC
 
-CORBA
+Anteriormente, discutimos como o uso de formatos binários de serialização dos dados podem aumentar a eficiência na comunicação entre serviços, ou até mesmo entre um navegador e um servidor Web. Uma característica do Protocol Buffers, um formato binário definido pela Google, é há uma maneira de definir uma interface para um serviço mas não são fornecidas implementações de clientes e servidores.
 
-Stubby -> RPC
+No post [gRPC: a true internet-scale RPC framework](https://cloud.google.com/blog/products/gcp/grpc-a-true-internet-scale-rpc-framework-is-now-1-and-ready-for-production-deployments) (TALWAR, 2016), Varun Talwar revela que a Google usou por 15 anos um projeto chamado Stubby, uma framework RPC que fornecia essa implementação de clientes e servidores, usando Protocol Buffers como formato de dados e lidando com dezenas de bilhões de requests por segundo.
 
-proto buffers
+Como mencionamos anteriormente, RPC (Remote Procedure Call) é uma forma de integrar Sistemas Distribuídos que expõe as operações de uma aplicação. Exemplos de mecanismos RPC são Web Services CORBA, DCOM, RMI, SOAP e Thrift.
+
+Uma API RESTful não seria exatamente RPC, apesar da comunicação síncrona, porque é _Resource-Oriented_.
+
+Em um framework RPC, o cliente invoca o servidor como se você uma chamada local. O framework lida com as complexidades de serialização de dados, comunicação pela rede, entre outras preocupações.
+
+Em 2015, a Google lançou o projeto open-source **gRPC**, uma evolução do Stubby que provê um framework para comunicação RPC que usa Protocol Buffers como formato padrão de dados. Como protocolo para transmissão de dados, o gRPC é implementado sobre HTTP/2, aproveitando os frames binários e streams. Podem ser gerados servidores e clientes em linguagens como C++, C#, Java, Go, PHP, Python, Ruby, JS/Node, entre outras.
+
+### IDL com Protocol Buffers
+
+Em uma solução RPC, o servidor precisa expor quais as operações podem ser chamadas e qual o modelo de dados das requisições e das respostas. No RMI, essa definição é feita em uma interface Java. Em um WebService SOAP, as operações são definidas em um WSDL. No antigo CORBA, era utilizado um IDL (Interface Definition Language).
+
+No gRPC, o IDL é definido com Protocol Buffers.
+
+A estrutura de serialização dos dados é definida em um arquivo com a extensão `.proto`.
+
+Nesse arquivo, definimos um ou mais `Message`, cada contendo um ou mais campos tipados. Entre os tipos possíveis são: `double`, `float`, `int32` (um `int` no Java), `int64` (um `long` no Java), `bool`, `string` e `bytes`, entre outros. É possível definir um `enum`. Um campo pode ser singular, o padrão, ou `repeated`, indicando uma lista ordenada com zero ou mais elementos. Cada campo deve ter um número único, que é usado para identificar o campo na serialização binária.
+
+Também é possível definir um ou mais `Service`, que definem chamadas remotas com as `Message` de request e de response. É possível definir alguns tipos de métodos no `Service`:
+
+- RPC simples, como uma chamada de função normal, em que o cliente envia um request para o servidor e espera um response
+- _Server-side streaming RPC_, em que o cliente envia um request e o servidor responde com um fluxo de dados
+- _Client-side streaming RPC_, em que o cliente enviar um fluxo de dados e o servidor responde com uma `Message` simples
+- _Bidirectional streaming RPC_, em que tanto o cliente e o servidor trabalham com fluxos de dados
+
+Por exemplo, para termos algo semelhante à busca dos restaurantes mais próximos do serviço de Distância, poderíamos criar o seguinte arquivo `distancia.proto`, com um RPC simples: 
+
+```proto
+syntax = "proto3";
+
+package distancia; // não deve ser reverse domain name
+
+option java_package = "br.com.caelum.eats.distancia"; // pacote na convenção Java
+
+service Distancia {
+
+  rpc MaisProximos (MaisProximosRequest) returns (MaisProximosResponse) {}
+
+}
+
+message MaisProximosRequest {
+
+  string cep = 1;
+
+}
+
+
+message MaisProximosResponse {
+
+  repeated RestauranteComDistancia restaurantes = 1;
+
+}
+
+message RestauranteComDistancia {
+
+  int64 restauranteId = 1;
+  double distancia = 2;
+
+}
+```
+
+A partir do arquivo `.proto`, podem ser geradas classes (ou o equivalente da linguagem) com o compilador do Protocol Buffers: 
+
+```sh
+protoc -I=src/main/proto --java_out=target/generated-sources/protobuf/java/ src/main/proto/distancia.proto
+```
+
+A opção `-I` ou `--proto_path` especifica o diretório que contém arquivos `.proto`.
+
+A opção `--java_out` indica o diretório raiz onde devem ser colocados os `.java` gerados. No caso do arquivo `distancia.proto`, com a opção `target` no `--java_out`, os arquivos seriam gerados no diretório `target/br/com/caelum/eats/distancia`.
+
+Existem análogos em outras linguagens como `--cpp_out` para C++, `--go_out` para Go, `--python_out` para Python, entre outras opções.
+
+O último argumento do comando `protoc` é o caminho a um ou mais arquivos `.proto`.
+
+O comando anterior criaria, no diretório `target/generated-sources/protobuf/java/`, uma classe `DistanciaOuterClass.java` que contém os seguintes outros tipos:
+
+- a interface `MaisProximosRequestOrBuilder`
+- a classe `MaisProximosRequest`
+- a classe `MaisProximosRequest.Builder`
+- a interface `MaisProximosResponseOrBuilder`o
+- a classe `MaisProximosResponse`
+- a classe `MaisProximosResponse.Builder`
+- a interface `RestauranteComDistanciaOrBuilder`
+- a classe `RestauranteComDistancia`
+- a classe `RestauranteComDistancia.Builder`
+
+A partir dessas classes é possível criar instâncias de `MaisProximosRequest` e `MaisProximosRequest` e serializá-las para o formato Protocol Buffers.
+
+Para que a execução do compilador do Protocol Buffers faça parte do build, podemos usar plugins para Maven e Gradle.
+
+No Maven, deve ser adicionada uma dependência ao `protobuf-java` no `pom.xml`:
+
+```xml
+<dependency>
+  <groupId>com.google.protobuf</groupId>
+  <artifactId>protobuf-java</artifactId>
+  <version>3.10.0</version>
+</dependency>
+```
+
+O arquivo `distancia.proto`, com o código anterior, deve ser definido no diretório `src/main/proto`.
+
+Deve ser definida a seguinte `extension`:
+
+```xml
+<extensions>
+  <extension>
+    <groupId>kr.motd.maven</groupId>
+    <artifactId>os-maven-plugin</artifactId>
+    <version>1.6.2</version>
+  </extension>
+</extensions>
+```
+
+Então, deve ser definido o seguinte `plugin`:
+
+```xml
+<plugin>
+  <groupId>org.xolstice.maven.plugins</groupId>
+  <artifactId>protobuf-maven-plugin</artifactId>
+  <version>0.6.1</version>
+  <configuration>
+    <protocArtifact>com.google.protobuf:protoc:3.10.0:exe:${os.detected.classifier}</protocArtifact>
+  </configuration>
+  <executions>
+    <execution>
+      <goals>
+        <goal>compile</goal>
+      </goals>
+    </execution>
+  </executions>
+</plugin>
+```
+
+Quando o comando `mvn clean install` for executado, as classes mencionadas anteriormente serão geradas no diretório `target/generated-sources/protobuf/java/` e compiladas no diretório `target/classes`.
+
+### Gerando servidores e clientes com gRPC
+
+Para gerar classes base para o servidor e stubs para os cliente com gRPC, devemos adicionar o plugin do gRPC para o compilador do Protocol Buffers.
+
+Para isso, devem ser adicionadas as seguintes configurçãoes ao `<configuration>` do `protobuf-maven-plugin`
+
+```xml
+<pluginId>grpc-java</pluginId>
+<pluginArtifact>io.grpc:protoc-gen-grpc-java:1.24.0:exe:${os.detected.classifier}</pluginArtifact>
+```
+
+Também deve ser adicionado o seguinte `<goal>`:
+
+```xml
+<goal>compile-custom</goal>
+```
+
+Ao executarmos `mvn clean install`, além da classe `DistanciaOuterClass.java` criada anteriormente, seria criada a classe `DistanciaGrpc`, contendo os seguintes outros tipos:
+
+- a interface `DistanciaImplBase`, cujos métodos devem ser estendidos para criar o servidor
+- a classe `DistanciaBlockingStub`, para criar um cliente síncrono, cujas chamadas bloqueiam a thread esperando o resultado do servidor
+- as classes `DistanciaStub` e `DistanciaFutureStub`, para criar clientes assíncronos, cujas chamadas são não-bloqueantes
+- as classes de uso interno `MethodHandlers`, `DistanciaBaseDescriptorSupplier`, `DistanciaFileDescriptorSupplier` e `DistanciaMethodDescriptorSupplier`
+
+A implementação do servidor gRPC poderia ser algo semelhante a:
+
+```java
+public class DistanciaGrpcService extends DistanciaGrpc.DistanciaImplBase {
+
+  @Override
+  public void maisProximos(MaisProximosRequest request, StreamObserver<MaisProximosResponse> responseObserver) {
+    // obtém CEP do request gRPC
+    String cep = request.getCep();
+    
+    List<RestauranteComDistanciaDto> maisProximos = // obtém lista de restaurantes mais próximos
+    
+    // monta lista de restaurantes para gRPC
+    List<RestauranteComDistancia> restaurantesParaGrpc = new ArrayList<>();
+    for (RestauranteComDistanciaDto maisProximo : maisProximos) {
+      RestauranteComDistancia restauranteParaGrpc = RestauranteComDistancia
+                              .newBuilder()
+                              .setDistancia(maisProximo.getDistancia().doubleValue())
+                              .setRestauranteId(maisProximo.getRestauranteId())
+                              .build();
+      restaurantesParaGrpc.add(restauranteParaGrpc);
+    }
+    
+    // monta response gRPC
+    MaisProximosResponse maisProximosResponse = MaisProximosResponse
+                            .newBuilder()
+                            .addAllRestaurantes(restaurantesParaGrpc)
+                            .build();
+    
+    responseObserver.onNext(maisProximosResponse);
+    responseObserver.onCompleted();
+  
+  }
+  
+}
+```
+
+Os imports corretos seriam os seguintes:
+
+```java
+import br.com.caelum.eats.distancia.DistanciaOuterClass.MaisProximosRequest;
+import br.com.caelum.eats.distancia.DistanciaOuterClass.MaisProximosResponse;
+import br.com.caelum.eats.distancia.DistanciaOuterClass.RestauranteComDistancia;
+import io.grpc.stub.StreamObserver;
+```
+
+Para subir um servidor na porta `6565`, deveria ser implementada a seguinte classe:
+
+```java
+public class ServidorGrpc {
+
+  public static void main(String[] args) throws IOException, InterruptedException {
+    Server server = ServerBuilder.forPort(6565)
+              .addService(new DistanciaGrpcService())
+              .build()
+              .start();
+    server.awaitTermination();
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      @Override
+      public void run() {
+        server.shutdown();
+      }
+    });
+  }
+
+}
+```
+
+Os imports seriam:
+
+```java
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
+```
+
+A implementação do cliente seria algo semelhante a:
+
+```java
+public class DistanciaGrpcClient {
+
+  public static void main(String[] args) {
+    ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 6565)
+                  .usePlaintext()
+                  .build();
+    DistanciaBlockingStub distanciaStub = DistanciaGrpc.newBlockingStub(channel);
+    
+    MaisProximosRequest request = MaisProximosRequest
+                    .newBuilder()
+                    .setCep("71500-100")
+                    .build();
+  
+    MaisProximosResponse response = distanciaStub.maisProximos(request);
+    
+    List<RestauranteComDistancia> restaurantesComDistancia = response.getRestaurantesList();
+    
+    // Usa lista de restaurantes com distância...
+  }
+
+}
+```
+
+A lista de imports:
+
+```java
+import br.com.caelum.eats.distancia.DistanciaGrpc.DistanciaBlockingStub;
+import br.com.caelum.eats.distancia.DistanciaOuterClass.MaisProximosRequest;
+import br.com.caelum.eats.distancia.DistanciaOuterClass.MaisProximosResponse;
+import br.com.caelum.eats.distancia.DistanciaOuterClass.RestauranteComDistancia;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+```
+
+<!--
+TODO:
+### Integrando gRPC ao Spring Boot
 -->
-
 ## Para saber mais: Todo o poder emana do cliente - explorando uma API GraphQL
 
 > O texto dessa seção é baseado no post [Todo o poder emana do cliente: explorando uma API GraphQL](https://blog.caelum.com.br/todo-o-poder-emana-do-cliente-explorando-uma-api-graphql) (AQUILES, 2017) do blog da Caelum, disponível em: https://blog.caelum.com.br/todo-o-poder-emana-do-cliente-explorando-uma-api-graphql
