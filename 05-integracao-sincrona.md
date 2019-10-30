@@ -2675,7 +2675,6 @@ O serviço de Distância deve chamar o serviço de Recomendações logo depois d
       channel.shutdown();
     }
 
-
   }
   ```
 
