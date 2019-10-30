@@ -2113,7 +2113,29 @@ Quando o comando `mvn clean install` for executado, as classes mencionadas anter
 
 ### Gerando servidores e clientes com gRPC
 
-Para gerar classes base para o servidor e stubs para os cliente com gRPC, devemos adicionar o plugin do gRPC para o compilador do Protocol Buffers.
+Para gerar classes base para o servidor e stubs para os cliente com gRPC, devemos adicionar as seguintes dependências ao `pom.xml`:
+
+```xml
+<dependency>
+  <groupId>io.grpc</groupId>
+  <artifactId>grpc-netty-shaded</artifactId>
+  <version>1.24.0</version>
+</dependency>
+<dependency>
+  <groupId>io.grpc</groupId>
+  <artifactId>grpc-protobuf</artifactId>
+  <version>1.24.0</version>
+</dependency>
+<dependency>
+  <groupId>io.grpc</groupId>
+  <artifactId>grpc-stub</artifactId>
+  <version>1.24.0</version>
+</dependency>
+```
+
+Podemos remover a dependência à biblioteca `protobuf-java`, já que essa é uma dependência transitiva de `grpc-protobuf`.
+
+Devemos, também, adicionar o plugin do gRPC para o compilador do Protocol Buffers.
 
 Para isso, devem ser adicionadas as seguintes configurçãoes ao `<configuration>` do `protobuf-maven-plugin`
 
@@ -2128,7 +2150,7 @@ Também deve ser adicionado o seguinte `<goal>`:
 <goal>compile-custom</goal>
 ```
 
-Ao executarmos `mvn clean install`, além da classe `DistanciaOuterClass.java` criada anteriormente, seria criada a classe `DistanciaGrpc`, contendo os seguintes outros tipos:
+Ao executarmos `mvn clean install`, além da classe `DistanciaOuterClass.java` criada anteriormente, seria criada a classe `DistanciaGrpc`, no diretório `target/generated-sources/protobuf/grpc-java/`, contendo internamente os seguintes outros tipos:
 
 - a interface `DistanciaImplBase`, cujos métodos devem ser estendidos para criar o servidor
 - a classe `DistanciaBlockingStub`, para criar um cliente síncrono, cujas chamadas bloqueiam a thread esperando o resultado do servidor
@@ -2217,7 +2239,7 @@ public class DistanciaGrpcClient {
 
   public static void main(String[] args) {
     ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 6565)
-                  .usePlaintext()
+                  .usePlaintext() // desabilita TLS (apenas para testes)
                   .build();
     DistanciaBlockingStub distanciaStub = DistanciaGrpc.newBlockingStub(channel);
     
@@ -2247,10 +2269,580 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 ```
 
-<!--
-TODO:
 ### Integrando gRPC ao Spring Boot
--->
+
+Ainda não há suporte oficial ao gRPC no Spring Boot, mas a comunidade criou uma série de _starters_ para facilitar a integração entre um projeto Spring Boot e o gRPC.
+
+Um desses starters é da empresa LogNet. Para usá-lo basta adicionar, ao `pom.xml`, a seguinte dependência:
+
+```xml
+<dependency>
+  <groupId>io.github.lognet</groupId>
+  <artifactId>grpc-spring-boot-starter</artifactId>
+  <version>3.4.3</version>
+</dependency>
+```
+
+Podemos remover as dependências às bibliotecas `grpc-protobuf`, `grpc-stub` e `grpc-netty-shaded`, que já são definidas pelo starter da LogNet.
+
+Então, não há a necessidade de subir manualmente um servidor, como fizemos na classe `ServidorGrpc`.
+
+Basta anotar a implementação da classe base com `@GRpcService`:
+
+```java
+@GRpcService // adicionado
+public class DistanciaGrpcService extends DistanciaGrpc.DistanciaImplBase {
+
+  // código omitido...
+
+}
+```
+
+O import correto é:
+
+```java
+import org.lognet.springboot.grpc.GRpcService;
+```
+
+O restante da implementação é exatamente o mesmo. A diferença é que é possível injetar dependências gerenciadas pelo Spring, como services e repositories.
+
+É iniciado um servidor na porta `6565`. Podemos alterar essa porta com a propriedade `grpc.port` no `application.properties`.
+
+Há ainda integração com outras bibliotecas do ecossitemas Spring Boot e Spring Cloud, que podem ser estudadas na documentação do starter: https://github.com/LogNet/grpc-spring-boot-starter
+
+## Exercício opcional: implementando um serviço de Recomendações com gRPC
+
+### Objetivo
+
+Vamos implementar um serviço de Recomendações que recebe uma lista de ids de restaurantes e retorna uma outra lista com os elementos reordenados de acordo com uma suposta recomendação.
+
+Por enquanto, faremos uma implementação fajuta: apenas vamos embaralhar a lista original.
+
+Implementaremos o serviço de Recomendações usando gRPC.
+
+O serviço de Distância deve chamar o serviço de Recomendações logo depois de recuperar a lista de restaurantes mais próximos.
+
+### Passo a passo
+
+1. Primeiramente, vamos criar uma definição Protocol Buffers para o serviço. Para isso, criaremos um novo projeto que conterá somente o IDL e as classes geradas. Esse projeto será compartilhado tanto pelo novo serviço de Recomendações como pelo serviço de Distância.
+
+  Crie um novo projeto Maven chamado `fj33-recomendacoes-idl` no Desktop:
+  
+  Defina, no `pom.xml`, o seguinte conteúdo:
+
+  ####### fj33-recomendacoes-idl/pom.xml
+
+  ```xml
+  <project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>br.com.caelum</groupId>
+    <artifactId>recomendacoes-idl</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+
+    <properties>
+      <java.version>1.8</java.version>
+    </properties>
+
+    <dependencies>
+
+        <dependency>
+          <groupId>io.grpc</groupId>
+          <artifactId>grpc-netty-shaded</artifactId>
+          <version>1.24.0</version>
+        </dependency>
+        <dependency>
+          <groupId>io.grpc</groupId>
+          <artifactId>grpc-protobuf</artifactId>
+          <version>1.24.0</version>
+        </dependency>
+        <dependency>
+          <groupId>io.grpc</groupId>
+          <artifactId>grpc-stub</artifactId>
+          <version>1.24.0</version>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+      <extensions>
+        <extension>
+          <groupId>kr.motd.maven</groupId>
+          <artifactId>os-maven-plugin</artifactId>
+          <version>1.6.2</version>
+        </extension>
+      </extensions>
+      <plugins>
+        <plugin>
+          <groupId>org.xolstice.maven.plugins</groupId>
+          <artifactId>protobuf-maven-plugin</artifactId>
+          <version>0.6.1</version>
+          <configuration>
+            <protocArtifact>com.google.protobuf:protoc:3.10.0:exe:${os.detected.classifier}</protocArtifact>
+            <pluginId>grpc-java</pluginId>
+            <pluginArtifact>io.grpc:protoc-gen-grpc-java:1.24.0:exe:${os.detected.classifier}</pluginArtifact>
+          </configuration>
+          <executions>
+            <execution>
+              <goals>
+                <goal>compile</goal>
+                <goal>compile-custom</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </build>
+
+  </project>
+  ```
+
+  Crie um diretório `src/main/proto` e, dentro dele, um arquivo `recomendacoes.proto` com o seguinte conteúdo:
+
+  ####### fj33-recomendacoes-idl/src/main/proto/recomendacoes.proto
+
+  ```proto
+  syntax = "proto3";
+
+  package recomendacoes;
+
+  option java_package = "br.com.caelum.eats.recomendacoes.grpc";
+
+  message Restaurantes {
+    repeated int64 restauranteId = 1;
+  }
+
+  service RecomendacoesDeRestaurantes {
+    rpc Recomendacoes(Restaurantes) returns (Restaurantes) {}
+  }
+  ```
+
+  O arquivo anterior define um serviço `RecomendacoesDeRestaurantes` com um método `Recomendacoes` que recebe uma mensagem que contém uma lista (denotada pelo `repeated`) de `restauranteId`.
+
+  Então, deve-se fazer o build do projeto, criando um JAR com as classes geradas que será implantado no repositório local do Maven:
+
+  ```sh
+  cd ~/Desktop/recomendacoes-idl
+  mvn clean install
+  ```
+
+  O `recomendacoes-idl-0.0.1-SNAPSHOT.jar` deve conter as classes:
+
+  - `RecomendacoesDeRestaurantesGrpc`, com a classe base do servidor e os stubs do cliente
+  - `Recomendacoes`, com as classes Java que serão serializadas para Protocol Buffers
+
+2. Crie um projeto `fj33-recomendacoes-service` que utiliza o Spring Boot e contém um `pom.xml` com o seguinte conteúdo:
+
+  ####### fj33-recomendacoes-service/pom.xml 
+
+  ```xml
+  <project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-parent</artifactId>
+      <version>2.1.8.RELEASE</version>
+      <relativePath /> <!-- lookup parent from repository -->
+    </parent>
+
+    <groupId>br.com.caelum</groupId>
+    <artifactId>recomendacoes-service</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+
+    <properties>
+      <java.version>1.8</java.version>
+      <maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
+    </properties>
+
+    <dependencies>
+
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-devtools</artifactId>
+        <optional>true</optional>
+      </dependency>
+      <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <optional>true</optional>
+      </dependency>
+    
+    </dependencies>
+
+    <build>
+      <plugins>
+        <plugin>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-maven-plugin</artifactId>
+        </plugin>
+      </plugins>
+    </build>
+  </project>
+  ```
+
+  Perceba que não é um projeto Web.
+
+  Adicione ao `pom.xml` dependências ao starter gRPC da LogNet e ao projeto `recomendacoes-idl`:
+
+  ####### fj33-recomendacoes-service/pom.xml 
+
+  ```xml
+  <dependency>
+    <groupId>io.github.lognet</groupId>
+    <artifactId>grpc-spring-boot-starter</artifactId>
+    <version>3.4.3</version>
+  </dependency>
+
+  <dependency>
+    <groupId>br.com.caelum</groupId>
+    <artifactId>recomendacoes-idl</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+  </dependency>
+  ```
+
+  Mantenha inalterada a classe `RecomendacoesApplication`, no pacote `br.com.caelum.eats.recomendacoes`:
+
+  ####### fj33-recomendacoes-service/src/main/java/br/com/caelum/eats/recomendacoes/RecomendacoesApplication.java
+
+  ```java
+  @SpringBootApplication
+  public class RecomendacoesApplication {
+
+    public static void main(String[] args) {
+          SpringApplication.run(RecomendacoesApplication.class,args);
+      }
+  }
+  ```
+
+  Crie, no pacote `br.com.caelum.eats.recomendacoes`, uma classe `RecomendacoesService`. Essa classe deve estender de `RecomendacoesDeRestaurantesGrpc.RecomendacoesDeRestaurantesImplBase` e ser anotada com `@GRpcService`. No método `recomendacoes`, faça um _shuffle_ da lista de ids de restaurantes e retorne o resultado:
+
+  ####### fj33-recomendacoes-service/src/main/java/br/com/caelum/eats/recomendacoes/RecomendacoesApplication.java
+
+  ```java
+  @GRpcService
+  public class RecomendacoesService extends RecomendacoesDeRestaurantesGrpc.RecomendacoesDeRestaurantesImplBase {
+
+    @Override
+    public void recomendacoes(Restaurantes request, StreamObserver<Restaurantes> responseObserver) {
+      List<Long> idsDeRestaurantes = request.getRestauranteIdList();
+      
+      // simula recomendacao
+      List<Long> idsDeRestaurantesOrdenadosPorRecomendacoes = idsDeRestaurantes;
+      if (idsDeRestaurantes.size() > 1) {
+        idsDeRestaurantesOrdenadosPorRecomendacoes = new ArrayList<Long>(idsDeRestaurantes);
+        Collections.shuffle(idsDeRestaurantesOrdenadosPorRecomendacoes);
+      }
+      
+      Restaurantes response = Restaurantes
+                    .newBuilder()
+                    .addAllRestauranteId(idsDeRestaurantesOrdenadosPorRecomendacoes)
+                    .build();
+      
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
+    }
+
+  }
+  ```
+
+  Devem ser definidos os seguintes imports:
+
+  ####### fj33-recomendacoes-service/src/main/java/br/com/caelum/eats/recomendacoes/RecomendacoesApplication.java
+
+  ```java
+  import java.util.ArrayList;
+  import java.util.Collections;
+  import java.util.List;
+
+  import org.lognet.springboot.grpc.GRpcService;
+
+  import br.com.caelum.eats.recomendacoes.grpc.Recomendacoes.Restaurantes;
+  import br.com.caelum.eats.recomendacoes.grpc.RecomendacoesDeRestaurantesGrpc;
+  import io.grpc.stub.StreamObserver;
+  ```
+
+  Suba o serviço de Recomendações, executando a classe `RecomendacoesApplication`. No Console, deverá aparecer algo como:
+
+  ```txt
+  2019-10-30 14:13:23.278  INFO 25955 --- [  restartedMain] b.c.c.e.r.RecomendacoesApplication       : Started RecomendacoesApplication in 1.497 seconds (JVM running for 1.91)
+  2019-10-30 14:13:23.279  INFO 25955 --- [  restartedMain] o.l.springboot.grpc.GRpcServerRunner     : Starting gRPC Server ...
+  2019-10-30 14:13:23.339  INFO 25955 --- [  restartedMain] o.l.springboot.grpc.GRpcServerRunner     : 'br.com.caelum.eats.recomendacoes.RecomendacoesService' service has been registered.
+  2019-10-30 14:13:23.538  INFO 25955 --- [  restartedMain] o.l.springboot.grpc.GRpcServerRunner     : gRPC Server started, listening on port 6565.
+  ```
+
+3. Vamos fazer a implementação do cliente no serviço de Distância.
+
+  Adicione ao `pom.xml` do serviço de Distância dependências aos projetos do gRPC e ao `recomendacoes-idl`:
+
+  ####### fj33-eats-distancia-service/pom.xml
+
+  ```xml
+  <dependency>
+    <groupId>io.grpc</groupId>
+    <artifactId>grpc-netty-shaded</artifactId>
+    <version>1.24.0</version>
+  </dependency>
+  <dependency>
+    <groupId>io.grpc</groupId>
+    <artifactId>grpc-protobuf</artifactId>
+    <version>1.24.0</version>
+  </dependency>
+  <dependency>
+    <groupId>io.grpc</groupId>
+    <artifactId>grpc-stub</artifactId>
+    <version>1.24.0</version>
+  </dependency>
+
+  <dependency>
+    <groupId>br.com.caelum</groupId>
+    <artifactId>recomendacoes-idl</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+  </dependency>
+  ```
+
+  Adicione, ao `application.properties` do serviço de Distância, propriedades para o host e a porta do serviço de Recomendações:
+
+  ####### fj33-eats-distancia-service/src/main/resources/application.properties
+
+  ```properties
+  recomendacoes.service.host=localhost
+  recomendacoes.service.port=6565
+  ```
+
+  No pacote `br.com.caelum.eats.distancia`, crie uma nova classe `RecomendacoesGrpcClient` que será o cliente gRPC do serviço de Recomendações. Anote-a com `@Service`, para ser gerenciada pelo Spring, e `@Slf4j`, do Lombok, para logs.
+
+  ####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RecomendacoesGrpcClient.java
+
+  ```java
+  @Slf4j
+  @Service
+  class RecomendacoesGrpcClient {
+
+  }
+  ```
+
+  Receba o host e a porta do serviço de Recomendações no construtor, anotando os parâmetros com `@Value`, apontando para as propriedades definidas anterioremente e armazenando os valores em atributos.
+
+  ####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RecomendacoesGrpcClient.java
+
+  ```java
+  // anotações omitidas...
+  class RecomendacoesGrpcClient {
+
+    private String recomendacoesServiceHost; // adicionado
+    private Integer recomendacoesServicePort;  // adicionado
+
+    // adicionado
+    RecomendacoesGrpcClient(@Value("${recomendacoes.service.host}") String recomendacoesServiceHost, 
+                @Value("${recomendacoes.service.port}") Integer recomendacoesServicePort) {
+      this.recomendacoesServiceHost = recomendacoesServiceHost;
+      this.recomendacoesServicePort = recomendacoesServicePort;
+    }
+
+  }
+  ```
+
+  Crie um método `conectaAoRecomendacoesGrpcService` que faz a conexão com o serviço gRPC usando um `ManagedChannel` para criar um _blocking stub_, salvando as instâncias em atributos, e anote o método com `@PostConstruct`. Também crie um método `desconectaDoRecomendacoesGrpcService`, que pára a conexão gRPC, e anote-o com `@PreDestroy`.
+
+  ####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RecomendacoesGrpcClient.java
+
+  ```java
+  // anotações omitidas...
+  class RecomendacoesGrpcClient {
+
+    // demais atributos omitidos ...
+    private ManagedChannel channel; // adicionado
+    private RecomendacoesDeRestaurantesBlockingStub recomendacoes; // adicionado
+
+    // construtor omitido ...
+
+    // adicionado
+    @PostConstruct
+    void conectaAoRecomendacoesGrpcService() {
+      channel = ManagedChannelBuilder.forAddress(recomendacoesServiceHost, recomendacoesServicePort)
+                .usePlaintext() // desabilita TLS porque precisa de certificado (apenas para testes)
+                .build();
+      recomendacoes = RecomendacoesDeRestaurantesGrpc.newBlockingStub(channel);
+    }
+
+    // adicionado
+    @PreDestroy
+    void desconectaDoRecomendacoesGrpcService() {
+      channel.shutdown();
+    }
+
+
+  }
+  ```
+
+  Defina um método `ordenaPorRecomendacoes` que recebe uma lista de ids de restaurantes, montando o request, invocando o stub gRPC e retornado a lista obtida do serviço de Recomendações.
+
+  ####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RecomendacoesGrpcClient.java
+
+  ```java
+  // anotações omitidas...
+  class RecomendacoesGrpcClient {
+
+    // código omitido...
+
+    List<Long> ordenaPorRecomendacoes(List<Long> idsDeRestaurantes) {
+      Restaurantes restaurantes = Restaurantes
+                                    .newBuilder()
+                                    .addAllRestauranteId(idsDeRestaurantes)
+                                    .build();
+      
+      Restaurantes restaurantesOrdenadosPorRecomendacao = recomendacoes.recomendacoes(restaurantes);
+      
+      List<Long> restaurantesOrdenados = restaurantesOrdenadosPorRecomendacao.getRestauranteIdList();
+      
+      log.info("Restaurantes ordenados: {}", restaurantesOrdenados);
+      
+      return restaurantesOrdenados;
+    }
+    
+  }
+  ```
+
+  Os imports da classe `RecomendacoesGrpcClient` devem ser os seguintes:
+
+  ####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/RecomendacoesGrpcClient.java
+
+  ```java
+  import java.util.List;
+
+  import javax.annotation.PostConstruct;
+  import javax.annotation.PreDestroy;
+
+  import org.springframework.beans.factory.annotation.Value;
+  import org.springframework.stereotype.Service;
+
+  import br.com.caelum.eats.recomendacoes.grpc.Recomendacoes.Restaurantes;
+  import br.com.caelum.eats.recomendacoes.grpc.RecomendacoesDeRestaurantesGrpc;
+  import br.com.caelum.eats.recomendacoes.grpc.RecomendacoesDeRestaurantesGrpc.RecomendacoesDeRestaurantesBlockingStub;
+  import io.grpc.ManagedChannel;
+  import io.grpc.ManagedChannelBuilder;
+  import lombok.extern.slf4j.Slf4j;
+  ```
+
+  Use a classe `RecomendacoesGrpcClient` em `DistanciaService`.
+  
+  Em um novo método auxiliar `ordenaPorRecomendacoes`, que recebe uma lista de restaurantes, extrais os ids e invoca o cliente gRPC do serviço de Recomendações, reordenando a lista de restaurantes de acordo com a lista de ids retornada :
+
+  ####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/DistanciaService.java
+
+  ```java
+  //anotações omitidas...
+  class DistanciaService {
+
+    // demais atributos omitidos...
+
+    private RecomendacoesGrpcClient recomendacoesClient; // adicionado
+
+    // demais métodos omitidos...
+
+    // adicionado
+    private List<Restaurante> ordenaPorRecomendacoes(List<Restaurante> restaurantes) {
+      if (restaurantes.size() > 1) {
+        List<Long> idsDeRestaurantes = restaurantes
+                                          .stream()
+                                          .map(Restaurante::getId)
+                                          .collect(Collectors.toList());
+ 
+        List<Long> idsDeRestaurantesOrdenadosPorRecomendacao = recomendacoesClient.ordenaPorRecomendacoes(idsDeRestaurantes);
+ 
+        List<Restaurante> restaurantesOrdenadosPorRecomendacao = new ArrayList<>(restaurantes);
+        restaurantesOrdenadosPorRecomendacao
+          .sort(Comparator
+                  .comparing(restaurante -> 
+                      idsDeRestaurantesOrdenadosPorRecomendacao
+                        .indexOf(restaurante.getId())));
+        return restaurantesOrdenadosPorRecomendacao;
+      }
+  
+      return restaurantes;
+    }
+
+  }
+  ```
+
+  Utilize o método `ordenaPorRecomendacoes` no método `calculaDistanciaParaOsRestaurantes`:
+
+  ####### fj33-eats-distancia-service/src/main/java/br/com/caelum/eats/distancia/DistanciaService.java
+
+  ```java
+  //anotações omitidas...
+  class DistanciaService {
+
+    // código omitido...
+
+    private List<RestauranteComDistanciaDto> calculaDistanciaParaOsRestaurantes(
+                                                List<Restaurante> restaurantes, 
+                                                String cep) {
+      r̶e̶t̶u̶r̶n̶ ̶r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶s̶
+      return ordenaPorRecomendacoes(restaurantes) // modificado
+                .stream()
+                .map(restaurante -> {
+                  String cepDoRestaurante = restaurante.getCep();
+                  BigDecimal distancia = distanciaDoCep(cepDoRestaurante, cep);
+                  Long restauranteId = restaurante.getId();
+                  return new RestauranteComDistanciaDto(restauranteId, distancia);
+                })
+                .collect(Collectors.toList());
+    }
+
+  }
+  ```
+
+  Execute a classe `EatsDistanciaServiceApplication`.
+
+4. Em um Terminal, use o cURL para invocar o serviço de Distância algumas vezes, da seguinte maneira:
+
+  ```sh
+  curl http://localhost:8082/restaurantes/mais-proximos/78000-777
+  ```
+
+  Perceba que a ordem dos restaurantes é modificada aleatoriamente.
+
+  Por exemplo, se tivermos cadastrados os restaurantes de ids `1`, `2` e `3` no serviço de Distância, obteremos respostas semelhantes às que seguem.
+
+  Na primeira chamada, teremos algo como:
+
+  ```txt
+  [
+    {"restauranteId":3,"distancia":9.4187908418432879642523403163067996501922607421875},
+    {"restauranteId":1,"distancia":6.5896083315768390065159110235981643199920654296875},
+    {"restauranteId":2,"distancia":3.526626757955934721167068346403539180755615234375}
+  ]
+  ```
+
+  Já na segunda chamada:
+
+  ```txt
+  [
+    {"restauranteId":2,"distancia":12.51659444929334341622961801476776599884033203125},
+    {"restauranteId":1,"distancia":0.09125363010240528094385581425740383565425872802734375},
+    {"restauranteId":3,"distancia":7.10856812555768957651025630184449255466461181640625}
+  ]
+  ```
+  
+  Na terceira:
+
+  ```txt
+  [
+    {"restauranteId":1,"distancia":13.1420093922015350784704423858784139156341552734375},
+    {"restauranteId":3,"distancia":4.5362206318291011797327882959507405757904052734375},
+    {"restauranteId":2,"distancia":11.97968639569695170621344004757702350616455078125}
+  ]
+  ```
+
+  <!--@note
+    Coloquei o código do Exercício Opcional anterior no repositório: https://github.com/alexandreaquiles/fj33-exemplo-grpc
+  -->
+
 ## Para saber mais: Todo o poder emana do cliente - explorando uma API GraphQL
 
 > O texto dessa seção é baseado no post [Todo o poder emana do cliente: explorando uma API GraphQL](https://blog.caelum.com.br/todo-o-poder-emana-do-cliente-explorando-uma-api-graphql) (AQUILES, 2017) do blog da Caelum, disponível em: https://blog.caelum.com.br/todo-o-poder-emana-do-cliente-explorando-uma-api-graphql
