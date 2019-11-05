@@ -977,7 +977,7 @@ _A hypermedia é apenas uma expansão sobre o que o texto significa para incluir
 
 _Hypertext não precisa ser HTML num navegador. Máquinas podem seguir links quando entendem o formato de dados e os tipos de relacionamento._
 
-### Monte a sua histório seguindo links
+### Monte a sua história seguindo links
 
 No final da década de 1970 e começo da década de 1980, surgiu a série de livros-jogo "Escolha a sua aventura" (em inglês, _Choose Your Own Adventure_), lançada pela editora americana Bantam Books e editada pela Ediouro no Brasil.
 
