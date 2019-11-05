@@ -1,5 +1,81 @@
 # API Gateway
 
+No momento em que quebramos o Monólito, extraindo os serviços de Pagamentos e Distância, tivemos que alterar a UI do Caelum Eats.
+
+UI passou a chamar diretamente os serviços de Pagamentos, de Distância e o Monólito e, para isso, precisou conhecer as URLs dos novos serviços.
+
+O arquivo `environment.ts` do código da UI reflete esse fato:
+
+####### fj33-eats-ui/src/environments/environment.ts
+
+```typescript
+export const environment = {
+  production: false,
+  baseUrl: '//localhost:8080',
+  pagamentoUrl: '//localhost:8081',
+  distanciaUrl: '//localhost:8082'
+};
+```
+
+![Todos os serviços expostos {w=73}](imagens/06-api-gateway/todos-os-servicos-como-edge-services.png)
+
+Esse cenário, em que a UI invoca diretamente as APIs de cada serviço, traz alguns problemas. Os principais deles são:
+
+- _Falta de encapsulamento:_ expondo todos os serviços, a UI conhece detalhes sobre a implementação do sistema como um todo. E isso é problemático porque a implementação muda constantemente: novos serviços serão criados, outros extraídos do Monólito, alguns serão divididos em dois e outros mesclados em apenas um serviço. A cada alteração, a UI deverá ser modificada em conjunto. O mesmo ocorrerá com o deploy.
+- _Segurança:_ sob uma perspectiva de Segurança da Informação, há uma grande _superfície exposta_ na Arquitetura atual do Caelum Eats. Cada serviço exposto pode ser alvo de ataques.
+
+Poderíamos criar um _edge service_, que fica exposto na fronteira da rede e funciona como um _proxy reverso_ para os demais serviços, também chamados de _downstream services_.
+
+> Um _proxy_, ou _forward proxy_, age como intermediário entre seus clientes e a Internet. É comumente usado em redes internas de organizações para limitar acesso a redes sociais e monitorar o tráfego de rede.
+> Um _reverse proxy_ age como intermediário entre a Internet e servidores de uma rede interna, afim de proteger o acesso e limitar o conhecimento dos clientes sobre a estrutura interna da rede.
+
+Assim, a UI chamaria apenas esse _edge service_, sem conhecer as URLs dos _downstream services_. Aumentaríamos o encapsulamento e diminuiríamos a superfície exposta no perímetro da rede.
+
+A API desse _edge service_ serviria como a _API pública_ da organização.
+
+Chamadas entre serviços, feitas na rede interna, não precisariam passar por esse _edge service_.
+
+Em uma Arquitetura de Microservices, esse tipo de _edge service_ é chamado de **API Gateway**.
+
+> **Pattern: API Gateway**
+>
+> Um _edge service_ que é o ponto de entrada de uma API para seus clientes externos.
+
+![API Gateway na fronteira da rede {w=73}](imagens/06-api-gateway/api-gateway-como-edge-services.png)
+
+### Implementações de API Gateway
+
+Existem diferentes implementações de API Gateway disponíveis:
+
+- [AWS API Gateway](https://aws.amazon.com/pt/api-gateway/), disponibilizado pela Amazon na plataforma AWS
+- [Kong](https://github.com/Kong/kong), open-source, um conjunto de extensões do NGINX [escritos em Lua](https://docs.konghq.com/1.4.x/getting-started/introduction/#what-is-kong-technically) que provê diversas capacidades e permite a criação de plugins
+- [Traefik](https://github.com/containous/traefik), open-source, implementado em Go
+- [Spring Cloud Gateway](https://cloud.spring.io/spring-cloud-gateway/), parte da plataforma Spring, implementado com o framework Web reativo Spring WebFlux
+- [Zuul](https://github.com/Netflix/zuul), open-source, um projeto da Netflix feito em Java
+
+No orquestrador de containers [Kubernetes](https://kubernetes.io/), há o conceito de [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/), uma abstração que provê rotas HTTP e HTTPS de fora do cluster para [Services](https://kubernetes.io/docs/concepts/services-networking/service/) internos. Um Ingress deve ter uma implementação, chamada de [Ingress Controller](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/). Um Ingress Controller mantido pelo time do Kubernetes é o NGINX. Podem ser usados como Ingress Controller o Traefik e Kong, mencionados anteriormente. Há também diversas outras implementações como [Ambassador](https://www.getambassador.io/), [Contour](https://projectcontour.io/) da VMWare, [Gloo](https://solo.io/gloo/).
+
+#### Zuul
+
+No artigo de lançamento do Zuul no blog de Tecnologia da Netflix, [Announcing Zuul: Edge Service in the Cloud](https://medium.com/netflix-techblog/announcing-zuul-edge-service-in-the-cloud-ab3af5be08ee) (COHEN; HAWTHORNE, 2013), é afirmado que o Zuul é usado na Netflix API de diversas formas. Entre elas:
+
+- Autenticação e Segurança em geral
+- Insights
+- Teste de Stress
+- Testes (ou releases) Canário, um release parcial para um subconjunto das máquinas de produção, para minimizar o impacto e o risco de uma nova versão
+- Roteamento Dinâmico, que veremos em capítulos posteriores
+
+Mikey Cohen, na palestra [Zuul @ Netflix](https://www.slideshare.net/MikeyCohen1/zuul-netflix-springone-platform) (COHEN, 2016), diz que, na arquitetura da Netflix, há mais de 20 clusters Zuul em produção, que lidam com dezenas de bilhões de requests por dia em 3 regiões AWS diferentes.
+
+Há duas versões do Zuul, cujas diferenças são explicadas com detalhes na palestra [Zuul's Journey to Non-Blocking](https://www.youtube.com/watch?v=2oXqbLhMS_A) (GONIGBERG, 2017):
+
+- Zuul 1, que usa a API de Servlet sobre um Tomcat
+- Zuul 2, que usa I/O Assíncrono com Netty
+
+> Curiosidade: na palestra mencionada anteriormente, Arthur Gonigberg lembra que Zuul é o nome do mostro do filme Ghostbusters conhecido como The Gatekeeper (em português, algo como porteiro).
+
+Usaremos o projeto [Spring Cloud Netflix Zuul](https://cloud.spring.io/spring-cloud-netflix/multi/multi__router_and_filter_zuul.html), que integra o Zuul 1 ao Spring Boot.
+
 ## Implementando um API Gateway com Zuul
 
 Pelo navegador, abra `https://start.spring.io/`.
@@ -73,6 +149,13 @@ zuul.routes.distancia.url=http://localhost:8082
 zuul.routes.monolito.path=/**
 zuul.routes.monolito.url=http://localhost:8080
 ```
+
+Com as configurações anteriores, a URL `http://localhost:9999/pagamentos/1`  será direcionada para `http://localhost:8081/pagamentos/1`, mantendo o prefixo `pagamentos`.
+
+Já a URL `http://localhost:9999/distancia/restaurantes/mais-proximos/71503510` será direcionada para `http://localhost:8082/restaurantes/mais-proximos/71503510`, removendo o prefixo `distancia`.
+
+Outras URLs, que não iniciam com `/pagamentos` ou `/distancia`, serão direcionadas para o Monólito. Por exemplo, a URL `http://localhost:9999/restaurantes/1`, será direcionada para `http://localhost:8080/restaurantes/1`.
+
 
 ## Fazendo a UI usar o API Gateway
 
@@ -160,19 +243,7 @@ export class RestauranteService {
 
 ## Desabilitando a remoção de cabeçalhos sensíveis no Zuul
 
-<!--@note
-
-  O Zuul remove alguns headers sensíveis.
-
-  A configuração é a seguinte:
-
-    sensitiveHeaders: Cookie,Set-Cookie,Authorization
-
-  https://cloud.spring.io/spring-cloud-netflix/multi/multi__router_and_filter_zuul.html#_cookies_and_sensitive_headers
-
-  Observação: talvez o ideal seja fazer a Autenticação/Autorização no próprio API Gateway.
-
--->
+Na Netflix, o Zuul é usado para Autenticação. Os tokens provenientes da UI são validados e, se o usuário for válido, é repassado para os _downstream services_.
 
 Por padrão, o Zuul remove os cabeçalhos HTTP `Cookie`, `Set-Cookie`, `Authorization`. Vamos desabilitar essa remoção no `application.properties`:
 
@@ -196,6 +267,75 @@ zuul.sensitiveHeaders=
   Execute a classe `ApiGatewayApplication`. Zuul no ar!
 
 2. Faça novamente login como administrador (`admin`/`123456`) e acesse a página de restaurantes em aprovação. Deve funcionar!
+
+## API Composition no API Gateway
+
+Após escolher um restaurante, um cliente do Caelum Eats pode ver detalhes do restaurantes como o nome, descrição, tipo de cozinha, tempos de entrega, distância ao CEP informado, cardápio e avaliações.
+
+![Cliente vê detalhes do restaurante escolhido {w=60}](imagens/01-conhecendo-o-projeto/cliente-3-ve-cardapio.png)
+
+Para obter todos os dados necessários para a tela de detalhes do restaurante, o front-end Angular do Caelum Eats precisa disparar as seguintes chamadas `GET` via AJAX:
+
+- `http://localhost:9999/restaurantes/1`, para buscar os dados básicos do restaurante
+- `http://localhost:9999/restaurantes/1/cardapio`, para buscar os dados do cardápio
+- `http://localhost:9999/restaurantes/1/avaliacoes`, para buscar as avaliações
+- `http://localhost:9999/distancia/restaurantes/71503510/restaurante/1`, para buscar a distância do CEP informado
+
+![Chamadas AJAX para obter detalhes de um restaurante](imagens/06-api-gateway/chamadas-ajax-detalhes-de-um-restaurante.png)
+
+As três primeiras chamadas mostradas anteriormente são para o Monólito. Poderia ser feita uma otimização no módulo de Restaurante para, dado um id de um restaurante, obter os dados básicos juntamente ao cardápio. A chamada que busca avaliações faz parte do módulo Pedido do Monólito. Se desejássemos manter a separação entre os módulos, facilitando uma posterior extração como serviço, é interessante deixar a busca de avaliações separada da busca dos dados do restaurante.
+
+A quarta chamada é feita ao serviço de Distância, afim de obter a distância do restaurante ao CEP determinado pelo cliente. São buscadas informações, portanto, de outro serviço.
+
+São 4 chamadas ao backend, passando pelo API Gateway, para obter os dados de uma tela.
+
+Uma Arquitetura de Microservices vai levar a uma granularidade mais fina dos serviços. E, se não tomarmos cuidado, essa granularidade terá o efeito de aumentar o número de requisições feitas pelo front-end.
+
+Muitas chamadas ao backend acabam impactando a performance. Cada chamada terá, além da demora do processamento nos serviços, uma latência de rede adicional. Como lembra Sam Newman, no livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), seria um uso muito ineficiente do plano de dados de um Mobile.
+
+No post [Optimizing the Netflix API](https://medium.com/netflix-techblog/optimizing-the-netflix-api-5c9ac715cf19) (CHRISTENSEN, 2013), Ben Christensen mostra que essa "tagarelice" (em inglês, _chattiness_) era um problema da Netflix API. Devido à natureza genérica e granular das APIs, cada chamada só retornava uma pequena porção dos dados necessários. As aplicações do Netflix para cada dispositivo (smartphones, TVs, videogames) tinham que realizar diversas chamadas para unir os dados necessários em uma determinada experiência de usuário.
+
+A solução encontrada na Netflix, semelhante a citada por Sam Newman, é unir os vários requests necessários para cada dispositivo em um único request otimizado. O preço da latência da rede WAN (Internet) seria pago apenas uma vez e trocado por chamadas entre os servidores, numa rede LAN de menor latência. Um benefício adicional, além da eficiência, é que as chamadas na rede local são mais confiáveis.
+
+Essa ideia de compor APIs de serviços, com granularidade mais fina, em uma API de granularidade maior é chamada de **API Composition**.
+
+### API Composition e consultas
+
+Chris Richardson, no livro [Microservice Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), tem uma outra abordagem ao descrever API Composition: o foco é em como fazer consultas em uma Arquitetura de Microservices.
+
+Se, com um BD Monolítico, uma consulta poderia ser feita com um SQL e alguns joins, com Microservices os dados tem que ser recuperados de diversos BDs de serviços diferentes. Os clientes dos serviços recuperariam os dados pelas APIs do serviços e combinariam os resultados em memória. No fim das contas, trata-se de um _in-memory join_.
+
+
+> **Pattern: API Composition**
+>
+> Implemente uma consulta que recupera dados de diversos serviços por sua API e combina os resultados.
+
+
+Para Richardson, uma API Composition envolve dois participantes:
+
+- um _API Composer_, que invoca os serviços e combina os resultados
+- dois ou mais _Provider services_, que são a fonte dos dados consultados
+
+Richardson discute onde implementar a API Composition:
+
+- no front-end. É o caso que discutimos no Caelum Eats e na Netflix API. Há uma ineficiência no uso da rede, devido à alta latência da Internet.
+- no API Gateway. Faz sentido se as consultas fazem parte da API pública da organização. A performance de rede é aumentada, pois as consultas aos _downstream services_ são feitas em uma LAN, de menor latência. Deve-se evitar lógica de negócio no API Gateway. 
+- em um serviço específico para a composição. Útil para agregações invocadas internamente pelos serviços, que não fazem parte da API pública e para casos em que há uma lógica de negócio complexa envolvida na composição. Problemático quando não há um time responsável pelo serviço de composição.
+
+Podemos implementar a API Composition no API Gateway. Temos que mantê-la estritamente técnica, tomando cuidado para que lógica de negócio não acabe vazando para o API Gateway.
+
+### Avaliando pontos negativos de API Composition
+
+Chris Richardson ainda discute sobre algumas desvantagens de API Composition como um todo, em qualquer uma das abordagens descritas anteriormente:
+
+- há uma certa ineficiência em invocar _n_ APIs e realizar um _in-memory join_. Mesmo em uma rede interna, a latência vai afetar negativamente a performance da consulta. Datasets maiores são especialmente impactados.
+- há um impacto na disponibilidade, já que as _n_ APIs consultadas precisam estar no ar ao mesmo tempo para que a consulta seja realizada com sucesso.
+- há a possibilidade de inconsistência nos dados, já que evitamos transações distribuídas.
+
+Para mitigar algumas dessas desvantagens, Richardson sugere:
+
+- caches, que aumentam a disponibilidade e a performance, mas impactam ainda mais a consistência, com o risco de termos dados desatualizados.
+- uma solução que envolve Mensageria que discutiremos mais adiante
 
 ## Invocando o serviço de distância a partir do API Gateway com RestTemplate
 
@@ -552,6 +692,22 @@ Como apenas o API Gateway será chamado diretamente pelo navegador e não há re
 
   Digite um CEP, busque os restaurantes próximos e escolha algum. Na página de detalhes de um restaurantes, chamamos a API Composition. Veja se os dados do restaurante e a distância são exibidos corretamente.
 
+<!--
+
+TODO:
+
+## Para saber mais: BFF
+-->
+
+<!--
+TODO:
+
+## Zuul Filters
+
+ há uma descrição da arquitetura do Zuul, que é composta por uma série de filtros dinâmicos feitos em Groovy. Os filtros podem
+
+-->
+
 ## LocationRewriteFilter no Zuul para além de redirecionamentos
 
 Ao usar um API Gateway como Proxy, precisamos ficar atentos a URLs retornadas nos payloads e cabeçalhos HTTP.
@@ -720,3 +876,17 @@ Agora sim! Ao receber um status `201 Created`, depois de criar algum recurso em 
   Deve ocorrer um erro `429 Too Many Requests`.
 
 4. Apague (ou desabilite comentando a anotação `@Component`) a classe `RateLimitingZuulFilter` para que não cause erros na aplicação no restante do curso.
+
+<!-- 
+TODO:
+
+## Para saber mais: Micro front-ends
+
+ -->
+
+<!-- 
+TODO:
+
+## Discussão: API Gateway x ESB
+
+ -->

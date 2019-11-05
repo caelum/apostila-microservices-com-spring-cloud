@@ -32,7 +32,11 @@ CALÇADO, Phil. _Evoluindo uma Arquitetura inteiramente sobre APIs: o caso da So
 
 CALÇADO, Phil. 2018. Em: https://twitter.com/pcalcado/status/963183090339385345
 
+CHRISTENSEN, Ben. _Optimizing the Netflix API._ 2013. Em: https://medium.com/netflix-techblog/optimizing-the-netflix-api-5c9ac715cf19
+
 COCKCROFT, Adrian. _Patterns for Continuous Delivery, High Availability, DevOps & Cloud Native Open Source with NetflixOSS._ 2013. Em: https://www.slideshare.net/adrianco/yowworkshop-131203193626phpapp01-1
+
+COHEN, Mickey. _Zuul @ Netflix._ SpringOne Platform, 2016. Em: https://www.slideshare.net/MikeyCohen1/zuul-netflix-springone-platform
 
 CONWAY, Melvin. _How Do Committees Invent?_ Datamation, Abr. 1968. Em: http://www.melconway.com/Home/Committees_Paper.html
 
@@ -73,6 +77,8 @@ FOWLER, Martin. _Microservice Trade-Offs._ 2015a. Em: https://martinfowler.com/a
 FOWLER, Martin. _MicroservicePremium._ 2015b. Em: https://martinfowler.com/bliki/MicroservicePremium.html
 
 FOWLER, Martin. _MonolithFirst._ 2015c. Em: https://martinfowler.com/bliki/MonolithFirst.html
+
+GONIGBERG, Arthur. _Zuul's Journey to Non-Blocking._ Strange Loop, 2017. Em: https://www.youtube.com/watch?v=2oXqbLhMS_A
 
 GRIGORIK, Ilya. _High Performance Browser Networking._ O'Reilly, 2013. 400 p. Em: https://hpbn.co/
 
