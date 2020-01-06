@@ -769,14 +769,72 @@ Isso é discutido por Sam Newman no post [Backends For Frontends](https://samnew
 
 Na palestra [Evoluindo uma Arquitetura inteiramente sobre APIs](https://www.infoq.com/br/presentations/evoluindo-uma-arquitetura-soundcloud/) (CALÇADO, 2013), menciona uma outra motivação para BFFs separados por plataforma: uma app iOS é publicada na Apple Store em questão de semanas ou meses, enquanto uma app Android é publicada na Play Store em questão de horas. Se tivermos apenas um BFF, teremos que manter APIs compatíveis com ambas as versões das apps. Já com um BFF, há maior controle, ainda que haja alguma duplicação.
 
-<!--
-TODO:
-
 ## Zuul Filters
 
- há uma descrição da arquitetura do Zuul, que é composta por uma série de filtros dinâmicos feitos em Groovy. Os filtros podem
+A descrição da arquitetura do Zuul, feita no artigo [Announcing Zuul: Edge Service in the Cloud](https://medium.com/netflix-techblog/announcing-zuul-edge-service-in-the-cloud-ab3af5be08ee) (COHEN; HAWTHORNE, 2013), revela que o Zuul é um simples proxy reverso que pode ser usado com filtros feitos em alguma linguagem da JVM. Os Zuul Filters podem realizar diferentes ações durante o roteamento de requests e responses HTTP como: roteamento dinâmico, _load balacing_, _rate limiting_, _encoding_ para devices específicos, _failover_, autenticação, etc.
 
--->
+Os Zuul Filters possuem as seguintes características:
+
+- **Type**: em geral, a fase do roteamento em que o filtro será aplicado. Pode conter tipos customizados.
+- **Execution Order**: define a prioridade do filtro. Quanto menor, mais prioritário.
+- **Criteria**: define os critérios necessários para a execução do filtro.
+- **Action**: as ações a serem efetuadas pelo filtro.
+
+Os Zuul já contem alguns Type padronizados para os Zuul Filters:
+
+- `pre`: executados antes do roteamento. Pode ser usado para autenticação e load balancing, por exemplo.
+- `routing`: executados durante o roteamento.
+- `post`: executados depois que o roteamento foi feito. Pode ser usado para manipular cabeçalhos HTTP e registrar estatísticas, por exemplo.
+- `error`: executados no caso de um erro em outras fases.
+
+Um exemplo de um filtro implementado em Java, que atrasa em 20 segundos o roteamento de requests vindos de um Master System:
+
+```java
+class DeviceDelayFilter extends ZuulFilter {
+
+    @Override
+    public String filterType() {
+       return "pre";
+    }
+
+    @Override
+    public int filterOrder() {
+       return 5;
+    }
+
+    @Override
+    public boolean shouldFilter() {
+       String deviceType = RequestContext.getRequest().getParameter("deviceType");
+       return deviceType != null && deviceType.equals("MasterSystem");
+    }
+
+    @Override
+    public Object run() {
+       Thread.sleep(20000);
+    }
+}
+```
+
+Filtros dinâmicos podem ser implementados em Groovy e são lidos do disco, compilados e executados dinamicamente no próximo request roteado. Um diretório do servidor é consultado periodicamente para obter mudanças ou filtros adicionais.
+
+De acordo com a [documentação](https://cloud.spring.io/spring-cloud-netflix/multi/multi__router_and_filter_zuul.html) do Spring Cloud Netflix Zuul, já há uma série de Zuul Filters implementados em Java.
+
+Há alguns `pre` filters, como:
+
+- `ServletDetectionFilter`: detecta se a request passou pela Servlet Dispatcher do Spring.
+- `FormBodyWrapperFilter`: faz o parse de dados de forms.
+- `DebugFilter`: se `debug` estiver setado, seta outras propriedades de debug do routing e do request.
+- `PreDecorationFilter`: usa o `RouteLocator` para determinar onde e como fazer o roteamento e seta cabeçalhos relacionados a proxy como `X-Forwarded-Host` e `X-Forwarded-Port`.
+
+Há alguns `route` filters:
+
+- `SendForwardFilter`: repassa o resultado do response roteado para o response original.
+- `SimpleHostRoutingFilter`: envia os requests para a URL configurada na propriedade `routeHost` do `RequestContext`.
+- `RibbonRoutingFilter`: usa ferramentas que veremos posteriormente para fazer roteamento dinâmico e balanceamento de carga.
+
+Há um `error` filter:
+
+- `SendForwardFilter`: faz o forward de qualquer exceção para `/error`.
 
 ## LocationRewriteFilter no Zuul para além de redirecionamentos
 
@@ -786,11 +844,46 @@ O cabeçalho `Location` é comumente utilizado por redirects (status `301 Moved 
 
 Esse cabeçalho `Location` também é utilizado, por exemplo, quando um novo recurso é criado no servidor (status `201 Created`).
 
-O Zuul tem um Filter padrão, o `LocationRewriteFilter`,que reescreve as URLs, colocando no `Location` o endereço do próprio Zuul, ao invés de manter o endereço do serviço.
+O Spring Cloud Netflix Zuul tem um Filter padrão, o `LocationRewriteFilter`,que reescreve as URLs, colocando no `Location` o endereço do próprio Zuul, ao invés de manter o endereço do serviço.
 
 Porém, esse Filter só funciona para redirecionamentos (`3XX`) e não para outros status como `2XX`.
 
+Por exemplo, vamos criar um novo pagamento usando o Zuul como Proxy:
+
+```sh
+curl -X POST -i -H 'Content-Type: application/json' 
+ -d '{"va51.8, "nome": "JOÃO DA SILVA", "numero": "1111 2222 3333 4444", "expiracao": "2022-07", "codigo": "123", "formaDePagamentoId": 2, "pedidoId": 1}'
+  http://localhost:9999/pagamentos
+```
+
+O response, incluindo cabeçalhos, será semelhante a:
+
+```txt
+HTTP/1.1 201 
+Location: http://localhost:8081/pagamentos/2
+Date: Mon, 06 Jan 2020 17:47:56 GMT
+Content-Type: application/json;charset=UTF-8
+Transfer-Encoding: chunked
+```
+
+<!-- separador -->
+
+```json
+{"id":2, "valor":51.8, "nome":"JOÃO DA SILVA", "numero":"1111 2222 3333 4444",
+"expiracao":"2022-07", "codigo":"123", "status":"CRIADO",
+"formaDePagamentoId":2, "pedidoId":1}
+```
+
+Perceba que, apesar de invocarmos o serviço de pagamentos pelo Zuul, o cabeçalho `Location` contém a porta `8081`, do serviço original, na URL:
+
+```txt
+Location: http://localhost:8081/pagamentos/2
+```
+
 Vamos customizá-lo, para que funcione com respostas bem sucedidas, de status `2XX`.
+
+> O código do `LocationRewriteFilter` do Spring Cloud Netflix Zuul pode ser encontrado em:
+> http://bit.ly/spring-cloud-location-rewrite-filter
 
 Para isso, crie uma classe `LocationRewriteConfig` no pacote `br.com.caelum.apigateway`, definindo uma subclasse anônima  de `LocationRewriteFilter`, modificando alguns detalhes.
 
