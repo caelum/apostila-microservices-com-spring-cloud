@@ -21,13 +21,13 @@ export const environment = {
 
 Esse cenário, em que a UI invoca diretamente as APIs de cada serviço, traz alguns problemas. Os principais deles são:
 
-- _Falta de encapsulamento:_ expondo todos os serviços, a UI conhece detalhes sobre a implementação do sistema como um todo. E isso é problemático porque a implementação muda constantemente: novos serviços serão criados, outros extraídos do Monólito, alguns serão divididos em dois e outros mesclados em apenas um serviço. A cada alteração, a UI deverá ser modificada em conjunto. O mesmo ocorrerá com o deploy.
+- _Falta de encapsulamento:_ expondo todos os serviços, a UI conhece detalhes sobre a implementação do sistema como um todo. E isso é problemático porque a implementação muda constantemente: novos serviços serão criados, outros serviços serão extraídos do Monólito, alguns serão divididos em dois e outros mesclados em apenas um serviço. A cada alteração, a UI deverá ser modificada em conjunto com os serviços modificados. O mesmo ocorrerá com o deploy.
 - _Segurança:_ sob uma perspectiva de Segurança da Informação, há uma grande _superfície exposta_ na Arquitetura atual do Caelum Eats. Cada serviço exposto pode ser alvo de ataques.
 
 Poderíamos criar um _edge service_, que fica exposto na fronteira da rede e funciona como um _proxy reverso_ para os demais serviços, também chamados de _downstream services_.
 
 > Um _proxy_, ou _forward proxy_, age como intermediário entre seus clientes e a Internet. É comumente usado em redes internas de organizações para limitar acesso a redes sociais e monitorar o tráfego de rede.
-> Um _reverse proxy_ age como intermediário entre a Internet e servidores de uma rede interna, afim de proteger o acesso e limitar o conhecimento dos clientes sobre a estrutura interna da rede.
+> Um _reverse proxy_ age como intermediário entre a Internet e servidores de uma rede interna, afim de proteger o acesso e limitar o conhecimento dos clientes externos sobre a estrutura interna da rede.
 
 Assim, a UI chamaria apenas esse _edge service_, sem conhecer as URLs dos _downstream services_. Aumentaríamos o encapsulamento e diminuiríamos a superfície exposta no perímetro da rede.
 
@@ -245,7 +245,11 @@ export class RestauranteService {
 
 Na Netflix, o Zuul é usado para Autenticação. Os tokens provenientes da UI são validados e, se o usuário for válido, é repassado para os _downstream services_.
 
-Por padrão, o Zuul remove os cabeçalhos HTTP `Cookie`, `Set-Cookie`, `Authorization`. Vamos desabilitar essa remoção no `application.properties`:
+Por padrão, o Zuul remove os cabeçalhos HTTP `Cookie`, `Set-Cookie`, `Authorization`.
+
+Por enquanto, no Caelum Eats, não será feita nenhuma Autenticação no API Gateway.
+
+Por isso, vamos desabilitar essa remoção no `application.properties`:
 
 ####### fj33-api-gateway/src/main/resources/application.properties
 
@@ -295,7 +299,19 @@ Muitas chamadas ao backend acabam impactando a performance. Cada chamada terá, 
 
 No post [Optimizing the Netflix API](https://medium.com/netflix-techblog/optimizing-the-netflix-api-5c9ac715cf19) (CHRISTENSEN, 2013), Ben Christensen mostra que essa "tagarelice" (em inglês, _chattiness_) era um problema da Netflix API. Devido à natureza genérica e granular das APIs, cada chamada só retornava uma pequena porção dos dados necessários. As aplicações do Netflix para cada dispositivo (smartphones, TVs, videogames) tinham que realizar diversas chamadas para unir os dados necessários em uma determinada experiência de usuário.
 
-A solução encontrada na Netflix, semelhante a citada por Sam Newman, é unir os vários requests necessários para cada dispositivo em um único request otimizado. O preço da latência da rede WAN (Internet) seria pago apenas uma vez e trocado por chamadas entre os servidores, numa rede LAN de menor latência. Um benefício adicional, além da eficiência, é que as chamadas na rede local são mais confiáveis.
+A solução encontrada na Netflix, semelhante a citada por Sam Newman, é unir os vários requests necessários para cada dispositivo em um único request otimizado. O preço da latência da rede WAN (Internet) seria pago apenas uma vez e trocado por chamadas entre os servidores, numa rede LAN de menor latência. Um benefício adicional, além da eficiência, é que as chamadas na rede local são mais estáveis e confiáveis.
+
+<!--
+
+TODO:
+
+Colocar figuras do post "Optimizing the Netflix API" mostrando as diversas chamadas e a latência acumulada.
+
+https://miro.medium.com/max/1127/0*hH8iqS2HLJI9DUbz.png
+
+https://miro.medium.com/max/1127/0*pjGnJ3RF8wdXOLrC.png
+
+-->
 
 Essa ideia de compor APIs de serviços, com granularidade mais fina, em uma API de granularidade maior é chamada de **API Composition**.
 
@@ -303,7 +319,7 @@ Essa ideia de compor APIs de serviços, com granularidade mais fina, em uma API 
 
 Chris Richardson, no livro [Microservice Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), tem uma outra abordagem ao descrever API Composition: o foco é em como fazer consultas em uma Arquitetura de Microservices.
 
-Se, com um BD Monolítico, uma consulta poderia ser feita com um SQL e alguns joins, com Microservices os dados tem que ser recuperados de diversos BDs de serviços diferentes. Os clientes dos serviços recuperariam os dados pelas APIs do serviços e combinariam os resultados em memória. No fim das contas, trata-se de um _in-memory join_.
+Se, com um BD Monolítico, uma consulta poderia ser feita com um SQL e alguns joins, com Microservices, os dados tem que ser recuperados de diversos BDs de serviços diferentes. Os clientes dos serviços recuperariam os dados pelas APIs do serviços e combinariam os resultados em memória. No fim das contas, trata-se de um _in-memory join_.
 
 
 > **Pattern: API Composition**
@@ -328,7 +344,7 @@ Podemos implementar a API Composition no API Gateway. Temos que mantê-la estrit
 
 Chris Richardson ainda discute sobre algumas desvantagens de API Composition como um todo, em qualquer uma das abordagens descritas anteriormente:
 
-- há uma certa ineficiência em invocar _n_ APIs e realizar um _in-memory join_. Mesmo em uma rede interna, a latência vai afetar negativamente a performance da consulta. Datasets maiores são especialmente impactados.
+- há uma certa ineficiência em invocar _n_ APIs e realizar um _in-memory join_. Mesmo em uma rede interna, a latência vai afetar negativamente a performance da consulta. Pode haver um grande impacto especialmente em datasets maiores.
 - há um impacto na disponibilidade, já que as _n_ APIs consultadas precisam estar no ar ao mesmo tempo para que a consulta seja realizada com sucesso.
 - há a possibilidade de inconsistência nos dados, já que evitamos transações distribuídas.
 
@@ -336,6 +352,23 @@ Para mitigar algumas dessas desvantagens, Richardson sugere:
 
 - caches, que aumentam a disponibilidade e a performance, mas impactam ainda mais a consistência, com o risco de termos dados desatualizados.
 - uma solução que envolve Mensageria que discutiremos mais adiante
+
+## API Composition no API Gateway do Caelum Eats
+
+Conforme mencionamos anteriormente, na tela de detalhes do restaurante, a UI faz 4 chamadas AJAX:
+
+- 3 chamadas distintas ao Monólito para buscar os dados básicos do restaurante, o cardápio e as avaliações.
+- 1 chamada ao serviço de distância, para buscar a distância do restaurante ao CEP informado.
+
+Implementaremos um API Composition em que o API Gateway buscará em 1 chamada os dados básicos do restaurante junta à distância do restaurante ao CEP.
+
+> Poderíamos fazer um API Composition em que 1 chamada obteria todos os dados necessários para a tela de detalhe de restaurantes. Mas isso fica como um desafio!
+
+O API Gateway com o Spring Cloud Netflix Zuul é código feito com Spring Boot.
+
+Então, para implementar essa API Composition criaremos clientes REST que invocam o serviço de Distância e o Monólito. Utilizaremos o RestTemplate do Spring para invocar o serviço de Distância e o Feign para invocar o Monólito. Seria possível utilizar só o Feign, mas estudaremos a diferença entre o RestTemplate e Feign em integrações com algumas ferramentas do Spring Cloud.
+
+Para expor a API Composition para a UI, utilizaremos um bom e velho `@RestController` do Spring MVC. Para não precisamos criar um _domain model_ do serviço de Distância e do Monólito no código do API Gateway, mesclaremos os dados de cada _downstream service_ com um simples `Map`.
 
 ## Invocando o serviço de distância a partir do API Gateway com RestTemplate
 
