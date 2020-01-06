@@ -725,12 +725,49 @@ Como apenas o API Gateway será chamado diretamente pelo navegador e não há re
 
   Digite um CEP, busque os restaurantes próximos e escolha algum. Na página de detalhes de um restaurantes, chamamos a API Composition. Veja se os dados do restaurante e a distância são exibidos corretamente.
 
-<!--
-
-TODO:
-
 ## Para saber mais: BFF
+
+Microservices devem ser independentes. O time de desenvolvimento de um microservice deve dominar todo o seu ciclo de vida, da concepção a operação. Como disse o CTO da Amazon, Werner Vogels, em [entrevista a Association for Computing Machinery (ACM)](https://dl.acm.org/doi/pdf/10.1145/1142055.1142065?download=true) (VOEGELS, 2006): "You build it, you run it."
+
+À medida que mais responsabilidades são colocadas no API Gateway e mais API Compositions são implementadas, múltiplos times passam a contribuir com o mesmo código. A independência dos microservices e seus times é afetada.
+
+Para piorar o problema, raramente temos apenas uma UI. Além da Web, podemos ter UIs Mobile e/ou Desktop. Cada UI tem necessidades diferentes.  Por exemplo, uma UI Mobile vai ter menos espaço na tela e, portanto, vai exibir menos dados. Também no Mobile, há limitações de bateria e no plano de dados do usuário. E uma UI Mobile tem capacidades extra, como uma câmeras e GPS. Diferentes experiências de usuário requerem diferentes dados dos serviços e, em consequência, da API.
+
+Como resolver isso?
+
+Poderíamos ter um time para a API. Só que esse time teria uma coordenação com cada _downstream service_ e também com cada UI.
+
+Uma solução melhor, usada pela SoundCloud e descrita por Phil Calçado no post [The Back-end for Front-end Pattern (BFF)](https://philcalcado.com/2015/09/18/the_back_end_for_front_end_pattern_bff.html) (CALÇADO, 2015) é ter um API Gateway com API Compositions específicas para cada front-end. Calçado relata que Nick Fisher, tech lead do time Web da SoundCloud, cunhou o termo _Back-end for Front-end_, ou simplesmente **BFF**.
+
+<!--@note
+Calçado fala que tinha cunhado o termo BEFFE mas descobriu que era um palavrão em holandês.
+https://en.wiktionary.org/wiki/beffen#Verb
 -->
+
+![BFF {w=30}](imagens/06-api-gateway/bff.png)
+
+BFF não é uma tecnologia nem algo que você compra, baixa ou configura. BFF é uma maneira de utilizar um API Gateway mais alinhada com os times de front-end.
+
+Os times de front-end passam a ter a necessidade de um (ou mais) desenvolvedor(es) com habilidades de back-end, que mantém o código que compõe os _downstream services_ da maneira adequada para o front-end. Phil Calçado deixa claro no post mencionado anteriormente que o BFF é parte da aplicação e pode ser usado para implementar um _presentation model_, que amplia o _domain model_ para incluir dados relevantes apenas para UI como flags e títulos de janelas.
+
+Sam Newman, no post [Backends For Frontends](https://samnewman.io/patterns/architectural/bff/) (NEWMAN, 2015b), discute que um detalhe negativo do uso de BFFs é que pode levar a duplicação de código. Mas Newman diz que prefere aceitar um pouco de duplicação a criar abstrações que levem a uma necessidade de coordenação entre serviços. Porém, se a duplicação puder ser modelada em termos de domínio, pode ser extraída para um novo serviço.
+
+Newman ainda sugere que, se o tipo de usuário final for diferente, é interessante termos BFFs separados. No Caelum Eats, por exemplo, se tivermos uma aplicação Web para os clientes e outra diferente para os donos de restaurante, teríamos dois BFFs distintos para cada tipo de usuário.
+
+No mesmo post, Newman diz que um BFF pode ser usado como cache para resultados de API Composition e para server-side rendering.
+
+### Um BFF por plataforma?
+
+Aplicações de diferentes plataformas Mobile, como Android e iOS, devem utilizar o mesmo BFF ou não?
+
+Isso é discutido por Sam Newman no post [Backends For Frontends](https://samnewman.io/patterns/architectural/bff/) (NEWMAN, 2015b). Para Newman, há algumas motivações para termos BFFs distintos para cada plataforma:
+
+- se as experiências de usuário do Android e iOS são suficientemente distintas.
+- se há um time distinto para as aplicações Android e iOS.
+
+![BFF por plataforma {w=45}](imagens/06-api-gateway/bff-por-mobile.png)
+
+Na palestra [Evoluindo uma Arquitetura inteiramente sobre APIs](https://www.infoq.com/br/presentations/evoluindo-uma-arquitetura-soundcloud/) (CALÇADO, 2013), menciona uma outra motivação para BFFs separados por plataforma: uma app iOS é publicada na Apple Store em questão de semanas ou meses, enquanto uma app Android é publicada na Play Store em questão de horas. Se tivermos apenas um BFF, teremos que manter APIs compatíveis com ambas as versões das apps. Já com um BFF, há maior controle, ainda que haja alguma duplicação.
 
 <!--
 TODO:

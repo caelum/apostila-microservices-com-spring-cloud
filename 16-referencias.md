@@ -30,6 +30,8 @@ BROWN, Simon. _Modular monoliths._ 2015. Em: http://www.codingthearchitecture.co
 
 CALÇADO, Phil. _Evoluindo uma Arquitetura inteiramente sobre APIs: o caso da SoundCloud._ 2013. Em: https://www.infoq.com/br/presentations/evoluindo-uma-arquitetura-soundcloud/
 
+Calçado, Phil. _The Back-end for Front-end Pattern (BFF)._ 2015. Em: https://philcalcado.com/2015/09/18/the_back_end_for_front_end_pattern_bff.html
+
 CALÇADO, Phil. 2018. Em: https://twitter.com/pcalcado/status/963183090339385345
 
 CHRISTENSEN, Ben. _Optimizing the Netflix API._ 2013. Em: https://medium.com/netflix-techblog/optimizing-the-netflix-api-5c9ac715cf19
@@ -110,6 +112,8 @@ NELSON, Teodhor Holm. _Complex Information Processing: A File Structure for the 
 
 NEWMAN, Sam. _Building Microservices: Designing Fine-Grained Systems._ O'Reilly, 2015. 280 p. Em: https://www.oreilly.com/library/view/building-microservices/9781491950340/
 
+NEWMAN, Sam. _Pattern: Backends For Frontends._ 2015b. Em: https://samnewman.io/patterns/architectural/bff/
+
 NEWMAN, Sam. _Monolith to Microservices: Evolutionary Patterns to Transform Your Monolith._ O'Reilly, 2019. Early Release. 284 p. Em: https://learning.oreilly.com/library/view/monolith-to-microservices/9781492047834/
 
 NOTTINGHAM, Mark. _Web Linking._ Internet Engineering Task Force (IETF), 2010. https://tools.ietf.org/html/rfc5988
@@ -147,6 +151,10 @@ SRINIVAS, Prashanth Nuggehalli. _Strangler fig inside (licença GFDL)_ 2010. Em:
 TALWAR, Varun. _gRPC: a true internet-scale RPC framework is now 1.0 and ready for production deployments._ 2016. Em: https://cloud.google.com/blog/products/gcp/grpc-a-true-internet-scale-rpc-framework-is-now-1-and-ready-for-production-deployments
 
 TILKOV, Stefan. _Don't start with a monolith: ... when your goal is a microservices architecture._ 2015. Em: https://martinfowler.com/articles/dont-start-monolith.html
+
+VOEGELS, Werner. _A Conversation with Werner Voegels._ ACM Queue, Mai. 2006. Em: https://dl.acm.org/doi/pdf/10.1145/1142055.1142065?download=true
+
+SIMONS, Matthew; LEROY, Jonny. _Contending with Creaky Platforms CIO._ Cutter IT Journal, Dec. 2010. Em: http://jonnyleroy.com/2011/02/03/dealing-with-creaky-legacy-platforms/
 
 WALLS, Craig. _Modular Java: Creating Flexible Applications with OSGi and Spring._ The Pragmatic Bookshelf, 2009. 260 p. Em: https://pragprog.com/book/cwosg/modular-java
 
