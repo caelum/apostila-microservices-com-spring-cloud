@@ -80,6 +80,8 @@ FOWLER, Martin. _MicroservicePremium._ 2015b. Em: https://martinfowler.com/bliki
 
 FOWLER, Martin. _MonolithFirst._ 2015c. Em: https://martinfowler.com/bliki/MonolithFirst.html
 
+GEERS, Michael. _Micro Frontends._ 2017. Em: https://micro-frontends.org/
+
 GONIGBERG, Arthur. _Zuul's Journey to Non-Blocking._ Strange Loop, 2017. Em: https://www.youtube.com/watch?v=2oXqbLhMS_A
 
 GRIGORIK, Ilya. _High Performance Browser Networking._ O'Reilly, 2013. 400 p. Em: https://hpbn.co/

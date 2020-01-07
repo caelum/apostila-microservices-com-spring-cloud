@@ -1040,12 +1040,45 @@ Agora sim! Ao receber um status `201 Created`, depois de criar algum recurso em 
 
 4. Apague (ou desabilite comentando a anotação `@Component`) a classe `RateLimitingZuulFilter` para que não cause erros na aplicação no restante do curso.
 
-<!-- 
-TODO:
-
 ## Para saber mais: Micro front-ends
 
- -->
+Quebramos o código do back-end em alguns serviços independentes e alinhados com verticais de negócio. Mas e o front-end? Continua monolítico!
+
+Toda mudança relevante no back-end, em qualquer serviço (ou no monólito), traria a necessidade de uma mudança no front-end. Todo deploy relevante do back-end, iria requerer um deploy no front-end.
+
+Idealmente, uma Arquitetura de Microservices, teria times independentes, multidisciplinares e orientados pelo domínio, cuidando da concepção à operação do software. E isso deveria ser realmente ponta a ponta (em inglês, _end-to-end_), incluindo a UI.
+
+Michael Geers criou, em 2017, o site [micro-frontends.org](https://micro-frontends.org/) (GEERS, 2017), em que descreve uma abordagem que aplica os princípios de Microservices em websites e webapps.
+
+A ideia de Micro Front-ends é que os times cuidem de um aspecto de negócio específico de ponta a ponta, incluindo concepção, front-end, back-end e operações.
+
+<!-- @note
+  Michael Geers cita um artigo [Documents‐to‐Applications Continuum](https://ar.al/notes/the-documents-to-applications-continuum/), em que Aral Balkan fala da ideia de um continuum (tipo uma reta numérica) com documentos totalmente estáticos de um lado (websites) e aplicações em que não há conteúdo prévio e o usuário preenche o conteúdo (webapps), como um Editor de Fotos online.
+-->
+
+![Times "ponta a ponta" com Micro Front-ends {w=63}](imagens/06-api-gateway/micro-front-ends-times.png)
+
+Com Micro Front-ends, uma página é composta por componentes de diferentes times.
+
+No caso de sites estáticos, a composição da página pode ser feita no lado do servidor.
+
+Já para single-page apps, a composição deve ser feita no próprio navegador, com código JavaScript.
+
+![Times diferentes cuidam de partes de cada tela {w=72}](imagens/06-api-gateway/micro-front-ends-telas.png)
+
+<!-- @note
+  Uma dúvida é: dá pra fazer isso com apps mobile? Será que só com híbridas ou nativas também?
+  Creio que dá pra criar componentes customizados, publicados por meio de jars e compô-los em .
+-->
+
+Michael Geers declara alguns princípios de Micro Front-ends em seu site:
+
+- **Independência de Tecnologia**: cada time deve escolher suas tecnologias com o mínimo de coordenação com outros times. Navegadores modernos são compatíveis com [Web Components](https://www.webcomponents.org/introduction), um conjunto de especificações que permitem a criação de componentes customizados como, por exemplo, `<lista-de-recomendacoes>`. As principais especificações são: [Custom Elements](https://w3c.github.io/webcomponents/spec/custom/), [Shadow DOM](https://w3c.github.io/webcomponents/spec/shadow/), [ES Modules](https://html.spec.whatwg.org/multipage/webappapis.html#integration-with-the-javascript-module-system) e [HTML Template](https://html.spec.whatwg.org/multipage/scripting.html#the-template-element/)
+. É uma capacidade oferecida por frameworks como Angular, React e Vue, mas com APIs do próprio navegador. Dessa maneira, esses diferentes frameworks podem ter Web Componentes como destino do build.
+- **Código Isolado**: evite variáveis globais e estado compartilhado, mesmo se os times utilizarem o mesmo framework.
+- **Uso de Prefixos**: onde o isolamento não é possível, como CSS, Local Storage, Cookies e eventos, estabeleça prefixos e convenções de nomes para evitar colisões e deixar claro qual time cuida de qual componente.
+- **Uso de Recursos Nativos**: prefira recursos nativos do navegador a APIs customizadas. Por exemplo, para comunicação entre componentes, use [DOM Events](https://developer.mozilla.org/en-US/docs/Web/Events) ao invés de um mecanismo específico de um framework.
+- **Resiliência**: construa a aplicação de maneira que ainda seja útil no caso de uma demora ou uma falha no JavaScript. Conceitos como Universal Rendering e Progressive Enhancement ajudam nesse cenário.
 
 <!-- 
 TODO:
