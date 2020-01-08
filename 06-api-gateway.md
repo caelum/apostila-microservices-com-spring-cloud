@@ -1080,9 +1080,32 @@ Michael Geers declara alguns princípios de Micro Front-ends em seu site:
 - **Uso de Recursos Nativos**: prefira recursos nativos do navegador a APIs customizadas. Por exemplo, para comunicação entre componentes, use [DOM Events](https://developer.mozilla.org/en-US/docs/Web/Events) ao invés de um mecanismo específico de um framework.
 - **Resiliência**: construa a aplicação de maneira que ainda seja útil no caso de uma demora ou uma falha no JavaScript. Conceitos como Universal Rendering e Progressive Enhancement ajudam nesse cenário.
 
-<!-- 
-TODO:
+## Discussão: ESB x API Gateway
 
-## Discussão: API Gateway x ESB
+No livro [SOA in Practice](https://www.amazon.com.br/Soa-Practice-Distributed-System-Design/dp/0596529554) (JOSUTTIS, 2007), Nicholai Josuttis afirma que, entre as responsabilidades de um Enterprise Service Bus (ESB), estão: interoperabilidade entre diferentes plataformas e linguagens de programação, incluindo a tradução de protocolos; transformação de dados; roteamento inteligente; segurança; confiabilidade; gerenciamento de serviços; monitoramento e logging; e orquestração.
 
- -->
+Como mencionado anteriormente, o time de Tecnologia da Netflix, no post [Announcing Zuul: Edge Service in the Cloud](https://medium.com/netflix-techblog/announcing-zuul-edge-service-in-the-cloud-ab3af5be08ee) (COHEN; HAWTHORNE, 2013), afirma que o API Gateway Zuul é usado para: roteamento dinâmico; segurança; insights (ou seja, monitoramento); entre outras responsabilidades. Além disso, vimos durante o capítulo que podemos usar um API Gateway como um API Composer.
+
+Há certa semelhança entre as responsabilidades de um ESB e de um API Gateway. Seria um API Gateway uma reencarnação do ESB para uma Arquitetura de Microservices?
+
+Uma diferença importante é a **topologia de rede**.
+
+Em geral, um ESB é implantado como um ponto central de comunicação, em uma topologia conhecida como _hub and spoke_, de maneira a evitar uma comunicação ponto a ponto. Assim, os serviços não precisam conhecer os protocolos e endereços uns dos outros, mas apenas os do ESB. Numa implantação _hub and spoke_, a ideia é que qualquer comunicação entre serviços seja feita pelo ESB, levando a um baixo acoplamento.
+
+Já um API Gateway é um proxy reverso, implantado no perímetro da rede. Chamadas de aplicações externas passam pelo API Gateway, porém as chamadas entre os serviços são feitas diretamente, em uma comunicação ponto a ponto. Isso poderia levar a um alto acoplamento entre os serviços, mas nos próximos capítulos veremos maneiras de mitigar esse risco.
+
+Uma outra diferença é relacionada a **presença ou não de regras de negócio**.
+
+No SOA clássico, há a ideia de que serviços podem ser compostos em outros serviços formando novos processos de negócio. O ESB passa a coordenar a execução de diversos serviços de acordo com uma lógica de negócio. O ESB funciona como um maestro que coordena os diferentes músicos (os serviços) de uma orquestra, num processo conhecido como Orquestração. Tecnologias como BPEL ajudam nessa tarefa. Isso pode levar a necessidade de coordenação no desenvolvimento e deploy de diversos serviços.
+
+Autonomia é um dos conceitos mais importantes de uma Arquitetura de Microservices. A centralização de uma Orquestração dá lugar à descentralização de uma Coreografia, em que os diferentes serviços reagem em conjunto a eventos de negócio. Assim, não há um coordenador ou maestro e, em consequência, não há a necessidade de colocar regras de negócio fora dos serviços. Canais de comunicação devem ser "ignorantes". Martin Fowler e James Lewis, em seu seminal artigo [Microservices](https://martinfowler.com/articles/microservices.html) (FOWLER; LEWIS, 2014), cunharam um lema nesse sentido: _smart endpoints, dumb pipes_.
+
+Para seguir o lema _smart endpoints, dumb pipes_ e favorecer a autonomia dos serviços, um API Gateway não deveria conter regras de negócio. Um API Gateway deveria ajudar na implementação de requisitos transversais (também chamados de não-funcionais): segurança, resiliência, escalabilidade, entre diversos outros.
+
+Em uma [thread no Twitter de Maio de 2019](https://twitter.com/samnewman/status/1131117455907205120) (NEWMAN, 2019b), Sam Newman critica o uso do API Gateway como orquestrador de regras de negócio:
+
+_As pessoas [no SOA clássico] fariam a orquestração de processos de negócios nas camadas do message broker. Agora é comum ver pessoas fazendo o mesmo nos API Gateways, que estão rapidamente se tornando o Enterprise Service Bus dos Microservices._
+
+_A inserção da lógica de negócios no middleware é problemática do ponto de vista da implantação, pois é necessário coordenar o rollout, mas também em termos de controle, pois as pessoas que construíram o aplicativo geralmente eram diferentes das pessoas que gerenciavam alterações no middleware._
+
+E as nossas API Compositions não seriam, no fim das contas, colocar regras de negócio no API Gateway? Não, já que evitamos processar os dados, usando a API Composition apenas como agregação de chamadas remotas, visando a otimização das chamadas da UI externa.

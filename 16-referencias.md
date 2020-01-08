@@ -88,6 +88,8 @@ GRIGORIK, Ilya. _High Performance Browser Networking._ O'Reilly, 2013. 400 p. Em
 
 JACOBSON, Ivar. _Object Oriented Software Engineering: A Use-Case Driven Approach._ Addison-Wesley Professional, 1992. 552 p. Em: https://www.amazon.com/Object-Oriented-Software-Engineering-Approach/dp/0201544350
 
+JOSUTTIS, Nicholai. _SOA in Practice: The Art of Distributed System Design._ O'Reilly Media, 2007. 344 p. Em: https://www.amazon.com.br/Soa-Practice-Distributed-System-Design/dp/0596529554
+
 KELLY, Mike. _JSON Hypertext Application Language_. Internet Engineering Task Force (IETF) Internet-Draft, 2012. Em: https://tools.ietf.org/html/draft-kelly-json-hal-00
 
 KNOERNSCHILD, Kirk. _Java Application Architecture: Modularity Patterns with Examples Using OSGi._ Prentice Hall, 2012. 384 p. Em: https://www.amazon.com.br/Java-Application-Architecture-Modularity-Patterns/dp/0321247132.
@@ -117,6 +119,8 @@ NEWMAN, Sam. _Building Microservices: Designing Fine-Grained Systems._ O'Reilly,
 NEWMAN, Sam. _Pattern: Backends For Frontends._ 2015b. Em: https://samnewman.io/patterns/architectural/bff/
 
 NEWMAN, Sam. _Monolith to Microservices: Evolutionary Patterns to Transform Your Monolith._ O'Reilly, 2019. Early Release. 284 p. Em: https://learning.oreilly.com/library/view/monolith-to-microservices/9781492047834/
+
+NEWMAN, Sam. 2019b. Em: https://twitter.com/samnewman/status/1131117455907205120
 
 NOTTINGHAM, Mark. _Web Linking._ Internet Engineering Task Force (IETF), 2010. https://tools.ietf.org/html/rfc5988
 
