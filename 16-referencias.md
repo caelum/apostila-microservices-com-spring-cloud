@@ -122,6 +122,8 @@ NEWMAN, Sam. _Monolith to Microservices: Evolutionary Patterns to Transform Your
 
 NEWMAN, Sam. 2019b. Em: https://twitter.com/samnewman/status/1131117455907205120
 
+NYGARD, Michael. _Release It!: Design and Deploy Production-Ready Software._ Pragmatic Programmers, 2007. 326 p. Em: https://pragprog.com/book/mnee/release-it
+
 NOTTINGHAM, Mark. _Web Linking._ Internet Engineering Task Force (IETF), 2010. https://tools.ietf.org/html/rfc5988
 
 PARLOG, Nicolai. _The Java Module System._ Manning Publications, 2018. Manning Early Access Program, version 10. 503 p. Em: <https://www.manning.com/books/the-java-module-system>
