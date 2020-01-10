@@ -1064,6 +1064,10 @@ No caso de sites estáticos, a composição da página pode ser feita no lado do
 
 Já para single-page apps, a composição deve ser feita no próprio navegador, com código JavaScript.
 
+No site [microservices.io](https://microservices.io/), mantido por Chris Richardson, autor do livro [Microservice Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), a composição no servidor é chamada de _Server-side page fragment composition_ e no navegador é chamada de _Client-side UI composition_.
+
+Navegadores modernos são compatíveis com [Web Components](https://www.webcomponents.org/introduction), um conjunto de especificações que permitem a criação de componentes customizados como, por exemplo, `<lista-de-recomendacoes>`. As principais especificações são: [Custom Elements](https://w3c.github.io/webcomponents/spec/custom/), [Shadow DOM](https://w3c.github.io/webcomponents/spec/shadow/), [ES Modules](https://html.spec.whatwg.org/multipage/webappapis.html#integration-with-the-javascript-module-system) e [HTML Template](https://html.spec.whatwg.org/multipage/scripting.html#the-template-element/). É uma capacidade oferecida por frameworks como Angular, React e Vue, mas com APIs do próprio navegador. Dessa maneira, esses diferentes frameworks podem ter Web Componentes como destino do build.
+
 ![Times diferentes cuidam de partes de cada tela {w=72}](imagens/06-api-gateway/micro-front-ends-telas.png)
 
 <!-- @note
@@ -1073,8 +1077,7 @@ Já para single-page apps, a composição deve ser feita no próprio navegador, 
 
 Michael Geers declara alguns princípios de Micro Front-ends em seu site:
 
-- **Independência de Tecnologia**: cada time deve escolher suas tecnologias com o mínimo de coordenação com outros times. Navegadores modernos são compatíveis com [Web Components](https://www.webcomponents.org/introduction), um conjunto de especificações que permitem a criação de componentes customizados como, por exemplo, `<lista-de-recomendacoes>`. As principais especificações são: [Custom Elements](https://w3c.github.io/webcomponents/spec/custom/), [Shadow DOM](https://w3c.github.io/webcomponents/spec/shadow/), [ES Modules](https://html.spec.whatwg.org/multipage/webappapis.html#integration-with-the-javascript-module-system) e [HTML Template](https://html.spec.whatwg.org/multipage/scripting.html#the-template-element/)
-. É uma capacidade oferecida por frameworks como Angular, React e Vue, mas com APIs do próprio navegador. Dessa maneira, esses diferentes frameworks podem ter Web Componentes como destino do build.
+- **Independência de Tecnologia**: cada time deve escolher suas tecnologias com o mínimo de coordenação com outros times. Uma tecnologia como os Web Components, mencionados anteriormente, ajudam a implementar esse princípio.
 - **Código Isolado**: evite variáveis globais e estado compartilhado, mesmo se os times utilizarem o mesmo framework.
 - **Uso de Prefixos**: onde o isolamento não é possível, como CSS, Local Storage, Cookies e eventos, estabeleça prefixos e convenções de nomes para evitar colisões e deixar claro qual time cuida de qual componente.
 - **Uso de Recursos Nativos**: prefira recursos nativos do navegador a APIs customizadas. Por exemplo, para comunicação entre componentes, use [DOM Events](https://developer.mozilla.org/en-US/docs/Web/Events) ao invés de um mecanismo específico de um framework.
