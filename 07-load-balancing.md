@@ -2,25 +2,25 @@
 
 ## Escalabilidade
 
-Em um dia como a Black Friday, é comum um aumento drástico nos acessos a lojas online como a Casa do Código. Em um desastre natural, redes sociais como o Twitter também tem um incremento vigoroso no uso. Como esses softwares conseguem lidar com essa demanda anormal?
+Em um dia como a Black Friday, é comum um aumento drástico nos acessos a lojas online como a Casa do Código. No caso de um desastre natural, há um incremento vigoroso no uso de redes sociais como o Twitter. Como esses softwares conseguem lidar com essa demanda anormal?
 
-Além das funcionalidades acessadas pelos usuários, um software possui uma série de características operacionais transversais, que não estão relacionadas a uma capacidade de negócio específica. São características comuns a todo bom software, geralmente chamadas de requisitos não-funcionais ou atributos de qualidade. São requisitos relevantes para a Arquitetura de Software como, por exemplo: segurança, resiliência, performance, usabilidade, manutenibilidade, disponibilidade, escalabilidade, entre vários outros. Também são chamados de _-ilidades_, já que esse é o sufixo de boa parte desses.
+Além das funcionalidades acessadas pelos usuários, um software possui uma série de características operacionais transversais, que não estão relacionadas a uma capacidade de negócio específica. São características comuns a todo bom software, geralmente chamadas de requisitos não-funcionais ou atributos de qualidade. São requisitos relevantes para a Arquitetura de Software como, por exemplo: segurança, resiliência, performance, usabilidade, manutenibilidade, disponibilidade, escalabilidade, entre vários outros. Também são chamados de _-ilidades_, já que esse é o sufixo de boa parte desses requisitos.
 
 Uma dessas _ilidades_ é a característica de um sistema de conseguir lidar com esse aumento vigoroso no uso: a **Escalabilidade**.
 
 Um sistema pode ter como característica a **Escalabilidade Vertical**, em que o aumento na capacidade computacional se deve a uma máquina mais poderosa: mais memória, mais CPUs e mais disco.
 
-Já um que apresenta **Escalabilidade Horizontal** aumenta seu poder computacional adicionando mais máquinas a um Sistema Distribuído. Em uma Arquitetura de Microservices, significa adicionar **redundância**, replicando o código de um mesmo serviço em mais de uma máquina.
+Já um que apresenta **Escalabilidade Horizontal** aumenta seu poder computacional adicionando mais máquinas _commodity_ a um Sistema Distribuído. Em uma Arquitetura de Microservices, significa adicionar **redundância**, replicando o código de um mesmo serviço em mais de uma máquina.
 
-Redundância não é suficiente. Vários outras características são necessárias em um serviço para que possa ser escalado horizontalmente. Uma muito importante é o serviço ser _Stateless_. Lembrando a definição de Roy Fielding sua tese [Architectural Styles and the Design of Network-based Software Architectures](https://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm) (FIELDING, 2000): uma sistema é _Stateless_ quando cada request do cliente deve conter todos os dados necessários, sem tomar vantagem de nenhum contexto armazenado no servidor
+Redundância não é suficiente. Vários outras características são necessárias para que um serviço possa ser escalado horizontalmente. Por exemplo, um serviço _Stateless_ favorece bastante a Escalabilidade Horizontal. Lembrando a definição de Roy Fielding sua tese [Architectural Styles and the Design of Network-based Software Architectures](https://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm) (FIELDING, 2000): uma sistema é _Stateless_ quando cada request do cliente deve conter todos os dados necessários, sem tomar vantagem de nenhum contexto armazenado no servidor
 
-Em sistemas executados em alguma plataforma de Cloud Computing, manter recursos alocados sem utilização custa caro. Por isso, é importante que o sistema possa aumentar _e diminuir_ a sua capacidade de maneira automática. Essa característica é conhecida como **Elasticidade**.
+Em sistemas executados em alguma plataforma de Cloud Computing, manter recursos alocados sem utilização custa caro. Por isso, é importante que o sistema possa aumentar _e diminuir_ a sua capacidade de maneira automática. Essa característica é conhecida como _Elasticidade_.
 
 > Será que um Monólito ser escalável horizontalmente? Pode sim, se for construído de maneira que o código do projeto possa ser replicado em múltiplas máquinas.
 
 ## Disponibilidade
 
-O pesquisador da Google Jeffrey Dean, na palestra [Designs, Lessons and Advice from Building Large Distributed Systems](http://www.cs.cornell.edu/projects/ladis2009/talks/dean-keynote-ladis2009.pdf) (DEAN, 2009), lista alguns problemas de hardware que ocorrem no primeiro ano de um novo cluster de máquinas:
+O pesquisador da Google Jeffrey Dean, na palestra [Designs, Lessons and Advice from Building Large Distributed Systems](http://www.cs.cornell.edu/projects/ladis2009/talks/dean-keynote-ladis2009.pdf) (DEAN, 2009), lista alguns problemas de hardware que ocorrem no primeiro ano de um novo cluster:
 
 - 3 falhas em roteadores, tirando o cluster do ar por 1 hora
 - 8 manutenções na rede, causando 30 minutos de perdas de conexões
@@ -34,31 +34,35 @@ O Jeffrey Dean ainda menciona tubarões como problemas em links de longa distân
 
 Fica claro que, no mundo real, um Sistema Distribuído tem diversos motivos para ficar fora do ar. 
 
-Estar operando normalmente ou não é algo relacionado a outra _ilidade_: a **Disponibilidade**. Trata-se da proporção de tempo em que um sistema se mantém em operação. Algumas disponibilidades comuns relacionadas ao tempo que um sistema fica fora do ar:
+Estar operando normalmente é algo relacionado a outra _ilidade_: a **Disponibilidade**. Trata-se da proporção de tempo em que um sistema se mantém em operação. Algumas medidas de Disponibilidade comuns:
 
-- fora do ar durante 3,65 dias por ano tem disponibilidade de 99 %, conhecida como _two nines_
-- fora do ar durante 8,77 horas por ano tem disponibilidade de 99.9 %, conhecida como _three nines_
-- fora do ar durante 5,26 minutos por ano tem disponibilidade de 99,999 %, conhecida como _five nines_
+- um sistema que fica fora do ar durante 3,65 dias por ano tem disponibilidade de 99 %, conhecida como _two nines_
+- um sistema que fica fora do ar durante 8,77 horas por ano tem disponibilidade de 99.9 %, conhecida como _three nines_
+- um sistema que fica fora do ar durante 5,26 minutos por ano tem disponibilidade de 99,999 %, conhecida como _five nines_
 
-Mais adiante na apostila vamos revisitar o conceito de Disponibilidade.
+> Mais adiante na apostila vamos revisitar o conceito de Disponibilidade.
 
-Em um Sistema Distribuído, manter a Disponibilidade passa ser mais difícil. Se 3 serviços distintos com Disponibilidade de 99 % têm que estar no ar ao mesmo tempo para que o Sistema Distribuído esteja disponível, a Disponibilidade do todo é de 99<sup>3</sup> %, ou **97 %**. Ou seja, a disponibilidade geral é menor do que a disponibilidade de cada serviço!
+Em um Sistema Distribuído, manter a Disponibilidade passa ser mais difícil. Para estar disponível, um Sistema Distribuído com 3 serviços distintos tem que ter todos no ar ao mesmo tempo. Se a Disponibilidade de cada serviço for 99 %, a Disponibilidade do todo é de 99<sup>3</sup> %, ou **97 %**. Ou seja, a disponibilidade geral é menor do que a disponibilidade de cada serviço!
 
-O que podemos fazer para ajudar a aumentar a Disponibilidade de um Sistema Distribuído? Devemos eliminar pontos únicos de falha (em inglês, _Single Points of Failure_) adicionando **redundância**, replicando o código de um mesmo serviço em mais de uma máquina (também chamada de instâncias). Assim, se uma das instâncias falharem, outras irão tratar as requisições.
+O que podemos fazer para ajudar a aumentar a Disponibilidade de um Sistema Distribuído?
 
-Redundância por si só não é suficiente para garantir Alta Disponibilidade de um Sistema Distribuído. De maneira semelhante à Escalabilidade, há outras características necessárias. Entre elas, ser _Stateless_.
+Devemos eliminar pontos únicos de falha (em inglês, _Single Points of Failure_) adicionando **redundância**, replicando o código de um mesmo serviço em mais de uma máquina. Assim, se uma das máquinas falharem, teremos outras que tratarão as requisições ao serviço.
+
+Redundância por si só não é suficiente para garantir Alta Disponibilidade de um Sistema Distribuído. De maneira semelhante à Escalabilidade, há outras características necessárias. Ser _Stateless_, por exemplo, facilita a redundância, favorecendo a Disponibilidade.
 
 ## Load Balancing
 
 Perceba que, tanto para atingir Escalabilidade Horizontal como para conseguirmos Alta Disponibilidade, devemos usar redundância, replicando os mesmo serviços em diferentes instâncias.
 
-Surge um problema: qual das instâncias deve ser chamada por clientes externos, como uma UI Web? E em uma chamada entre serviços, qual instância deve ser invocada?
+Surge um problema: qual das instâncias deve ser chamada por clientes externos, como uma UI Web? E, em uma chamada entre serviços, qual instância deve ser invocada?
 
 Precisamos fazer um **Balanceamento de Carga** (em inglês, _Load Balancing_), distribuindo as requisições entre as instâncias disponíveis de um serviço.
 
 Podemos implementar o Load Balancing de duas maneiras diferentes: do lado de quem provê as instâncias (servidor) e do lado de quem chama as instâncias (cliente).
 
-Se um load balancer estiver fora do ar, todas as instâncias de um serviço ficarão inatingíveis. Para que não seja um _Single Point of Failure_, é necessário que haja redundância do próprio load balancer.
+Um detalhe importante: se um _load balancer_ estiver fora do ar, todas as instâncias de um serviço ficarão inatingíveis. Para que não seja um _Single Point of Failure_, é necessário que haja redundância do próprio load balancer.
+
+Load Balancers que usam dados de protocolos no nível de rede ou transporte como IP, TCP, FTP e UDP para fazer o balanceamento são chamados de _L4 load balancers_, já que vão até o nível 4 (Transporte) do Modelo OSI de redes computacionais. Já quando um load balancer lida dados de protocolos do nível de aplicação, como cabeçalhos do HTTP, são chamados de _L7 load balancers_, correspondendo ao nível 7 (Aplicação) do Modelo OSI.
 
 > _Sistemas escaláveis horizontalmente atingem disponibilidade e escalabilidade por meio da multiplicidade. A adição de mais máquinas para aumentar a capacidade melhora a resiliência a impulsos (choques agudos e curtos no sistema). Os servidores menores usados em arquiteturas escaláveis horizontalmente também custam muito menos e permitem aumentar a capacidade em pequenos incrementos._
 >
@@ -66,16 +70,15 @@ Se um load balancer estiver fora do ar, todas as instâncias de um serviço fica
 >
 > Michael Nygard, em seu livro [Release It!](https://pragprog.com/book/mnee/release-it) (NYGARD, 2007)
 
-
 ### Server Side Load Balancing
 
 A maneira mais comum de implementar Load Balancing é do lado do servidor: o **Server Side Load Balacing**.
 
-Esse _load balancer_ pode ser um hardware, como as _appliances_ da Cisco ou F5. Esses load balancers, em geral, trabalham com dados de protocolos no nível de rede ou transporte como IP, TCP, FTP e UDP para fazer o balanceamento. Por isso, são chamados de L4 load balancers, já que esses protocolos vão até o nível 4 (Transporte) do Modelo OSI de redes computacionais. Porém podem também trabalhar baseados em dados de protocolos do nível de aplicação, como o HTTP, sendo chamados de L7 load balancers, que vão até o nível 7 (Aplicação) do Modelo OSI. Os hardware load balancers são equipamento caríssimos.
+Esses server side load balancers pode hardwares, como as _appliances_ da Cisco ou F5. Em geral, são L4 load balancers mas também podem ser L7. São equipamentos caríssimos.
 
-Mas é bem comum termos software que funcionam como load balancers, em geral, L7 load balancers. Proxys reversos como Squid, Apache httpd, NGinx e HAProxy são comumente usados como load balancers.
+É bem comum termos softwares que funcionam como server side load balancers. Em geral, são L7 load balancers. Proxys reversos como Squid, Apache httpd, NGinx e HAProxy são comumente usados para Load Balancing.
 
-> Plataformas de Cloud Computing tem load balancers já integrados com outras soluções. A Amazon AWS, por exemplo, tem o AWS Elastic Load Balancer (ELB), que está integrado com AWS EC2 e AWS Lambda, por exemplo. É possível escolher entre L4 e L7 load balancers.
+> Plataformas de Cloud Computing tem load balancers já integrados com as outras soluções oferecidas. A Amazon AWS, por exemplo, tem o AWS Elastic Load Balancer (ELB), que está integrado com AWS EC2 e AWS Lambda, por exemplo. É possível escolher entre L4 e L7 load balancers.
 
 Em termos de topologia de rede, um load balancer deve ser colocado na frente de cada grupo de instâncias de um determinado serviço.
 
@@ -83,31 +86,31 @@ No caso do Caelum Eats, isso significaria que precisaríamos de um load balancer
 
 ![Server Side Load Balancer {w=64}](imagens/07-load-balancing/server-side-load-balancer.png)
 
-No orquestrador de containers [Kubernetes](https://kubernetes.io/), as instâncias de uma aplicação são chamadas de [Pods](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/). O Kubernetes já provê uma abstração para o agrupamento dos diferentes Pods de uma aplicação, chamada de [Service](https://kubernetes.io/docs/concepts/services-networking/service/). Um Service funciona como um  server side load balancer, expondo os Pods de uma aplicação sob um mesmo DNS name.
+No orquestrador de containers [Kubernetes](https://kubernetes.io/), as instâncias de uma aplicação são chamadas de [Pods](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/). O Kubernetes já provê uma abstração para o agrupamento dos diferentes Pods de uma aplicação, chamada de [Service](https://kubernetes.io/docs/concepts/services-networking/service/). Um Service funciona como um server side load balancer, expondo os Pods de uma aplicação sob um mesmo DNS name.
 
-> No livro [Release It!](https://pragprog.com/book/mnee/release-it) (NYGARD, 2007), Michael Nygard menciona que o DNS pode ser usado como um L7 load balancer. É possível associar múltiplos IPs a um mesmo domínio. Ao contrário de outros load balancers, o balanceamento não é feito durante o request, mas na resolução de nomes. É feito um balanceamento do tipo _round-robin_, em que os IPs oferecidos ao cliente são rotacionados sequencialmente. Uma grande desvantagem do DNS é que os IPs devem ser acessíveis diretamente. Além disso, não há uma maneira de modificar o algoritmo de balanceamento e, uma vez que o cliente esteja conectado a um IP, não há como redirecionar para outras instâncias.
+> No livro [Release It!](https://pragprog.com/book/mnee/release-it) (NYGARD, 2007), Michael Nygard menciona que o próprio DNS pode ser usado como um L7 load balancer: é possível associar múltiplos IPs a um mesmo domínio. Ao contrário de outros load balancers, o balanceamento não é feito durante uma requisição, mas na resolução de nomes. É feito um balanceamento do tipo _round-robin_, em que os IPs oferecidos ao cliente são rotacionados sequencialmente. Uma grande desvantagem do DNS é que os IPs devem ser acessíveis diretamente. Além disso, não há uma maneira de modificar o algoritmo de balanceamento e, uma vez que o cliente esteja conectado a um IP, não há como redirecionar para outras instâncias.
 
 ### Client Side Load Balancing
 
 Uma alternativa é que um componente dentro da própria aplicação sirva como load balancer: é o que chamamos de **Client Side Load Balancing**.
 
-A topologia de rede é drasticamente simplificada, já que o load balancer não é externo à aplicação. Além disso, 
+Esse componente da aplicação precisa, de alguma forma, saber quais instâncias estão disponíveis para quais serviços. Isso pode ser feito através de configurações.
 
-A aplicação precisa, de alguma forma, saber quais instâncias estão disponíveis para quais serviços.
+A topologia de rede é drasticamente simplificada, já que o load balancer não é externo à aplicação. Além disso, cada instância terá o mesmo componente com a mesma configuração, ou seja, já há redundância do load balancer!
 
 ![Client Side Load Balancer {w=63}](imagens/07-load-balancing/client-side-load-balancer.png)
 
 ## Ribbon
 
-A Netflix lançou como parte de sua iniciativa open-source o [Ribbon](https://github.com/Netflix/ribbon/), um Client Side Load Balancer integrado com as outras ferramentas do Netflix OSS.
+A Netflix lançou como parte de sua iniciativa open-source o [Ribbon](https://github.com/Netflix/ribbon/), um Client Side Load Balancer integrado com outras ferramentas do Netflix OSS.
 
-Uma das necessidades do Ribbon é saber o IP ou DNS name das instâncias de um determinado serviço. Isso pode ser feito por uma configuração estática (`ConfigurationBasedServerList`), ou de maneira dinâmica, de modo a, de tempos em tempos, remover instâncias indisponíveis e adicionar novas instâncias (`DiscoveryEnabledNIWSServerList`). Nesse capítulo, focaremos na configuração estática. Em um capítulo posterior, estudaremos a configuração dinâmica da lista de instâncias.
+Uma das necessidades do Ribbon é saber o IP ou DNS name das instâncias de um determinado serviço. Isso pode ser feito por uma configuração estática (`ConfigurationBasedServerList`), ou de maneira dinâmica, de modo a remover, de tempos em tempos, instâncias indisponíveis e adicionar novas instâncias (`DiscoveryEnabledNIWSServerList`). Nesse capítulo, focaremos na configuração estática. Em um capítulo posterior, estudaremos a configuração dinâmica da lista de instâncias.
 
 O Ribbon possui diferentes _rules_, que são lógicas de escolha de uma instância da lista. Entre elas:
 
-- `RoundRobinRule`: usa o algoritmo _round robin_, que alterna sequencialmente entre a lista de instâncias disponíveis. É o algoritmo padrão. Se tivermos 3 instâncias, as chamadas seriam à primeira, à segunda e à terceira, e então à primeira novamente, e assim por diante.
-- `AvailabilityFilteringRule`: um algoritmo que pula as instâncias indisponíveis. Por padrão, uma instância é considerada indisponível se há falha em 3 conexões consecutivas. Depois de 30 segundos, há nova tentativa de conexão. Se houver falha, há um aumento exponencial do tempo de espera. Todos esses valores são configuráveis.
-- `WeightedResponseTimeRule`: é coletado o tempo de resposta de cada instância. Quanto maior o tempo de resposta, menos provável a instância ser obtida da lista.
+- `RoundRobinRule`: usa o algoritmo _round robin_, que rotaciona a lista de instâncias, alternando sequencialmente entre as instâncias disponíveis. É o algoritmo padrão. Se tivermos 3 instâncias, as chamadas seriam à primeira, à segunda e à terceira, e então à primeira novamente, e assim por diante.
+- `AvailabilityFilteringRule`: um algoritmo que pula as instâncias indisponíveis. Por padrão, uma instância é considerada indisponível se há falha em 3 conexões consecutivas. Depois de 30 segundos, há nova tentativa de conexão. Se houver falha nas novas tentativas, há um aumento exponencial do tempo de espera. Todos esses valores são configuráveis.
+- `WeightedResponseTimeRule`: é coletado o tempo de resposta de cada instância. Quanto maior o tempo de resposta, menor a probabilidade da instância ser obtida da lista.
 
 Além disso, o Ribbon mantém estatísticas da latência e frequência de falha de cada instância.
 
@@ -121,7 +124,7 @@ Também é possível agrupar clientes e servidores em zonas (equivalente a _data
 
 O projeto Spring Cloud Netflix Ribbon integra o Ribbon com o ecossistema do Spring.
 
-Para utilizá-lo em um projeto feito com Spring Boot, basta adicionar como dependência o artefato `spring-cloud-starter-netflix-ribbon`. Com o Maven, basta declarar:
+Para utilizá-lo em um projeto Spring Boot, basta adicionar como dependência o artefato `spring-cloud-starter-netflix-ribbon`. Com o Maven, basta declarar:
 
 ```xml
 <dependency>
@@ -130,7 +133,7 @@ Para utilizá-lo em um projeto feito com Spring Boot, basta adicionar como depen
 </dependency>
 ```
 
-_Observação: para que o Maven obtenha as versões corretas do Spring Cloud e das dependências transitivas, o artefato `spring-cloud-dependencies` deve ser adicionado ao Dependency Management com tipo `pom`. Faremos isso nos próximos exercícios para os projetos que ainda não possuem esse artefato._
+_Observação: para que o Maven obtenha as versões corretas do Spring Cloud e das dependências transitivas, o artefato `spring-cloud-dependencies` deve ser adicionado ao Dependency Management com tipo `pom`. Faremos isso nos próximos exercícios para os projetos que ainda não possuem essa declaração._
 
 Digamos que temos duas instâncias de um serviço de Estoque sendo executadas nas portas `8089` e `9099`.
 
@@ -143,7 +146,7 @@ http://localhost:8089/item/1
 Já para a outra instância, teríamos:
 
 ```txt
-http://localhost:9089/item/1
+http://localhost:9099/item/1
 ```
 
 Com o Spring Cloud Netflix Ribbon, poderíamos ter a seguinte configuração no `application.properties` do projeto:
@@ -152,7 +155,7 @@ Com o Spring Cloud Netflix Ribbon, poderíamos ter a seguinte configuração no 
 estoque.ribbon.listOfServers=http://localhost:8089,http://localhost:9099
 ```
 
-Com a configuração anterior, o nome `estoque` está associado pelo Ribbon à lista com as duas instâncias do serviço. É como se fosse criado um Virtual Host chamado `estoque`. Chamadas a `http://estoque` que passam pelo Ribbon seriam alternadas entre as duas instâncias.
+Com a configuração anterior, o nome `estoque` está associado pelo Ribbon à lista com as duas instâncias do serviço. É como se fosse criado um Virtual Host chamado `estoque`. Como o algoritmo padrão é o _round robin_, chamadas a `http://estoque` que passam pelo Ribbon seriam alternadas entre as duas instâncias.
 
 Uma outra configuração que devemos fazer por enquanto é desabilitar o Eureka, que está integrado ao Ribbon mas estudaremos em capítulos posteriores:
 
@@ -177,7 +180,7 @@ java.net.UnknownHostException: estoque
 
 O RestTemplate não entende o que significa `estoque`. Na verdade, a chamada não foi interceptada pelo Ribbon.
 
-Para isso, devemos utilizar a anotação `@LoadBalanced` do pacote `org.springframework.cloud.client.loadbalancer` no momento da criação da instância do `RestTemplate`:
+Para associar o Ribbon ao `RestTemplate`, devemos utilizar a anotação `@LoadBalanced` no momento da criação da instância do `RestTemplate`:
 
 ```java
 @Configuration
@@ -192,7 +195,7 @@ public class RestClientConfig {
 }
 ```
 
-Perceba que a anotação `@LoadBalanced` não é de um pacote específico do Ribbon, mas de um pacote mais genérico. Essa anotação está definida no projeto Spring Cloud Commons, que contém diversas abstrações que permitem deixar o código desacoplado de implementações específicas. É o poder das abstrações!
+A anotação `@LoadBalanced` é do pacote `org.springframework.cloud.client.loadbalancer`. Perceba que não é de um pacote específico do Ribbon, mas de um pacote mais genérico. Essa anotação está definida no projeto Spring Cloud Commons, que contém diversas abstrações que permitem deixar o código desacoplado de implementações específicas. É o poder das abstrações!
 
 ### Integrando com Feign
 
@@ -275,6 +278,10 @@ logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=DEBUG
   cd ~/Desktop/fj33-eats-distancia-service
   git checkout -f cap8-detalhando-o-log-de-resquests-do-servico-de-distancia
   ```
+
+  <!--
+    TODO: renomear a branch cap8-detalhando-o-log-de-requests-do-servico-de-distancia, corrigindo o resquests, tanto na apostila como no repositório. 
+  -->
 
   Execute a classe `EatsDistanciaServiceApplication`.
 
