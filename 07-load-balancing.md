@@ -553,7 +553,7 @@ monolito.ribbon.listOfServers=http://localhost:8080,http://localhost:9090
 
   Execute novamente o serviço de pagamentos e o API Gateway.
 
-2. Garanta que o serviço de pagamento foi reiniciado e que as duas instâncias do monólito estão no ar.
+2. Garanta que o serviço de pagamentos foi reiniciado e que as duas instâncias do monólito estão no ar.
 
   Use um cliente REST como o cURL para confirmar um pagamento:
 

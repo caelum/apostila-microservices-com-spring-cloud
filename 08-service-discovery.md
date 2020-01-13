@@ -251,7 +251,7 @@ eureka.client.serviceUrl.defaultZone=${EUREKA_URI:http://localhost:8761/eureka/}
 
 Dessa maneira, caso seja necessário modificar a URL padrão do Eureka Server, basta definir a variável de ambiente `EUREKA_URI`.
 
-## Self Registration do serviço de pagamento no Eureka Server
+## Self Registration do serviço de pagamentos no Eureka Server
 
 No `pom.xml` do `eats-pagamento-service`, adicione como dependência o _starter_ do Eureka Client:
 
@@ -527,11 +527,11 @@ r̶i̶b̶b̶o̶n̶.̶e̶u̶r̶e̶k̶a̶.̶e̶n̶a̶b̶l̶e̶d̶=̶f̶a̶l̶s̶e�
 
 Na [documentação do Eureka](https://github.com/Netflix/eureka/wiki/Eureka-at-a-glance), há a seguinte comparação:
 
-_O AWS Elastic Load Balancer (ELB) é uma solução de Load Balancing para edge services expostos ao tráfego da web do usuário final. O Eureka preenche a necessidade de Load Balancing nas chamadas entre serviços. Embora você possa, teoricamente, colocar seus serviços internos atrás do AWS ELB, no EC2, você os expõe ao mundo exterior e perdendo toda a utilidade dos security groups da AWS._
+_O AWS Elastic Load Balancer (ELB) é uma solução de Load Balancing para edge services expostos ao tráfego da web do usuário final. O Eureka preenche a necessidade de Load Balancing nas **chamadas entre serviços**. Embora você possa, teoricamente, colocar seus serviços internos atrás do AWS ELB, no EC2, você os expõe ao mundo exterior e perdendo toda a utilidade dos security groups da AWS._
 
-_O AWS ELB também é uma solução tradicional de Load Balancing baseada em proxy, enquanto no Eureka é diferente, pois o Load Balancing ocorre no nível da instância. As instâncias do cliente conhecem com quais servidores precisam conversar [...]_
+_O AWS ELB também é uma solução tradicional de Load Balancing baseada em proxy, enquanto no Eureka é diferente, pois o Load Balancing ocorre **no nível da instância**. As instâncias do cliente conhecem com quais servidores precisam conversar [...]_
 
-_Outro aspecto importante que diferencia o Load Balancing baseado em proxy [do AWS ELB] do Load Balancing do Eureka é que seu aplicativo pode ser resiliente às interrupções dos load balancers, pois as informações sobre os servidores disponíveis são armazenadas em cache no cliente [...]_
+_Outro aspecto importante que diferencia o Load Balancing baseado em proxy [do AWS ELB] do Load Balancing do Eureka é que seu aplicativo pode ser **resiliente às interrupções dos load balancers**, pois as informações sobre os servidores disponíveis são armazenadas em cache no cliente [...]_
 
 ## Para saber mais: Third party registration e Server-side Discovery
 

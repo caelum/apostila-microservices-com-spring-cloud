@@ -951,7 +951,7 @@ public class PagamentoController {
 
   Suba o monólito executando a classe `EatsApplication` e o serviço de pagamentos por meio da classe `EatsPagamentoServiceApplication`.
 
-2. Certifique-se que o serviço de pagamento foi reiniciado e que os demais serviços e o front-end estão no ar.
+2. Certifique-se que o serviço de pagamentos foi reiniciado e que os demais serviços e o front-end estão no ar.
 
   Faça um novo pedido, realizando e confirmando um pagamento.
   
