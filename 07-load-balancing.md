@@ -32,6 +32,10 @@ O pesquisador da Google Jeffrey Dean, na palestra [Designs, Lessons and Advice f
 O Jeffrey Dean ainda menciona tubarões como problemas em links de longa distância, provavelmente para links marinhos entre continentes!
 -->
 
+> _A principal coisa que notei, no entanto, foi que os discos rígidos foram conectados por velcro. Perguntei a um dos Googlers o motivo disso. 'Ah', disse ele, 'os discos rígidos falham tanto que não queremos que eles sejam aparafusados. Nós apenas os arrancamos, jogamos na lixeira e conectamos um novo com velcro._
+>
+> Sam Newman, no livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015)
+
 Fica claro que, no mundo real, um Sistema Distribuído tem diversos motivos para ficar fora do ar. 
 
 Estar operando normalmente é algo relacionado a outra _ilidade_: a **Disponibilidade**. Trata-se da proporção de tempo em que um sistema se mantém em operação. Algumas medidas de Disponibilidade comuns:
