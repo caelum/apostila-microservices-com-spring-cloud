@@ -521,7 +521,58 @@ r̶i̶b̶b̶o̶n̶.̶e̶u̶r̶e̶k̶a̶.̶e̶n̶a̶b̶l̶e̶d̶=̶f̶a̶l̶s̶e�
 
   Perceba que as instâncias do serviço de distância são chamadas alternadamente.
 
-<!-- TODO: exemplo com Consul -->
+## Para saber mais: usando o Consul como Service Registry
+
+Como mencionado anteriormente, o [Consul](https://www.consul.io/) da HashiCorp é, entre outras utilidades, um Service Registry que provê uma RESTful API e é compatível com DNS. É implementado na linguagem Go e o uso de memória tende a ser consideravelmente menor que o Eureka Server.
+
+O Consul foi implementado como um Sistema Distribuído altamente disponível e, por isso, implementa algoritmos como o consensus protocol Raft e o gossip protocol SWIM para membros e _broadcast_. Idealmente, deve ser executado em um cluster de 3 servidores em um mesmo _datacenter_.
+
+Para definir um servidor Consul podemos usar a imagem `consul` do DockerHub. A porta `8500` é usada pela API HTTP e por uma Web UI semelhante à do Eureka Server. Já a porta `8600` é usada para resolver consultas DNS.
+
+Mesmo com apenas um servidor, é necessário configurarmos o endereço do cluster Consul, apontando para uma interface de rede válida, através da variável de ambiente `CONSUL_BIND_INTERFACE`.
+
+```yaml
+  consul:
+    image: consul:1.5
+    restart: on-failure
+    ports:
+      - "8500:8500"
+      - "8600:8600"
+    environment:
+      CONSUL_BIND_INTERFACE: eth0
+```
+
+Usar o Consul em um projeto Spring Cloud não dá tanto trabalho. O projeto [Spring Cloud Consul](https://cloud.spring.io/spring-cloud-consul/reference/html/) tem bibliotecas de compatibilidade com várias das funcionalidades do Consul, com integração com outros componentes do Spring Cloud, incluindo o Zuul e o Ribbon.
+
+Para usar o Spring Cloud Consul, basta declara como dependência de cada projeto o artefato `spring-cloud-starter-consul-all`. Com Maven:
+
+```xml
+<dependency>
+  <groupId>org.springframework.cloud</groupId>
+  <artifactId>spring-cloud-starter-consul-all</artifactId>
+</dependency>
+```
+
+_Observação: o Dependency Management `spring-cloud-dependencies` deve estar declarado no `pom.xml`._
+
+No `application.properties` de cada serviço e dos respectivos clientes, devemos configurar o endereço correto do servidor Consul:
+
+```properties
+spring.cloud.consul.host=localhost
+spring.cloud.consul.port=8500
+spring.cloud.consul.discovery.register-health-check=false
+```
+
+Como ainda não vimos o conceito de _health checking_ no curso, desabilitaremos essa funcionalidade.
+
+Finalmente, basta adicionar a anotação `@EnableDiscoveryClient` na classe principal:
+
+```java
+@EnableDiscoveryClient // adicionado
+@SpringBootApplication
+```
+
+Note que a anotação `@EnableDiscoveryClient` é abstrata, sendo declarada no pacote `org.springframework.cloud.client.discovery`, do Spring Cloud Commons. Ao migrar um projeto do Eureka para o Consul, não há a necessidade de alterar as classes principais. É o poder das abstrações!
 
 ## Para saber mais: Qual a diferença entre o Eureka e o AWS ELB?
 
@@ -545,3 +596,4 @@ Richardson lista dois _patterns_ relacionados:
 Como dissemos em capítulo anterior, no orquestrador de containers [Kubernetes](https://kubernetes.io/), há o conceito de Service, que expõe um conjunto de Pods sob um mesmo DNS name. Richardson afirma que um Service do Kubernetes é uma forma de Service Discovery provido pela infra-estrutura. Os dados de um cluster Kubernetes são armazenados no [etcd](https://etcd.io/), um BD distribuído do tipo chave-valor.
 
 Outras plataformas como [Marathon](https://mesosphere.github.io/marathon/), um orquestrador de containers para [Datacenter Operating System (DC/OS)](https://dcos.io/) e [Apache Mesos](https://mesos.apache.org/), implementam os mesmo patterns.
+
