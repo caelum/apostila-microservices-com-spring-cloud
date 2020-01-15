@@ -40,9 +40,9 @@ Fica claro que, no mundo real, um Sistema Distribuído tem diversos motivos para
 
 Estar operando normalmente é algo relacionado a outra _ilidade_: a **Disponibilidade**. Trata-se da proporção de tempo em que um sistema se mantém em operação. Algumas medidas de Disponibilidade comuns:
 
-- um sistema que fica fora do ar durante 3,65 dias por ano tem disponibilidade de 99 %, conhecida como _two nines_
-- um sistema que fica fora do ar durante 8,77 horas por ano tem disponibilidade de 99.9 %, conhecida como _three nines_
-- um sistema que fica fora do ar durante 5,26 minutos por ano tem disponibilidade de 99,999 %, conhecida como _five nines_
+- um sistema que fica fora do ar durante 3,65 dias por ano tem Disponibilidade anual de 99 %, conhecida como _two nines_
+- um sistema que fica fora do ar durante 8,77 horas por ano tem Disponibilidade anual de 99.9 %, conhecida como _three nines_
+- um sistema que fica fora do ar durante 5,26 minutos por ano tem Disponibilidade anual de 99,999 %, conhecida como _five nines_
 
 > Mais adiante na apostila vamos revisitar o conceito de Disponibilidade.
 
