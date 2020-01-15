@@ -36,6 +36,8 @@ O Jeffrey Dean ainda menciona tubarões como problemas em links de longa distân
 >
 > Sam Newman, no livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015)
 
+Há diversas outras fontes de erro, como mudança de configurações de Firewall, alterações no DNS ainda não propagadas, atualizações em serviços externos para versões não compatíveis, falhas no Sistema Operacional e, claro, bugs involuntariamente adicionados pelos desenvolvedores de um serviço.
+
 Fica claro que, no mundo real, um Sistema Distribuído tem diversos motivos para ficar fora do ar. 
 
 Estar operando normalmente é algo relacionado a outra _ilidade_: a **Disponibilidade**. Trata-se da proporção de tempo em que um sistema se mantém em operação. Algumas medidas de Disponibilidade comuns:
