@@ -40,7 +40,15 @@ Há diversas outras fontes de erro, como mudança de configurações de Firewall
 
 Fica claro que, no mundo real, um Sistema Distribuído tem diversos motivos para ficar fora do ar. 
 
-Estar operando normalmente é algo relacionado a outra _ilidade_: a **Disponibilidade**. Trata-se da proporção de tempo em que um sistema se mantém em operação. Algumas medidas de Disponibilidade comuns:
+Estar operando normalmente é algo relacionado a outra _ilidade_: a **Disponibilidade**. Trata-se da proporção de tempo em que um sistema se mantém em operação.
+
+A Disponibilidade está relacionada a um período de tempo: diário, semanal, mensal ou anual. O tempo em que um sistema passa operando normalmente nesse período de tempo é chamado de _uptime_. Já o tempo em que um sistema falha em completar requisições nesse período de tempo é o _downtime_. Portanto:
+
+```txt
+Disponibilidade = uptime / (uptime + downtime)
+```
+
+Algumas medidas de Disponibilidade comuns:
 
 - um sistema que fica fora do ar durante 3,65 dias por ano tem Disponibilidade anual de 99 %, conhecida como _two nines_
 - um sistema que fica fora do ar durante 8,77 horas por ano tem Disponibilidade anual de 99.9 %, conhecida como _three nines_
@@ -74,7 +82,7 @@ Load Balancers que usam dados de protocolos no nível de rede ou transporte como
 >
 > _A criação de sistemas escaláveis horizontalmente implica em alguma forma de balanceamento de carga. O balanceamento de carga tem tudo a ver com a distribuição de solicitações em um pool ou farm de servidores para atender a todas as requisições corretamente no menor tempo possível._
 >
-> Michael Nygard, em seu livro [Release It!](https://pragprog.com/book/mnee/release-it) (NYGARD, 2007)
+> Michael Nygard, em seu livro [Release It! Second Edition](https://pragprog.com/book/mnee2/release-it-second-edition) (NYGARD, 2018)
 
 ### Server Side Load Balancing
 
@@ -94,7 +102,7 @@ No caso do Caelum Eats, isso significaria que precisaríamos de um load balancer
 
 No orquestrador de containers [Kubernetes](https://kubernetes.io/), as instâncias de uma aplicação são chamadas de [Pods](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/). O Kubernetes já provê uma abstração para o agrupamento dos diferentes Pods de uma aplicação, chamada de [Service](https://kubernetes.io/docs/concepts/services-networking/service/). Um Service funciona como um server side load balancer, expondo os Pods de uma aplicação sob um mesmo DNS name.
 
-> No livro [Release It!](https://pragprog.com/book/mnee/release-it) (NYGARD, 2007), Michael Nygard menciona que o próprio DNS pode ser usado como um L7 load balancer: é possível associar múltiplos IPs a um mesmo domínio. Ao contrário de outros load balancers, o balanceamento não é feito durante uma requisição, mas na resolução de nomes. É feito um balanceamento do tipo _round-robin_, em que os IPs oferecidos ao cliente são rotacionados sequencialmente. Uma grande desvantagem do DNS é que os IPs devem ser acessíveis diretamente. Além disso, não há uma maneira de modificar o algoritmo de balanceamento e, uma vez que o cliente esteja conectado a um IP, não há como redirecionar para outras instâncias.
+> No livro [Release It! Second Edition](https://pragprog.com/book/mnee2/release-it-second-edition) (NYGARD, 2018), Michael Nygard menciona que o próprio DNS pode ser usado como um L7 load balancer: é possível associar múltiplos IPs a um mesmo domínio. Ao contrário de outros load balancers, o balanceamento não é feito durante uma requisição, mas na resolução de nomes. É feito um balanceamento do tipo _round-robin_, em que os IPs oferecidos ao cliente são rotacionados sequencialmente. Uma grande desvantagem do DNS é que os IPs devem ser acessíveis diretamente. Além disso, não há uma maneira de modificar o algoritmo de balanceamento e, uma vez que o cliente esteja conectado a um IP, não há como redirecionar para outras instâncias.
 
 ### Client Side Load Balancing
 
