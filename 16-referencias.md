@@ -28,6 +28,8 @@ BROOKS, Fred. _No Silver Bullet: Essence and Accident in Software Engineering._ 
 
 BROWN, Simon. _Modular monoliths._ 2015. Em: http://www.codingthearchitecture.com/presentations/sa2015-modular-monoliths
 
+BRUCE, Morgan; PEREIRA, Paulo A. _Microservices in Action._ Manning Publications, 2018. 392 p. Em: https://www.manning.com/books/microservices-in-action
+
 CALÇADO, Phil. _Evoluindo uma Arquitetura inteiramente sobre APIs: o caso da SoundCloud._ 2013. Em: https://www.infoq.com/br/presentations/evoluindo-uma-arquitetura-soundcloud/
 
 Calçado, Phil. _The Back-end for Front-end Pattern (BFF)._ 2015. Em: https://philcalcado.com/2015/09/18/the_back_end_for_front_end_pattern_bff.html
@@ -122,7 +124,7 @@ NEWMAN, Sam. _Monolith to Microservices: Evolutionary Patterns to Transform Your
 
 NEWMAN, Sam. 2019b. Em: https://twitter.com/samnewman/status/1131117455907205120
 
-NYGARD, Michael. _Release It!: Design and Deploy Production-Ready Software._ Pragmatic Programmers, 2007. 326 p. Em: https://pragprog.com/book/mnee/release-it
+NYGARD, Michael. _Release It! Second Edition: Design and Deploy Production-Ready Software._ Pragmatic Programmers, 2018. 376 p. Em: https://pragprog.com/book/mnee2/release-it-second-edition
 
 NOTTINGHAM, Mark. _Web Linking._ Internet Engineering Task Force (IETF), 2010. https://tools.ietf.org/html/rfc5988
 

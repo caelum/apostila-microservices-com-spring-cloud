@@ -1,5 +1,98 @@
 # Resiliência
 
+## Revisitando o conceito de Disponibilidade
+
+Em capítulos anteriores, definimos Disponibilidade como a proporção de tempo, em um determinado período, em que o sistema opera normalmente.
+
+Mas o que acontece se um sistema estiver extremamente lento?
+
+Conforme mencionamos nos primeiros capítulos, ao falar sobre Consistência em um Sistema Distribuído, no paper [Consistency Tradeoffs in Modern Distributed Database System Design](http://www.cs.umd.edu/~abadi/papers/abadi-pacelc.pdf) (ABADI, 2012), Daniel Abadi amplia o Teorema CAP, cunhando o Teorema PACELC: no caso de uma Partição na rede, um Sistema Distribuído precisa escolher entre Disponibilidade (em inglês, _Availability_) e Consistência;  se não houver Partição na rede, a escolha é entre Latência e Consistência. Simplificando, podemos incluir alta latência de rede como uma forma de indisponibilidade.
+
+> _Observe que Disponibilidade e Latência são sem dúvida a mesma coisa: um sistema indisponível fornece essencialmente uma Latência extremamente alta. Para os fins desta discussão, considero como indisponíveis sistemas com latências maiores que um timeout típico para uma requisição, como alguns segundos; e como "Alta Latência", sistemas com latências menores que um timeout típico, mas ainda se aproximando de centenas de milissegundos._
+>
+> Daniel Abadi, no paper [Consistency Tradeoffs in Modern Distributed Database System Design](http://www.cs.umd.edu/~abadi/papers/abadi-pacelc.pdf) (ABADI, 2012)
+
+<!--@note
+  Alexandre - Podemos lembrar aos alunos dos números de Latência do Jeffrey Dean da Google: Cache L1 é 0.5 ns enquanto round Round trip dentro do mesmo data center é 500 000 ns. Ou seja, uma latência 1 milhão de vezes maior. Podemos lembrar que a Luz, a coisa mais rápida do Universo, demoraria 133 ms pra ir e voltar do Japão.
+-->
+
+## Falhas em Cascata
+
+Em um Sistema Distribuído implementado de maneira ingênua, uma lentidão em um serviço pode levar o sistema todo a ficar indisponível. Isso é comumente conhecido como falhas em cascata (em inglês, _cascading failures_).
+
+No livro [Microservices in Action](https://www.manning.com/books/microservices-in-action) (BRUCE; PEREIRA, 2018), os autores ligam esse tipo de comportamento em cascata com um comportamento emergente de Sistemas Complexos: _um evento perturba um Sistema, levando a algum efeito que, por sua vez, aumenta a magnitude do distúrbio inicial. [...] Considere uma debandada em um rebanho de animais: o pânico faz um animal correr que, por sua vez, espalha o pânico para outros animais, o que faz com que eles corram, e assim por diante. Em Microservices, uma sobrecarga pode causar um efeito dominó: uma falha em um serviço aumenta falhas nos serviços que o chamam e, por sua vez, nos serviços que chamam esses. No pior caso, o resultado é uma indisponibilidade generalizada._
+
+No livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), Sam Newman descreve o caso em um sistema de agregador de anúncios, que unia resultados de diferentes sistemas legados. Um dos legados mais antigos e pouco usados, que correspondia a menos de 5% do faturamento, passou a responder de maneira muito lenta.  A demora fez com que o único pool de conexões fosse preenchido e, como as threads ficavam esperando indefinidamente, o sistema todo veio abaixo.
+
+> _Responder muito lentamente é um dos piores modos de falha que você pode experimentar. Se um sistema não está no ar, você descobre rapidamente. Quando apenas está lento, você acaba esperando um pouco antes de desistir. [...] descobrimos da maneira mais difícil que os sistemas lentos são muito mais difíceis de lidar do que os sistemas que falham rapidamente. Em um Sistema Distribuído, a Latência mata._
+>
+> Sam Newman, no livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015)
+
+## Patterns de Estabilidade
+
+Desejamos que nosso Sistema Distribuído apresente como característica a **Resiliência**. Segundo o Dicionário Michaelis, um significado figurativo da palavra [Resiliência](https://michaelis.uol.com.br/moderno-portugues/busca/portugues-brasileiro/resili%C3%AAncia/) é a _capacidade de rápida adaptação ou recuperação_. A qual _ilidade_ a Resiliência estaria ligada? À **Estabilidade** que, também segundo o Dicionário Michaelis, é _característica daquilo que é estável; solidez._
+
+Michael Nygard, em seu livro [Release It! Second Edition](https://pragprog.com/book/mnee2/release-it-second-edition) (NYGARD, 2018), define Estabilidade como a característica observável em _um sistema resiliente que se mantém processando transações [de negócio], mesmo quando há impulsos transientes, estresses persistentes ou falhas de componentes que interrompem o processamento normal._
+
+<!--@note
+  Nygard define uma série de termos de usados quando fala em Estabilidade:
+  transaction: abstract unit of work processed by the system
+  system: I mean the complete, interdependent set of hardware, applications, and services required to process transactions for users
+
+  (impulse and stress come from mechanical engineering)
+
+  impulse: a rapid shock to the system
+  stress: a force applied to the system over an extended period
+-->
+
+Nygard lista uma série de patterns de Estabilidade. Alguns deles serão descritos a seguir.
+
+## Timeouts
+
+No exemplo do agregador de anúncios mencionado por Sam Newman, no livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), a lentidão em um dos legados ocasionou uma interrupção no sistema todo. O motivo mencionado por Newman é que o pool de conexões único utilizado esperava "para sempre" e, com uma alta demanda, o pool foi exaurido e o serviço de anúncios não poderia chamar nenhum outro legado. A biblioteca de pool de conexões dava suporte a _timeouts_, mas estava desabilitada por padrão!
+
+Newman, recomenda que todas as chamadas remotas tenham timeouts configurados. E qual valor definir? Se for longo demais, ainda causará lentidão no sistema. Se for rápido demais, uma chamada bem sucedida por ser considerado como falha. Uma boa solução é usar valores default de bibliotecas, ajustando valores para cenários específicos.
+
+Em seu livro [Release It! Second Edition](https://pragprog.com/book/mnee2/release-it-second-edition) (NYGARD, 2018), Michael Nygard argumenta que timeouts provêem _isolamento de falhas_, já que um problema em outro serviço, dispositivo ou sistema não deve ser um problema de quem o invoca. Nygard relata que, infelizmente, muitas APIs e bibliotecas de clientes de sistemas como Bancos de Dados não provêem maneiras de setar timeouts. Para Nygard, qualquer pool de recursos que bloqueia threads deve ter timeouts.
+
+## Fail Fast
+
+Michael Nygard, ainda no livro [Release It! Second Edition](https://pragprog.com/book/mnee2/release-it-second-edition) (NYGARD, 2018), diz: _se respostas lentas são piores que nenhuma resposta, o pior dos mundos certamente são falhas lentas._ Se um sistema puder detectar que vai falhar, é melhor que retorne o mais rápido possível um response de erro para seus clientes. Como predizer uma falha? Nygard afirma que um load balancer, por exemplo, deve recusar novas requisições se não houver nenhum servidor para balanceamento no ar, evitando enfileirar requisições.
+
+Para Nygard, no código de uma aplicação, parâmetros devem ser validados e recursos obtidos, como conexões a BDs ou a outros sistemas, assim que possível. Assim, se houver uma falha de validação ou na obtenção de algum recurso, é possível falhar rapidamente. É importante notar que isso serve como um príncipio, porém não é aplicável em todas as situações.
+
+<!--@note
+Nygard cita um projeto para um estúdio fotográfico em que, caso fontes, cores, imagens ou planos de fundo não estivessem disponíveis, uma imagem preta era enviada a uma impressora de alta resolução. Eram gastos recursos caríssimos como papéis especiais, produtos químicos, tempo de impressão e profissionais para separar as imagens defeituosas, diagnosticando e ajudando desenvolvedores a debugar o software. Então, o time de Nygard aplicou o pattern _Fail Fast_, checando fontes, cores, imagens, planos de fundo, memória disponível. Dessa forma, os erros induzidos pelo software foram a zero.
+-->
+
+Para Nygard, tanto o Timeout como Fail Fast são patterns que tratam de problemas de latência, sendo dois lados da mesma moeda. O Timeout é útil para proteger o seu sistema de falhas dos outros. O Fail Fast é útil quando você precisa avisar o porquê não será possível processar alguma requisição. Timeouts são para saídas e Fail Fast para entradas.
+
+## Bulkheads
+
+Ainda no livro [Release It! Second Edition](https://pragprog.com/book/mnee2/release-it-second-edition) (NYGARD, 2018), Michael Nygard empresta um conceito da Engenharia Naval: as anteparas (em inglês, _bulkheads_): _em um navio, bulkheads são divisórias metálicas que podem ser seladas para dividir o navio em compartimentos separados. Quando as escotilhas são fechadas, uma bulkhead impede que a água se mova de uma seção para outra. Dessa maneira, um único dano no casco não afunda irreversivelmente o navio. A bulkhead aplica um princípio de contenção de dados._
+
+![Navios sem e com bulkheads {w=80}](imagens/09-resiliencia/bulkheads-navais.png)
+
+_Observação: a fonte das imagens anteriores é a [documentação do OpenLiberty](https://openliberty.io/guides/bulkhead.html), um microservice chassis baseado no IBM WebSphere._
+
+Nygard afirma que, em TI, redundância física é a maneira mais comum de aplicar a ideia de bulkheads: uma falha no hardware de um servidor não afetaria os outros. O mesmo princípio pode ser atingido executando múltiplas instâncias de um serviço em um mesmo servidor.
+
+Para Nygard, há maneiras mais granulares de aplicar bulkheads. Por exemplo, é possível apartar em pools diferentes threads de um processo que tem responsabilidades distintas, separando threads que tratam requests de threads administrativas. Assim, se as threads da aplicação travarem, é possível usar as threads administrativas para obter um dump ou fazer um _shut down_. Nygard menciona ainda que um Sistema Operacional pode alocar um processo a um core específico (ou a um grupo de cores), o que é conhecido como _CPU Binding_. Dessa maneira, a sobrecarga em um processo não degrada a performance da máquina toda, já outros cores estarão liberados para outros processo.
+
+Há também maneiras menos granulares. No caso de _cloud computing_, podem ser exploradas diferentes topologias como zonas e regiões da AWS.
+
+> _Você pode particionar pools de threads em uma aplicação, CPUs em um servidor ou servidores em um cluster._
+>
+> Michael Nygard, no livro [Release It! Second Edition](https://pragprog.com/book/mnee2/release-it-second-edition) (NYGARD, 2018)
+
+Em seu livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), Sam Newman afirma que as barreiras arquiteturais entre microservices são, no fim das contas, bulkheads: uma falha em um serviço pode degradar certas funcionalidades, mas não pára tudo.
+
+No exemplo do agregador de anúncios de Newman, todas as conexões aos sistemas legados compartilhavam um mesmo pool de conexões. A falha em um legado derrubou o único pool de conexões e, consequentemente, impediu que chamadas fossem feitas aos outros legados, tornando o sistema inutilizável. Usando a ideia de bulkheads, cada sistema legado deveria ter seu próprio pool de conexões, de maneira a isolar possíveis falhas.
+
+<!-- 
+## Circuit Breaker
+ -->
+
 ## Exercício: simulando demora no serviço de distância
 
 1. Altere o método `calculaDistancia` da classe `DistanciaService` do serviço de distância, para que invoque o método que simula uma demora de 10 a 20 segundos:
