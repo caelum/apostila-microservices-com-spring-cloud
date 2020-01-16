@@ -49,15 +49,15 @@ Nygard lista uma série de patterns de Estabilidade. Alguns deles serão descrit
 
 ## Timeouts
 
-No exemplo do agregador de anúncios mencionado por Sam Newman, no livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), a lentidão em um dos legados ocasionou uma interrupção no sistema todo. O motivo mencionado por Newman é que o pool de conexões único utilizado esperava "para sempre" e, com uma alta demanda, o pool foi exaurido e o serviço de anúncios não poderia chamar nenhum outro legado. A biblioteca de pool de conexões dava suporte a _timeouts_, mas estava desabilitada por padrão!
+No exemplo do agregador de anúncios mencionado por Sam Newman, no livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), a lentidão em um dos legados ocasionou uma interrupção no sistema todo. O motivo mencionado por Newman é que o pool de conexões único utilizado esperava "para sempre" e, com uma alta demanda, o pool foi exaurido e o serviço de anúncios não poderia chamar nenhum outro legado. A biblioteca de pool de conexões dava suporte a _Timeouts_, mas estava desabilitada por padrão!
 
-Newman, recomenda que todas as chamadas remotas tenham timeouts configurados. E qual valor definir? Se for longo demais, ainda causará lentidão no sistema. Se for rápido demais, uma chamada bem sucedida por ser considerado como falha. Uma boa solução é usar valores default de bibliotecas, ajustando valores para cenários específicos.
+Newman, recomenda que todas as chamadas remotas tenham Timeouts configurados. E qual valor definir? Se for longo demais, ainda causará lentidão no sistema. Se for rápido demais, uma chamada bem sucedida por ser considerado como falha. Uma boa solução é usar valores default de bibliotecas, ajustando valores para cenários específicos.
 
-Em seu livro [Release It! Second Edition](https://pragprog.com/book/mnee2/release-it-second-edition) (NYGARD, 2018), Michael Nygard argumenta que timeouts provêem _isolamento de falhas_, já que um problema em outro serviço, dispositivo ou sistema não deve ser um problema de quem o invoca. Nygard relata que, infelizmente, muitas APIs e bibliotecas de clientes de sistemas como Bancos de Dados não provêem maneiras de setar timeouts. Para Nygard, qualquer pool de recursos que bloqueia threads deve ter timeouts.
+Em seu livro [Release It! Second Edition](https://pragprog.com/book/mnee2/release-it-second-edition) (NYGARD, 2018), Michael Nygard argumenta que Timeouts provêem _isolamento de falhas_, já que um problema em outro serviço, dispositivo ou sistema não deve ser um problema de quem o invoca. Nygard relata que, infelizmente, muitas APIs e bibliotecas de clientes de sistemas como Bancos de Dados não provêem maneiras de setar Timeouts. Para Nygard, qualquer pool de recursos que bloqueia threads deve ter Timeouts.
 
 ## Fail Fast
 
-Michael Nygard, ainda no livro [Release It! Second Edition](https://pragprog.com/book/mnee2/release-it-second-edition) (NYGARD, 2018), diz: _se respostas lentas são piores que nenhuma resposta, o pior dos mundos certamente são falhas lentas._ Se um sistema puder detectar que vai falhar, é melhor que retorne o mais rápido possível um response de erro para seus clientes. Como predizer uma falha? Nygard afirma que um load balancer, por exemplo, deve recusar novas requisições se não houver nenhum servidor para balanceamento no ar, evitando enfileirar requisições.
+Michael Nygard, ainda no livro [Release It! Second Edition](https://pragprog.com/book/mnee2/release-it-second-edition) (NYGARD, 2018), diz: _se respostas lentas são piores que nenhuma resposta, o pior dos mundos certamente são falhas lentas._ Se um sistema puder detectar que vai falhar, é melhor que retorne o mais rápido possível um response de erro para seus clientes. Falhe rápido (em inglês, _Fail Fast_). Como predizer uma falha? Nygard afirma que um load balancer, por exemplo, deve recusar novas requisições se não houver nenhum servidor para balanceamento no ar, evitando enfileirar requisições.
 
 Para Nygard, no código de uma aplicação, parâmetros devem ser validados e recursos obtidos, como conexões a BDs ou a outros sistemas, assim que possível. Assim, se houver uma falha de validação ou na obtenção de algum recurso, é possível falhar rapidamente. É importante notar que isso serve como um príncipio, porém não é aplicável em todas as situações.
 
@@ -69,15 +69,15 @@ Para Nygard, tanto o Timeout como Fail Fast são patterns que tratam de problema
 
 ## Bulkheads
 
-Ainda no livro [Release It! Second Edition](https://pragprog.com/book/mnee2/release-it-second-edition) (NYGARD, 2018), Michael Nygard empresta um conceito da Engenharia Naval: as anteparas (em inglês, _bulkheads_): _em um navio, bulkheads são divisórias metálicas que podem ser seladas para dividir o navio em compartimentos separados. Quando as escotilhas são fechadas, uma bulkhead impede que a água se mova de uma seção para outra. Dessa maneira, um único dano no casco não afunda irreversivelmente o navio. A bulkhead aplica um princípio de contenção de dados._
+Ainda no livro [Release It! Second Edition](https://pragprog.com/book/mnee2/release-it-second-edition) (NYGARD, 2018), Michael Nygard empresta um conceito da Engenharia Naval: as anteparas (em inglês, _Bulkheads_): _em um navio, Bulkheads são divisórias metálicas que podem ser seladas para dividir o navio em compartimentos separados. Quando as escotilhas são fechadas, uma Bulkhead impede que a água se mova de uma seção para outra. Dessa maneira, um único dano no casco não afunda irreversivelmente o navio. A Bulkhead aplica um princípio de contenção de dados._
 
-![Navios sem e com bulkheads {w=80}](imagens/09-resiliencia/bulkheads-navais.png)
+![Navios sem e com Bulkheads {w=80}](imagens/09-resiliencia/bulkheads-navais.png)
 
 _Observação: a fonte das imagens anteriores é a [documentação do OpenLiberty](https://openliberty.io/guides/bulkhead.html), um microservice chassis baseado no IBM WebSphere._
 
-Nygard afirma que, em TI, redundância física é a maneira mais comum de aplicar a ideia de bulkheads: uma falha no hardware de um servidor não afetaria os outros. O mesmo princípio pode ser atingido executando múltiplas instâncias de um serviço em um mesmo servidor.
+Nygard afirma que, em TI, redundância física é a maneira mais comum de aplicar a ideia de Bulkheads: uma falha no hardware de um servidor não afetaria os outros. O mesmo princípio pode ser atingido executando múltiplas instâncias de um serviço em um mesmo servidor.
 
-Para Nygard, há maneiras mais granulares de aplicar bulkheads. Por exemplo, é possível apartar em pools diferentes threads de um processo que tem responsabilidades distintas, separando threads que tratam requests de threads administrativas. Assim, se as threads da aplicação travarem, é possível usar as threads administrativas para obter um dump ou fazer um _shut down_. Nygard menciona ainda que um Sistema Operacional pode alocar um processo a um core específico (ou a um grupo de cores), o que é conhecido como _CPU Binding_. Dessa maneira, a sobrecarga em um processo não degrada a performance da máquina toda, já outros cores estarão liberados para outros processo.
+Para Nygard, há maneiras mais granulares de aplicar Bulkheads. Por exemplo, é possível apartar em pools diferentes threads de um processo que tem responsabilidades distintas, separando threads que tratam requests de threads administrativas. Assim, se as threads da aplicação travarem, é possível usar as threads administrativas para obter um dump ou fazer um _shut down_. Nygard menciona ainda que um Sistema Operacional pode alocar um processo a um core específico (ou a um grupo de cores), o que é conhecido como _CPU Binding_. Dessa maneira, a sobrecarga em um processo não degrada a performance da máquina toda, já outros cores estarão liberados para outros processo.
 
 Há também maneiras menos granulares. No caso de _cloud computing_, podem ser exploradas diferentes topologias como zonas e regiões da AWS.
 
@@ -85,13 +85,41 @@ Há também maneiras menos granulares. No caso de _cloud computing_, podem ser e
 >
 > Michael Nygard, no livro [Release It! Second Edition](https://pragprog.com/book/mnee2/release-it-second-edition) (NYGARD, 2018)
 
-Em seu livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), Sam Newman afirma que as barreiras arquiteturais entre microservices são, no fim das contas, bulkheads: uma falha em um serviço pode degradar certas funcionalidades, mas não pára tudo.
+Em seu livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), Sam Newman afirma que as barreiras arquiteturais entre microservices são, no fim das contas, Bulkheads: uma falha em um serviço pode degradar certas funcionalidades, mas não pára tudo.
 
-No exemplo do agregador de anúncios de Newman, todas as conexões aos sistemas legados compartilhavam um mesmo pool de conexões. A falha em um legado derrubou o único pool de conexões e, consequentemente, impediu que chamadas fossem feitas aos outros legados, tornando o sistema inutilizável. Usando a ideia de bulkheads, cada sistema legado deveria ter seu próprio pool de conexões, de maneira a isolar possíveis falhas.
+No exemplo do agregador de anúncios de Newman, todas as conexões aos sistemas legados compartilhavam um mesmo pool de conexões. A falha em um legado derrubou o único pool de conexões e, consequentemente, impediu que chamadas fossem feitas aos outros legados, tornando o sistema inutilizável. Usando a ideia de Bulkheads, cada sistema legado deveria ter seu próprio pool de conexões, de maneira a isolar possíveis falhas.
 
-<!-- 
 ## Circuit Breaker
- -->
+
+Michael Nygard, no livro [Release It! Second Edition](https://pragprog.com/book/mnee2/release-it-second-edition) (NYGARD, 2018), conta que quando a fiação elétrica começou a ser construída nas casas, à medida que as pessoas plugassem mais aparelhos, os fios iam esquentando mais e mais, até que a casa fosse incendiada, eventualmente. A indústria então passou a usar fusíveis residenciais que queimavam antes da fiação (_fail fast_), protegendo as casas. Só que os fusíveis são descartáveis e as pessoas começaram a usa moedas de cobre no lugar. Resultado: casas queimadas. Então, inventaram o disjuntor (em inglês, _Circuit Breaker_), atualmente presente em qualquer prédio residencial ou comercial. Um Circuit Breaker detecta um uso excessivo de corrente e abre, desarmando como um fusível, desligando todos os aparelhos. Mas, diferentemente de um fusível, um Circuit Breaker pode ser fechado novamente, de maneira manual, assim que não houver perigo.
+
+O princípio por trás de um Circuit Breaker é permitir que um subsistema falhe sem destruir o sistema todo. Assim, um circuito elétrico pode apresentar corrente excessiva devido a um curto-circuito, por exemplo, mas impede que a fiação queime a casa toda.
+
+Nygard diz que, em software, podemos envolver operações perigosas em um componente que oferece uma alternativa quando o sistema não está saudável: um Circuit Breaker. Essa operações são, em geral, chamadas a outros sistemas mas podem ser operações internas a um serviço.
+
+No estado fechado (em inglês, _Closed_), o Circuit Breaker executa as operações normalmente. Se houver uma falha, o Circuit Breaker a contabiliza. Falhas podem ser:
+
+- demoras que ocasionam Timeouts
+- falhas em conexões, quando o sistema a ser chamado estiver fora do ar
+- retornos com erro, como o status 500 em uma chamada HTTP
+
+Se o número (ou frequência) de falhas passa um certo limite, o Circuit Breaker fica no estado aberto (em inglês, _Open_). Uma chamada a um Circuit Breaker no estado Open falha imediatamente (_fail fast_), sem nem tentar executar a operação solicitada.
+
+Um disjuntor residencial precisa ser fechado manualmente. Em software, ao contrário, podemos automatizar o fechamento. Para isso, depois de algum tempo, o Circuit Breaker passa para o estado meio aberto (em inglês, _Half-Open_). Nesse estado, a próxima chamada é executada normalmente. Se a chamada for bem sucedida, o Circuit Breaker passa ao estado de Closed. Se falhar, o Circuit Breaker volta ao estado Open.
+
+![Transição de estados de um Circuit Breaker {w=26}](imagens/09-resiliencia/estados-de-um-circuit-breaker.png)
+
+Vamos voltar ao caso de uma falha em cascata: um serviço sobrecarregado é continuamente requisitado, deixando-o mais sobrecarregado ainda e exaurindo recursos do serviço que o chama. Como suavizar um serviço sobrecarregado? Falhando rapidamente! Como detectar que um serviço está sobrecarregado? Com um Timeout! Como evitar a exaustão de recursos nos serviços que o chamam? Com Circuit Breakers! O intuito final de um Circuit Breaker é suavizar um sistema sobrecarregado, evitando falhas em cascata. E com fechamento é automático.
+
+> _Um Circuit Breaker evita chamadas quando uma Integração apresenta problemas. Um Timeout indica que há um problema em uma Integração._
+>
+> Michael Nygard, no livro [Release It! Second Edition](https://pragprog.com/book/mnee2/release-it-second-edition) (NYGARD, 2018)
+
+Há diferentes frameworks que implementam Circuit Breakers:
+
+- [Polly](https://github.com/App-vNext/Polly), implementado em .NET
+- [Resilience4j](https://github.com/resilience4j/resilience4j), implementa vários patterns de resiliência em Java
+- [Hystrix](https://github.com/Netflix/Hystrix), implementado em Java e parte da iniciativa open-source da Netflix
 
 ## Exercício: simulando demora no serviço de distância
 
@@ -298,7 +326,46 @@ import java.util.HashMap;
 ```
 
 Observação: uma solução interessante seria manter um cache das distâncias entre CEPs e restaurantes e usá-lo como fallback, se possível. Porém, a _hit ratio_, a taxa de sucesso das consultas ao cache, deve ser baixa, já que os CEPs dos clientes mudam bastante.
+<!-- 
 
+TODO:
+
+
+## Fallback
+
+
+When the circuit breaker is open, something has to be done with the calls
+that come in. The easiest answer would be for the calls to immediately fail,
+perhaps by throwing an exception (preferably a different exception than an
+ordinary timeout so that the caller can provide useful feedback). A circuit
+breaker may also have a “fallback” strategy. Perhaps it returns the last good
+response or a cached value. It may return a generic answer rather than a
+personalized one. Or it may even call a secondary service when the primary
+is not available
+
+
+Circuit breakers are a way to automatically degrade functionality when the
+system is under stress. No matter the fallback strategy, it can have an impact
+on the business of the system. Therefore, it’s essential to involve the system’s
+stakeholders when deciding how to handle calls made when the circuit is open.
+For example, should a retail system accept an order if it can’t confirm availabil-
+ity of the customer’s items? What about if it can’t verify the customer’s credit
+card or shipping address? Of course, this conversation is not unique to the use
+of a circuit breaker, but discussing the circuit breaker can be a more effective
+way of broaching the topic than asking for a requirements document.
+There are some interesting implementation details to consider. For one thing,
+what constitutes “too many failures”? A simple counter adding up all the
+faults probably isn’t that interesting. There’s a world of difference between
+observing five faults spread evenly over five hours versus five faults in the
+last thirty seconds. We’re usually more interested in the fault density than
+the total count. I like the Leaky Bucket pattern from Pattern Languages of
+Program Design 2 [VCK96]. It’s a simple counter that you can increment every
+time you observe a fault. In the background, a thread or timer decrements
+the counter periodically (down to zero, of course.) If the count exceeds a
+threshold, then you know that faults are arriving quickly.
+
+
+ -->
 ## Exercício: Fallback com Hystrix
 
 1. Acesse repetidas vezes, em um navegador, a URL a seguir:
@@ -565,6 +632,16 @@ interface RestauranteRestClient {
   }
   ```
 
+<!-- 
+TODO:
+
+Release It! Second Edition
+
+This differs from retries, in that circuit breakers exist to prevent
+operations rather than reexecute them.
+
+ -->
+
 ## Tentando novamente com Spring Retry
 
 No módulo `eats-restaurante` do monólito, adicione o Spring Retry como dependência:
@@ -752,3 +829,13 @@ import org.springframework.retry.annotation.Backoff;
 
   }
   ```
+
+<!-- 
+TODO:
+
+## Para saber mais: Sidecar
+
+## Para saber mais: Service Mesh
+
+
+ -->

@@ -151,6 +151,30 @@ http://localhost:9999/actuator/filters
 
   http://localhost:{porta}/actuator
 
+
+<!-- TODO:
+
+## Monitorando Circuit Breakers
+
+Do Release It Second Edition
+
+The state of the circuit breakers in a system is important to another set of
+stakeholders: operations. Changes in a circuit breaker’s state should always
+be logged, and the current state should be exposed for querying and monitor-
+ing. In fact, the frequency of state changes is a useful metric to chart over
+time; it is a leading indicator of problems elsewhere in the enterprise. Likewise,
+Operations needs some way to directly trip or reset the circuit breaker. The
+circuit breaker is also a convenient place to gather metrics about call volumes
+and response times.
+
+**Expose, track, and report state changes.**
+
+Popping a Circuit Breaker always indicates something abnormal. It should
+be visible to Operations. It should be reported, recorded, trended, and
+correlated.
+
+ -->
+
 ## Configurando o Hystrix Dashboard
 
 Pelo navegador, abra `https://start.spring.io/`.
