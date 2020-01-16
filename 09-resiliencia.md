@@ -121,6 +121,11 @@ Há diferentes frameworks que implementam Circuit Breakers:
 - [Resilience4j](https://github.com/resilience4j/resilience4j), implementa vários patterns de resiliência em Java
 - [Hystrix](https://github.com/Netflix/Hystrix), implementado em Java e parte da iniciativa open-source da Netflix
 
+
+## Hystrix
+
+
+
 ## Exercício: simulando demora no serviço de distância
 
 1. Altere o método `calculaDistancia` da classe `DistanciaService` do serviço de distância, para que invoque o método que simula uma demora de 10 a 20 segundos:
@@ -830,12 +835,115 @@ import org.springframework.retry.annotation.Backoff;
   }
   ```
 
+
+## Patterns de Resiliência: um resumo
+
+A [documentação do Resilience4j](https://github.com/resilience4j/resilience4j#resilience-patterns), traz um resumo dos patterns de Resiliência de maneira divertida:
+
+|name |how does it work? | description |slogans |links
+
+### Retry
+
+- _Como funciona?_ Repete execuções que falharam.
+- _Descrição:_ Muitas falhas são transientes e podem ser autocorrigidas depois de um pequeno período.
+- _Slogans:_ "Insira uma moeda para tentar de novo" ou "Talvez seja só um tilt"
+
+### Circuit Breaker
+
+- _Como funciona?_ Bloqueia temporariamente possíveis falhas.
+- _Descrição:_ Quando um sistema está sofrendo seriamente, é melhor fracassar rapidamente (_Fail Fast_) do que fazer com que os clientes esperem.
+- _Slogans:_ "Dá uma folga pra aquele sistema" ou "Baby, don't hurt me, no more"
+
+### Rate Limiter
+
+- _Como funciona?_ Limita execuções por período.
+- _Descrição:_ Prepare-se para uma escala e estabeleça a Confiabilidade e a Alta Disponibilidade de seu serviço.
+- _Slogans:_ "Tá bom para esse minuto!" ou "Bom, vai funcionar da próxima vez"
+
+### Timeout
+
+- _Como funciona?_ Limita a duração de uma execução.
+- _Descrição:_ Depois de um certo tempo, um resultado bem sucedido é improvável.
+- _Slogans:_ "Não espere para sempre"
+
+### Bulkhead
+
+- _Como funciona?_ Limita execuções concorrentes.
+- _Descrição:_ Recurso são isolados em pools de maneira que, se algum falhar, os outros continuarão.
+- _Slogans:_ "Uma falha não deveria afundar o navio todo" ou "Por favor, não todos de uma vez"
+
+## Cache
+
+- _Como funciona?_ Memoriza um resultado bem sucedido.
+- _Descrição:_ Alguma proporção das requisições pode ser semelhante.
+- _Slogans:_ "Você já pediu esse"
+
+## Fallback
+
+- _Como funciona?_ Provê um resultado alternativo para falhas.
+- _Descrição:_ As coisas ainda falharão - planeje o que você fará quando isso acontecer.
+- _Slogans:_ "Degrade graciosamente" ou "Um pássaro na mão é melhor que dois voando"
+
 <!-- 
 TODO:
+
 
 ## Para saber mais: Sidecar
 
 ## Para saber mais: Service Mesh
+
+## Uma mentalidade antifrágil
+
+The	Antifragile	Organization
+
+In	his	book	Antifragile	(Random	House),	Nassim	Taleb	talks	about	things	that	actually
+benefit	from	failure	and	disorder.	Ariel	Tseitlin	used	this	concept	to	coin	the	concept	of	the
+antifragile	organization	in	regards	to	how	Netflix	operates.
+The	scale	at	which	Netflix	operates	is	well	known,	as	is	the	fact	that	Netflix	is	based
+entirely	on	the	AWS	infrastructure.	These	two	factors	mean	that	it	has	to	embrace	failure
+well.	Netflix	goes	beyond	that	by	actually	inciting	failure	to	ensure	that	its	systems	are
+tolerant	of	it.
+
+Some	organizations	would	be	happy	with	game	days,	where	failure	is	simulated	by
+systems	being	switched	off	and	having	the	various	teams	react.	During	my	time	at	Google,
+this	was	a	fairly	common	occurrence	for	various	systems,	and	I	certainly	think	that	many
+organizations	could	benefit	from	having	these	sorts	of	exercises	regularly.	Google	goes
+beyond	simple	tests	to	mimic	server	failure,	and	as	part	of	its	annual	DiRT	(Disaster
+Recovery	Test)	exercises	it	has	simulated	large-scale	disasters	such	as	earthquakes.	Netflix
+also	takes	a	more	aggressive	approach,	by	writing	programs	that	cause	failure	and	running
+them	in	production	on	a	daily	basis.
+The	most	famous	of	these	programs	is	the	Chaos	Monkey,	which	during	certain	hours	of
+the	day	will	turn	off	random	machines.	Knowing	that	this	can	and	willhappen	in
+production	means	that	the	developers	who	create	the	systems	really	have	to	be	prepared
+for	it.	The	Chaos	Monkey	is	just	one	part	of	Netflix’s	Simian	Army	of	failure	bots.	The
+Chaos	Gorilla	is	used	to	take	out	an	entire	availability	center	(the	AWS	equivalent	of	a
+data	center),	whereas	the	Latency	Monkey	simulates	slow	network	connectivity	between
+machines.	Netflix	has	made	these	tools	available	under	an	open	source	license.	For	many,
+the	ultimate	test	of	whether	your	system	really	is	robust	might	be	unleashing	your	very
+own	Simian	Army	on	your	production	infrastructure.
+Embracing	and	inciting	failure	through	software,	and	building	systems	that	can	handle	it,
+is	only	part	of	what	Netflix	does.	It	also	understands	the	importance	of	learning	from	the
+failure	when	it	occurs,	and	adopting	a	blameless	culture	when	mistakes	do	happen.
+Developers	are	further	empowered	to	be	part	of	this	learning	and	evolving	process,	as	each
+developer	is	also	responsible	for	managing	his	or	her	production	services.
+
+By	causing	failure	to	happen,	and	building	for	it,	Netflix	has	ensured	that	the	systems	it
+has	scale	better,	and	better	support	the	needs	of	its	customers.
+Not	everyone	needs	to	go	to	the	sorts	of	extremes	that	Google	or	Netflix	do,	but	it	is
+important	to	understand	the	mindset	shift	that	is	required	with	distributed	systems.	Things
+will	fail.	The	fact	that	your	system	is	now	spread	across	multiple	machines	(which	can	and
+will	fail)	across	a	network	(which	will	be	unreliable)	can	actually	make	your	system	more
+vulnerable,	not	less.	So	regardless	of	whether	you’re	trying	to	provide	a	service	at	the
+scale	of	Google	or	Netflix,	preparing	yourself	for	the	sorts	of	failure	that	happen	with
+
+more	distributed	architectures	is	pretty	important.	So	what	do	we	need	to	do	to	handle
+failure	in	our	systems?
+
+ACM QUeue June 27, 2013 Volume 11, issue 6
+The Antifragile Organization: Embracing Failure to Improve Resilience and Maximize Availability
+Ariel Tseitlin
+https://queue.acm.org/detail.cfm?id=2499552
+
 
 
  -->
