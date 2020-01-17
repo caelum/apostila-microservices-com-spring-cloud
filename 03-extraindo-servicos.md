@@ -377,6 +377,10 @@ _Observação: várias dessas necessidades serão abordadas nos próximos capít
 
 Chris Richardson, no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), chama de **Microservices chassis** um framework ou conjunto de bibliotecas que tratam dessas questões transversais.
 
+> **Pattern: Microservice chassis**
+>
+> Construa serviços usando um framework ou coleção de frameworks que lida com questões transversais como rastreamento de exceções, logging, health checks, configuração externalizada e distributed tracing. 
+
 Frameworks Java como [Dropwizard](https://www.dropwizard.io/en/stable/) e [Spring Boot](https://spring.io/projects/spring-boot) são exemplos de Microservices chassis. 
 
 O [Spring Cloud](https://spring.io/projects/spring-cloud) é um conjunto de ferramentas que expandem as capacidades do Spring Boot e oferecem implementações para patterns comuns de sistemas distribuídos. Há, por exemplo, o [Spring Cloud Netflix](https://spring.io/projects/spring-cloud-netflix), que integra vários componentes da Netflix OSS com o ecossistema do Spring. Estudaremos várias das ferramentas do Spring Cloud durante o curso.
