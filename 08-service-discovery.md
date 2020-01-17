@@ -565,7 +565,7 @@ spring.cloud.consul.discovery.register-health-check=false
 
 Como ainda não vimos o conceito de _health checking_ no curso, desabilitaremos essa funcionalidade.
 
-Finalmente, basta adicionar a anotação `@EnableDiscoveryClient` na classe principal:
+Finalmente, basta adicionar a anotação `@EnableDiscoveryClient` na classe principal (ou em alguma classe de configuração):
 
 ```java
 @EnableDiscoveryClient // adicionado
