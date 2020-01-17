@@ -16,6 +16,8 @@ BARR, Jeff. _Migration Complete – Amazon’s Consumer Business Just Turned off
 
 BELSHE, Mike et al. _Hypertext Transfer Protocol Version 2 (HTTP/2)._ Internet Engineering Task Force (IETF), 2015. Em: https://tools.ietf.org/html/rfc7540
 
+BENEVIDES, Rafael. _Why Kubernetes is The New Application Server._ 2018. Em: https://developers.redhat.com/blog/2018/06/28/why-kubernetes-is-the-new-application-server/
+
 BERNERS-LEE, Tim et al. _Uniform Resource Locators (URL)._ Internet Engineering Task Force (IETF), 1994. Em: https://tools.ietf.org/html/rfc1738
 
 BERNERS-LEE, Tim et al. _Hypertext Transfer Protocol -- HTTP/1.0._ Internet Engineering Task Force (IETF), 1996. Em: https://tools.ietf.org/html/rfc1945
@@ -159,6 +161,8 @@ SPOLSKY, Joel. _Things You Should Never Do, Part I._ 2000. Em: https://www.joelo
 SRINIVAS, Prashanth Nuggehalli. _Strangler fig inside (licença GFDL)_ 2010. Em: https://en.wikipedia.org/wiki/File:Strangler_fig_inside.jpg 
 
 TALWAR, Varun. _gRPC: a true internet-scale RPC framework is now 1.0 and ready for production deployments._ 2016. Em: https://cloud.google.com/blog/products/gcp/grpc-a-true-internet-scale-rpc-framework-is-now-1-and-ready-for-production-deployments
+
+TALEB, Nassim. _Antifragile: Things That Gain from Disorder._ Random House, 2012. 519 p. Em: https://www.amazon.com.br/Antifragile-Things-That-Gain-Disorder/dp/1400067820/
 
 TILKOV, Stefan. _Don't start with a monolith: ... when your goal is a microservices architecture._ 2015. Em: https://martinfowler.com/articles/dont-start-monolith.html
 

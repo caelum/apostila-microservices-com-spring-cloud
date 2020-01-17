@@ -18,7 +18,7 @@ Conforme mencionamos nos primeiros capítulos, ao falar sobre Consistência em u
 
 ## Falhas em Cascata
 
-Em um Sistema Distribuído implementado de maneira ingênua, uma lentidão em um serviço pode levar o sistema todo a ficar indisponível. Isso é comumente conhecido como falhas em cascata (em inglês, _cascading failures_).
+Em um Sistema Distribuído implementado de maneira ingênua, uma lentidão em um serviço pode levar o sistema todo a ficar indisponível. Isso é comumente conhecido como falhas em cascata (em inglês, **Cascading Failures**).
 
 No livro [Microservices in Action](https://www.manning.com/books/microservices-in-action) (BRUCE; PEREIRA, 2018), os autores ligam esse tipo de comportamento em cascata com um comportamento emergente de Sistemas Complexos: _um evento perturba um Sistema, levando a algum efeito que, por sua vez, aumenta a magnitude do distúrbio inicial. [...] Considere uma debandada em um rebanho de animais: o pânico faz um animal correr que, por sua vez, espalha o pânico para outros animais, o que faz com que eles corram, e assim por diante. Em Microservices, uma sobrecarga pode causar um efeito dominó: uma falha em um serviço aumenta falhas nos serviços que o chamam e, por sua vez, nos serviços que chamam esses. No pior caso, o resultado é uma indisponibilidade generalizada._
 
@@ -49,7 +49,7 @@ Nygard lista uma série de patterns de Estabilidade. Alguns deles serão descrit
 
 ## Timeouts
 
-No exemplo do agregador de anúncios mencionado por Sam Newman, no livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), a lentidão em um dos legados ocasionou uma interrupção no sistema todo. O motivo mencionado por Newman é que o pool de conexões único utilizado esperava "para sempre" e, com uma alta demanda, o pool foi exaurido e o serviço de anúncios não poderia chamar nenhum outro legado. A biblioteca de pool de conexões dava suporte a _Timeouts_, mas estava desabilitada por padrão!
+No exemplo do agregador de anúncios mencionado por Sam Newman, no livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), a lentidão em um dos legados ocasionou uma interrupção no sistema todo. O motivo mencionado por Newman é que o pool de conexões único utilizado esperava "para sempre" e, com uma alta demanda, o pool foi exaurido e o serviço de anúncios não poderia chamar nenhum outro legado. A biblioteca de pool de conexões dava suporte a um **Timeout**, mas estava desabilitada por padrão!
 
 Newman, recomenda que todas as chamadas remotas tenham Timeouts configurados. E qual valor definir? Se for longo demais, ainda causará lentidão no sistema. Se for rápido demais, uma chamada bem sucedida por ser considerado como falha. Uma boa solução é usar valores default de bibliotecas, ajustando valores para cenários específicos.
 
@@ -57,7 +57,7 @@ Em seu livro [Release It! Second Edition](https://pragprog.com/book/mnee2/releas
 
 ## Fail Fast
 
-Michael Nygard, ainda no livro [Release It! Second Edition](https://pragprog.com/book/mnee2/release-it-second-edition) (NYGARD, 2018), diz: _se respostas lentas são piores que nenhuma resposta, o pior dos mundos certamente são falhas lentas._ Se um sistema puder detectar que vai falhar, é melhor que retorne o mais rápido possível um response de erro para seus clientes. Falhe rápido (em inglês, _Fail Fast_). Como predizer uma falha? Nygard afirma que um load balancer, por exemplo, deve recusar novas requisições se não houver nenhum servidor para balanceamento no ar, evitando enfileirar requisições.
+Michael Nygard, ainda no livro [Release It! Second Edition](https://pragprog.com/book/mnee2/release-it-second-edition) (NYGARD, 2018), diz: _se respostas lentas são piores que nenhuma resposta, o pior dos mundos certamente são falhas lentas._ Se um sistema puder detectar que vai falhar, é melhor que retorne o mais rápido possível um response de erro para seus clientes. Falhe rápido (em inglês, **Fail Fast**). Como predizer uma falha? Nygard afirma que um load balancer, por exemplo, deve recusar novas requisições se não houver nenhum servidor para balanceamento no ar, evitando enfileirar requisições.
 
 Para Nygard, no código de uma aplicação, parâmetros devem ser validados e recursos obtidos, como conexões a BDs ou a outros sistemas, assim que possível. Assim, se houver uma falha de validação ou na obtenção de algum recurso, é possível falhar rapidamente. É importante notar que isso serve como um príncipio, porém não é aplicável em todas as situações.
 
@@ -69,11 +69,11 @@ Para Nygard, tanto o Timeout como Fail Fast são patterns que tratam de problema
 
 ## Bulkheads
 
-Ainda no livro [Release It! Second Edition](https://pragprog.com/book/mnee2/release-it-second-edition) (NYGARD, 2018), Michael Nygard empresta um conceito da Engenharia Naval: as anteparas (em inglês, _Bulkheads_): _em um navio, Bulkheads são divisórias metálicas que podem ser seladas para dividir o navio em compartimentos separados. Quando as escotilhas são fechadas, uma Bulkhead impede que a água se mova de uma seção para outra. Dessa maneira, um único dano no casco não afunda irreversivelmente o navio. A Bulkhead aplica um princípio de contenção de dados._
+Ainda no livro [Release It! Second Edition](https://pragprog.com/book/mnee2/release-it-second-edition) (NYGARD, 2018), Michael Nygard empresta um conceito da Engenharia Naval: as anteparas (em inglês, **Bulkheads**): _em um navio, Bulkheads são divisórias metálicas que podem ser seladas para dividir o navio em compartimentos separados. Quando as escotilhas são fechadas, uma Bulkhead impede que a água se mova de uma seção para outra. Dessa maneira, um único dano no casco não afunda irreversivelmente o navio. A Bulkhead aplica um princípio de contenção de dados._
 
 ![Navios sem e com Bulkheads {w=80}](imagens/09-resiliencia/bulkheads-navais.png)
 
-_Observação: a fonte das imagens anteriores é a [documentação do OpenLiberty](https://openliberty.io/guides/bulkhead.html), um microservice chassis baseado no IBM WebSphere._
+_Observação: a fonte das imagens anteriores é a [documentação do OpenLiberty](https://openliberty.io/guides/bulkhead.html), um Microservice Chassis baseado no IBM WebSphere._
 
 Nygard afirma que, em TI, redundância física é a maneira mais comum de aplicar a ideia de Bulkheads: uma falha no hardware de um servidor não afetaria os outros. O mesmo princípio pode ser atingido executando múltiplas instâncias de um serviço em um mesmo servidor.
 
@@ -91,7 +91,7 @@ No exemplo do agregador de anúncios de Newman, todas as conexões aos sistemas 
 
 ## Circuit Breaker
 
-Michael Nygard, no livro [Release It! Second Edition](https://pragprog.com/book/mnee2/release-it-second-edition) (NYGARD, 2018), conta que quando a fiação elétrica começou a ser construída nas casas, à medida que as pessoas plugassem mais aparelhos, os fios iam esquentando mais e mais, até que a casa fosse incendiada, eventualmente. A indústria então passou a usar fusíveis residenciais que queimavam antes da fiação (_fail fast_), protegendo as casas. Só que os fusíveis são descartáveis e as pessoas começaram a usa moedas de cobre no lugar. Resultado: casas queimadas. Então, inventaram o disjuntor (em inglês, _Circuit Breaker_), atualmente presente em qualquer prédio residencial ou comercial. Um Circuit Breaker detecta um uso excessivo de corrente e abre, desarmando como um fusível, desligando todos os aparelhos. Mas, diferentemente de um fusível, um Circuit Breaker pode ser fechado novamente, de maneira manual, assim que não houver perigo.
+Michael Nygard, no livro [Release It! Second Edition](https://pragprog.com/book/mnee2/release-it-second-edition) (NYGARD, 2018), conta que quando a fiação elétrica começou a ser construída nas casas, à medida que as pessoas plugassem mais aparelhos, os fios iam esquentando mais e mais, até que a casa fosse incendiada, eventualmente. A indústria então passou a usar fusíveis residenciais que queimavam antes da fiação (_fail fast_), protegendo as casas. Só que os fusíveis são descartáveis e as pessoas começaram a usa moedas de cobre no lugar. Resultado: casas queimadas. Então, inventaram o disjuntor (em inglês, **Circuit Breaker**), atualmente presente em qualquer prédio residencial ou comercial. Um Circuit Breaker detecta um uso excessivo de corrente e abre, desarmando como um fusível, desligando todos os aparelhos. Mas, diferentemente de um fusível, um Circuit Breaker pode ser fechado novamente, de maneira manual, assim que não houver perigo.
 
 O princípio por trás de um Circuit Breaker é permitir que um subsistema falhe sem destruir o sistema todo. Assim, um circuito elétrico pode apresentar corrente excessiva devido a um curto-circuito, por exemplo, mas impede que a fiação queime a casa toda.
 
@@ -105,6 +105,8 @@ No estado fechado (em inglês, _Closed_), o Circuit Breaker executa as operaçõ
 
 Se o número (ou frequência) de falhas passa um certo limite, o Circuit Breaker fica no estado aberto (em inglês, _Open_). Uma chamada a um Circuit Breaker no estado Open falha imediatamente (_fail fast_), sem nem tentar executar a operação solicitada.
 
+Como contar o número de falhas? Nygard argumenta que a densidade de falhas em um período de tempo é o mais importante: 5 falhas em 5 horas é muito diferente de 5 falhas nos últimos 30 segundos. Para auxiliar na implementação, Nygard menciona o pattern Leaky Bucket, em que um contador é incrementado a cada falha mas é zerado periodicamente.
+
 Um disjuntor residencial precisa ser fechado manualmente. Em software, ao contrário, podemos automatizar o fechamento. Para isso, depois de algum tempo, o Circuit Breaker passa para o estado meio aberto (em inglês, _Half-Open_). Nesse estado, a próxima chamada é executada normalmente. Se a chamada for bem sucedida, o Circuit Breaker passa ao estado de Closed. Se falhar, o Circuit Breaker volta ao estado Open.
 
 ![Transição de estados de um Circuit Breaker {w=26}](imagens/09-resiliencia/estados-de-um-circuit-breaker.png)
@@ -117,14 +119,62 @@ Vamos voltar ao caso de uma falha em cascata: um serviço sobrecarregado é cont
 
 Há diferentes frameworks que implementam Circuit Breakers:
 
-- [Polly](https://github.com/App-vNext/Polly), implementado em .NET
-- [Resilience4j](https://github.com/resilience4j/resilience4j), implementa vários patterns de resiliência em Java
-- [Hystrix](https://github.com/Netflix/Hystrix), implementado em Java e parte da iniciativa open-source da Netflix
+- [Polly](https://github.com/App-vNext/Polly), implementado em .NET. Em: https://github.com/App-vNext/Polly
+- [Resilience4j](https://github.com/resilience4j/resilience4j), implementa vários patterns de resiliência em Java. Em: https://github.com/resilience4j/resilience4j
+- [Hystrix](https://github.com/Netflix/Hystrix), implementado em Java e parte da iniciativa open-source da Netflix. Em: https://github.com/Netflix/Hystrix
 
+> **Pattern: Circuit Breaker**
+>
+> Um proxy para chamadas remotas que rejeita imediatamente invocações por um período depois que falhas consecutivas ultrapassam um limite especificado.
+>
+> Chris Richardson, no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a)
 
 ## Hystrix
 
+Hystrix é uma biblioteca open-source mantida pela Netflix que é usada para impedir falhas em cascata, auxiliar na recuperação rápida e isolar threads. O pattern Circuit Breaker é implementado, aleḿ de funcionalidades de monitoramento que estudaremos em capítulos posteriores.
 
+> Curiosidade: Hystrix é o nome do gênero dos roedores conhecidos comumente como porcos-espinho. O animal espinhento é o slogan da biblioteca da Netflix.
+
+É preciso estender a classe abstrata `HystrixCommand` para uma única resposta ou `HystrixObservableCommand` para um estilo reativo. Internamente, tudo é convertido para um `HystrixObservableCommand`. Há maneiras bloqueantes e não-bloqueantes de executar esse comando. Há a possibilidade de habilitar caches de respostas.
+
+O projeto [hystrix-javanica](https://github.com/Netflix/Hystrix/tree/master/hystrix-contrib/hystrix-javanica), mantido pela comunidade, usa aspectos (AOP) para permitir que um método com a anotação `@HystrixCommand` seja executado em um Circuit Breaker.
+
+O Hystrix permite a execução dos Commands em Thread Pools, o padrão, ou Semáforos. Com Semáforos é possível usar Thread Local e, em frameworks, escopos de sessão/request. A _isolation strategy_ pode ser modificada através da propriedade `execution.isolation.strategy`.
+
+Para o Hystrix, uma falha em uma requisição acontece se houve Timeout, exceção ou erro HTTP 500. Um Thread Pool ou Semáforo cheios causam uma rejeição da requisição.
+
+O Hystrix trabalha com uma janela de tempo de 10s (configurável com `metrics.rollingStats.timeInMilliseconds`) e, se houverem mais de 20 (`circuitBreaker.requestVolumeTheshold`) falhas consecutivas em requisições, o Hystrix passa a coletar estatísticas. As métricas são coletadas em 10 (`metrics.rollingStats.numBuckets`) _buckets_ de 1s cada, em uma técnica chamada _rolling window sampling_, que suaviza flutuações e [otimiza cálculos](https://github.com/Netflix/Hystrix/blob/master/hystrix-core/src/main/java/com/netflix/hystrix/util/HystrixRollingPercentile.java) para altos volumes de requisições. Se mais de 50% (`circuitBreaker.error-ThresholdPercentage`) das requisições falharem, o Circuit Breaker fica Open (ou _tripped_). Caso o Circuit Breaker se mantenha Closed, as estatísticas são limpas na expiração da janela de tempo.
+
+Enquanto o Circuit Breaker estiver aberto, novas requisições já falharão, sem chegar o serviço de destino. Há uma outra janela de 5s (`circuitBreaker.sleep-WindowInMilliseconds`) que passa o Circuit Breaker para Half-Open momentaneamente, deixando passar uma requisição. Se a chamada for bem sucedida, o Circuit Breaker passa para Closed. Senão, continuará Open e tentará nova requisição em mais 5s.
+
+Com as anotações do `hystrix-javanica`, as propriedades mencionadas anteriormente podem ser modificadas da seguinte maneira:
+
+```java
+@HystrixCommand(
+  commandPoolProperties = {
+    @HystrixProperty(name="circuitBreaker.requestVolumeThreshold", value="10"),
+    @HystrixProperty(name="circuitBreaker.errorThresholdPercentage", value="75"),
+    @HystrixProperty(name="circuitBreaker.sleepWindowInMilliseconds", value="7000"),
+    @HystrixProperty(name="metrics.rollingStats.timeInMilliseconds", value="15000"),
+    @HystrixProperty(name="metrics.rollingStats.numBuckets", value="5"),
+    @HystrixProperty(name="execution.isolation.strategy", value="SEMAPHORE")
+  }
+)
+```
+
+A documentação do Hystrix descreve o funcionamento do Circuit Breaker em detalhes: https://github.com/Netflix/Hystrix/wiki/How-it-Works
+
+O projeto Hystrix não está mais sendo ativamente desenvolvido e passou para modo de manutenção (não revisarão issues e não aceitarão pull requests), de acordo com a documentação da biblioteca. Na Netflix, o Hystrix é usado apenas em aplicações já existentes. Para novos projetos, a Netflix diz usar bibliotecas como Resilience4j. A documentação diz que, ao invés de configurações estáticas, o foco está em implementações adaptativas que reagem a performance em produção.
+
+### Spring Cloud Netflix Hystrix
+
+O Spring Cloud provê o projeto `spring-cloud-starter-netflix-hystrix`, que integra o Circuit Breaker da Netflix com o ecossistema Spring.
+
+A anotação `@EnableCircuitBreaker` deve ser adicionada à classe principal  ou em alguma classe de configuração.
+
+Para executar um método em um Circuit Breaker, devemos anotá-lo com `@HystrixCommand`, do projeto `hystrix-javanica`. Serão criados proxies dinâmicos para cada um desses métodos.
+
+O Spring Cloud Netflix Hystrix fornece um endpoint do Spring Actuator com métricas do Hystrix, que estudaremos em capítulos posteriores.
 
 ## Exercício: simulando demora no serviço de distância
 
@@ -224,19 +274,6 @@ O import é o seguinte:
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 ```
 
-<!--@note
-
-O timeout padrão do Hystrix é de 1s. Modificável pela propriedade:
-
-hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds
-
-https://github.com/Netflix/Hystrix/wiki/Configuration#CommandProperties
-
-Porém, há problemas na interação entre Zuul, Ribbon e Hystrix:
-https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
-
--->
-
 ## Exercício: Circuit Breaker com Hystrix
 
 1. Mude para a branch `cap10-circuit-breaker-com-hystrix` do projeto `fj33-api-gateway`:
@@ -263,6 +300,18 @@ https://github.com/spring-cloud/spring-cloud-netflix/issues/2606
   Total:         75  382 360.9    275    1558
   ```
 
+## Degradando funcionalidades com Fallbacks
+
+Por enquanto, em uma chamada a um Circuit Breaker aberto, é lançada a exceção `HystrixRuntimeException`.
+
+Michael Nygard, no livro [Release It! Second Edition](https://pragprog.com/book/mnee2/release-it-second-edition) (NYGARD, 2018), discute que é preferível que a exceção seja diferente de um Timeout comum, para quem chama poder tratá-la adequadamente.
+
+Nygard menciona que é interessante que um Circuit Breaker tenha uma resposta alternativa, um **Fallback**, como: uma resposta genérica, a última resposta bem sucedida, um valor em cache, uma resposta de um serviço secundário.
+
+Em seu livro, Nygard afirma que qualquer estratégia de Fallback pode ter impacto nos negócios, já que há uma _degradação automática das funcionalidades_. Por isso, é essencial involver os _stakeholders_ ao decidir a estratégia a ser tomada. O autor exemplifica: um sistema de varejo deve aceitar um pedido se não pode confirmar a disponibilidade dos itens em estoque? E se o cartão de crédito não puder ser verificado? Um Fallback pode ser uma maneira interessante de abordar esse tipo de requisito.
+
+No livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), Sam Newman foca na ideia de que a maneira correta de degradar as funcionalidades de um sistema em caso de falha em um serviço não é uma discussão técnica. É necessário saber o que é tecnicamente possível mas a  ação a ser tomada deve ser orientada pelo contexto de negócio. Em um e-commerce, por exemplo, no caso de um serviço de checkout estar fora do ar, é possível manter a listagem do catálogo e colocar um telefone para que os clientes possam fechar a compra.
+
 ## Fallback no @HystrixCommand
 
 Se acessarmos repetidas vezes, em um navegador, a URL a seguir:
@@ -285,7 +334,7 @@ A mensagem da exceção (_porCepEId timed-out and fallback failed_) ,indica que 
 
 Em outras tentativas, teremos uma exceção semelhante, mas cuja mensagem indica que o Circuit Breaker está aberto e a resposta foi _short-circuited_, não chegando a invocar o serviço de destino da requisição:
 
-```txtx
+```txt
 There was an unexpected error (type=Internal Server Error, status=500).
 route:SendForwardFilter
 com.netflix.hystrix.exception.HystrixRuntimeException: porCepEId short-circuited and fallback failed.
@@ -331,46 +380,7 @@ import java.util.HashMap;
 ```
 
 Observação: uma solução interessante seria manter um cache das distâncias entre CEPs e restaurantes e usá-lo como fallback, se possível. Porém, a _hit ratio_, a taxa de sucesso das consultas ao cache, deve ser baixa, já que os CEPs dos clientes mudam bastante.
-<!-- 
 
-TODO:
-
-
-## Fallback
-
-
-When the circuit breaker is open, something has to be done with the calls
-that come in. The easiest answer would be for the calls to immediately fail,
-perhaps by throwing an exception (preferably a different exception than an
-ordinary timeout so that the caller can provide useful feedback). A circuit
-breaker may also have a “fallback” strategy. Perhaps it returns the last good
-response or a cached value. It may return a generic answer rather than a
-personalized one. Or it may even call a secondary service when the primary
-is not available
-
-
-Circuit breakers are a way to automatically degrade functionality when the
-system is under stress. No matter the fallback strategy, it can have an impact
-on the business of the system. Therefore, it’s essential to involve the system’s
-stakeholders when deciding how to handle calls made when the circuit is open.
-For example, should a retail system accept an order if it can’t confirm availabil-
-ity of the customer’s items? What about if it can’t verify the customer’s credit
-card or shipping address? Of course, this conversation is not unique to the use
-of a circuit breaker, but discussing the circuit breaker can be a more effective
-way of broaching the topic than asking for a requirements document.
-There are some interesting implementation details to consider. For one thing,
-what constitutes “too many failures”? A simple counter adding up all the
-faults probably isn’t that interesting. There’s a world of difference between
-observing five faults spread evenly over five hours versus five faults in the
-last thirty seconds. We’re usually more interested in the fault density than
-the total count. I like the Leaky Bucket pattern from Pattern Languages of
-Program Design 2 [VCK96]. It’s a simple counter that you can increment every
-time you observe a fault. In the background, a thread or timer decrements
-the counter periodically (down to zero, of course.) If the count exceeds a
-threshold, then you know that faults are arriving quickly.
-
-
- -->
 ## Exercício: Fallback com Hystrix
 
 1. Acesse repetidas vezes, em um navegador, a URL a seguir:
@@ -606,6 +616,55 @@ interface RestauranteRestClient {
 
   Os detalhes do restaurante devem voltar a ser exibidos!
 
+## Retry e Backoff
+
+Uma outra maneira de lidar com falhas é tentar novamente (em inglês, **Retry**) de maneira automática.
+
+Um Retry ajuda no caso de um erro intermitente, como uma falha de conexão com um BD ou um pacote descartado na rede. Para erros persistentes ou sistêmicos, um Retry não é uma boa opção.
+
+No livro [Microservices in Action](https://www.manning.com/books/microservices-in-action) (BRUCE; PEREIRA, 2018), os autores indicam que um Retry pode minimizar o impacto para os usuários e evitar a necessidade de intervenção pelo time de Operações. Os autores também mencionam que operações idempotentes, que ao serem repetidas têm o mesmo efeito, são mais compatíveis com um Retry.
+
+Michael Nygard, no livro [Release It! Second Edition](https://pragprog.com/book/mnee2/release-it-second-edition) (NYGARD, 2018), afirma que Circuit Breakers são diferentes de Retries, já que os Circuit Breakers impedem que operações sejam executadas ao invés de refazê-las.
+
+Um Circuit Breaker visa suavizar um sistema sobrecarregado. Um Retry o tornaria mais sobrecarregado ainda.
+
+Como mencionam os autores do livro [Microservices in Action](https://www.manning.com/books/microservices-in-action) (BRUCE; PEREIRA, 2018), no caso de um erro persistente, para evitar que os retries contribuam para uma falha em cascata, é interessante espalhar a carga feita pelas novas tentativas. Para isso, inserimos um tempo de espera entre as tentativas. Isso é conhecido como **Backoff**. O BackOff pode ser exponencial, esperando entre os Retries 2s, 4s, 8s, 16s e assim sucessivamente.
+
+Ainda assim, pode ser que os Exponential Backoffs sejam amplificados, criando _multidões trovejantes de Retris sincronizados_, como escrevem os autores do [Microservices in Action](https://www.manning.com/books/microservices-in-action) (BRUCE; PEREIRA, 2018). Para evitar esses Retries sincronizados, os autores afirmam que é interessante que um Backoff inclua um elemento randômico, comumente chamado de _Jitter_.
+
+> No [artigo de lançamento do Zuul 2](https://netflixtechblog.com/zuul-2-the-netflix-journey-to-asynchronous-non-blocking-systems-45947377fb5c), a Netflix menciona um fato interessante: os Retry Storms, em que os usuários ocasionam um aumento drástico de requisições logo depois de um problema. Quem nunca clicou sem parar em um botão após um erro?
+
+## Spring Retry
+
+O Spring Retry era um componente do projeto Spring Batch que foi extraído e tornou-se um projeto próprio.
+
+Para utilizá-lo, basta adicionar como dependência o artefato `spring-retry` do grupo `org.springframework.retry`. No Maven:
+
+```xml
+<dependency>
+  <groupId>org.springframework.retry</groupId>
+  <artifactId>spring-retry</artifactId>
+</dependency>
+```
+
+Em um projeto Spring Boot, devemos adicionar `@EnableRetry` na classe principal ou em alguma classe de configuração.
+
+Para que os métodos que, em caso de exceção, tenham novas tentativas automáticas, basta anotá-los com `@Retryable`. Na propriedade `backoff` dessa anotação, é possível passar um `@Backoff`.
+
+As bibliotecas do projeto Spring Cloud Netflix tem [integração com o Spring Retry](https://cloud.spring.io/spring-cloud-netflix/reference/html/#retrying-failed-requests). A simples presença no Classpath da biblioteca de Retry já faz com que várias bibliotecas façam novas tentativas.
+
+O Ribbon possibilita Retries automáticos e é configurável pelas propriedades:
+
+- `servico.ribbon.MaxAutoRetries`, indica o número máximo de novas tentativas em um mesmo servidor, excluindo a primeira tentativa
+- `servico.ribbon.MaxAutoRetriesNextServer`, indica o número máximo de servidores para usar num Retry, excluindo o primeiro servidor
+- `servico.ribbon.OkToRetryOnAllOperation`, para que todas as operações, incluindo requisições `POST`, tenham novas tentativas
+
+É possível ainda fazer com que o Ribbon faça Retries para status codes específicos com a propriedade `servico.ribbon.retryableStatusCodes`.
+
+Não há Backoff nos Retries do Ribbon. Porém, é possível configurar políticas de Backoff fornecendo um `@Bean` do tipo `LoadBalancedRetryFactory`, do Spring Cloud Commons, que deve instanciar uma implementação da interface `BackOffPolicy`, do Spring Retry. 
+
+O Zuul usa as estratégias de Retry configuradas no Ribbon. Para desligá-las, basta desabilitar a propriedade `zuul.retryable`. É possível desabilitar o Retry para um rota específica com `zuul.routes.servico.retryable`.
+
 ## Exercício: Forçando uma exceção no serviço de distância
 
 1. No serviço de distância, force o lançamento de uma exceção no método `atualiza` da classe `RestaurantesController`.
@@ -636,16 +695,6 @@ interface RestauranteRestClient {
 
   }
   ```
-
-<!-- 
-TODO:
-
-Release It! Second Edition
-
-This differs from retries, in that circuit breakers exist to prevent
-operations rather than reexecute them.
-
- -->
 
 ## Tentando novamente com Spring Retry
 
@@ -782,6 +831,12 @@ O import a seguir deve ser adicionado:
 import org.springframework.retry.annotation.Backoff;
 ```
 
+> Para adicionar _jitter_, evitando Retries sincronizados, podemos habilitar a propriedade `random`.
+> 
+> ```java
+> @Backoff(delay=2000,multiplier=2, random=true)) 
+> ```
+
 ## Exercício: Exponential Backoff com Spring Retry
 
 1. Vá até a branch `cap10-backoff` do projeto `fj33-eats-monolito-modular`:
@@ -840,8 +895,6 @@ import org.springframework.retry.annotation.Backoff;
 
 A [documentação do Resilience4j](https://github.com/resilience4j/resilience4j#resilience-patterns), traz um resumo dos patterns de Resiliência de maneira divertida:
 
-|name |how does it work? | description |slogans |links
-
 ### Retry
 
 - _Como funciona?_ Repete execuções que falharam.
@@ -884,66 +937,85 @@ A [documentação do Resilience4j](https://github.com/resilience4j/resilience4j#
 - _Descrição:_ As coisas ainda falharão - planeje o que você fará quando isso acontecer.
 - _Slogans:_ "Degrade graciosamente" ou "Um pássaro na mão é melhor que dois voando"
 
-<!-- 
-TODO:
-
-
 ## Para saber mais: Sidecar
+
+Usamos bibliotecas da Netflix como Ribbon, Eureka e Hystrix em projetos Java. Poderíamos usá-las programas escritos em Groovy, Scala, Clojure ou Kotlin, já todas essas são linguagens que tem a JVM como plataforma. Mas e se tivermos microservices implementados em NodeJS, Python ou Go? É o caso da própria Netflix, que tem serviços em todas essas tecnologias.
+
+Para integrar as bibliotecas mencionadas com linguagens que não rodam na JVM, a estratégia da Netflix foi criar um serviço feito em Java que oferece, por meio de uma API HTTP, funcionalidades como Client Side Load Balancing, Self Registration, Client Side Discovery, Timeouts, Circuit Breakers e Fallbacks. Esse serviço foi chamado de [Prana](https://github.com/Netflix/Prana).
+
+Em termos de implantação, toda aplicação de linguagens não-JVM, tem o Prana instalado "ao lado", na mesma máquina (ou container). Por isso, o Prana é chamado de **Sidecar**, uma referência aos carros auxiliares anexados a algumas motocicletas.
+
+> **Pattern: Sidecar**
+>
+> Implementa preocupações transversais em um processo ou container que é executado ao lado da instância de um serviço
+>
+> Chris Richardson, no livro [Microservice Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a)
+
+No fim das contas, requisitos não-funcionais como Escalabilidade, Disponibilidade e Resiliência passam da aplicação para o Sidecar. Poderíamos remover responsabilidades inclusive de aplicações escritas em Java!
+
+Chris Richardson cita, no livro [Microservice Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), que um proxy como o [Envoy](https://www.envoyproxy.io/), implementado pela Lyft, é comumente implantado como um Sidecar.
+
+O [Spring Cloud Netflix Sidecar](https://cloud.spring.io/spring-cloud-netflix/reference/html/#polyglot-support-with-sidecar) não usa o Prana, mas implementa o mesmo conceito, integrando com diversas outras ferramentas do Spring Cloud.
 
 ## Para saber mais: Service Mesh
 
+No livro [Microservice Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), Chris Richardson recomenda usar um Microservice Chassis, um framework ou coleção de frameworks, para implementar questões transversais às funcionalidades da aplicação.
+
+Mas, para Richardson, um obstáculo é que frameworks são restritos a uma plataforma específica. É possível usar Spring Boot e Spring Cloud em aplicações escritas em Java ou Kotlin (e talvez em outras linguagens da JVM). Mas se alguns serviços forem escritos em Go, Elixir ou NodeJS, precisaremos de Microservices Chassis específicos.
+
+Uma alternativa emergente identificada por Chris Richardson é implementar essas preocupações transversais na própria infraestrutura de redes, mediando tanto a comunicação entre os serviços como as requisições de clientes externos: é um **Service Mesh**.
+
+Algumas implementações de Service Meshes:
+
+- Istio (https://istio.io), iniciado pela Google, IBM/Red Hat e Lyft
+- Linkerd (https://linkerd.io), da Bouyant, incubado na Cloud Native Computing Foundation (CNCF)
+- Consul (https://www.consul.io/), da HashiCorp
+- Maesh (https://containo.us/maesh/), da Containous, criadora do edge router Treafik 
+
+> **Pattern: Service Mesh**
+>
+> Roteie todo o tráfego de rede dos serviços através de uma camada de rede que implementa questões como Circuit Breakers, Distributed Tracing, Service Discovery, Load Balancing, Criptografia, entre outros.
+>
+> Chris Richardson, No livro [Microservice Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a)
+
+Para Richardson, com um Service Mesh, as implementações necessárias em um Microservice Chassis são minimizadas a Configurações Externalizadas, Health Checks e propagação de informações de Distributed Tracing.
+
+Diz Richardson: um Service Mesh como o Istio integra-se muito bem com um Orquestrador de Containers como o Kubernetes. O Istio usa o proxy Envoy como um Sidecar de um serviço, em um container no mesmo Pod.
+
+No artigo [Why Kubernetes is The New Application Server](https://developers.redhat.com/blog/2018/06/28/why-kubernetes-is-the-new-application-server/) (BENEVIDES, 2018), compara o Kubernetes junto ao Istio e ao Open Shift a um antigo Servidor de Aplicação do Java EE: o intuito era extrair da aplicação código de requisitos não-funcionais. Benevides faz uma analogia: o Servidor de Aplicação é um CD Player e a aplicação é um CD; uma imagem de um container com a aplicação é um novo formato de CD e o Kubernetes é um CD Player novo que provê as capacidades necessárias. E há uma grande vantagem: é multi-plataforma, já que o Kubernetes abstrai a infraestrutura.
+
+Benevides argumenta que essa nova plataforma, com Kubernetes, Istio e Open Shift, provê 9 capacidades importantes para implantar em produção aplicações robustas:
+
+- Service Discovery 
+- Integração
+- Elasticidade
+- Logging
+- Monitoramento
+- CI/CD Pipelines
+- Resiliência
+- Autenticação
+- Tracing
+
 ## Uma mentalidade antifrágil
 
-The	Antifragile	Organization
+No livro [Antifragile](https://www.amazon.com.br/Antifragile-Things-That-Gain-Disorder/dp/0812979680) (TALEB, 2012), Nassim Taleb questiona: qual seria o antônimo de frágil? Robusto, resiliente, sólido? Não! O antônimo de positivo é negativo, não neutro. O exato oposto de frágil seria algo que se beneficia ao receber pancadas, como um pacote com os dizeres "Por favor, lide sem nenhum cuidado". É o que Taleb chama de **antifrágil**.
 
-In	his	book	Antifragile	(Random	House),	Nassim	Taleb	talks	about	things	that	actually
-benefit	from	failure	and	disorder.	Ariel	Tseitlin	used	this	concept	to	coin	the	concept	of	the
-antifragile	organization	in	regards	to	how	Netflix	operates.
-The	scale	at	which	Netflix	operates	is	well	known,	as	is	the	fact	that	Netflix	is	based
-entirely	on	the	AWS	infrastructure.	These	two	factors	mean	that	it	has	to	embrace	failure
-well.	Netflix	goes	beyond	that	by	actually	inciting	failure	to	ensure	that	its	systems	are
-tolerant	of	it.
+<!--@note
+  No livro, Taleb fala de 3 mitos gregos:
 
-Some	organizations	would	be	happy	with	game	days,	where	failure	is	simulated	by
-systems	being	switched	off	and	having	the	various	teams	react.	During	my	time	at	Google,
-this	was	a	fairly	common	occurrence	for	various	systems,	and	I	certainly	think	that	many
-organizations	could	benefit	from	having	these	sorts	of	exercises	regularly.	Google	goes
-beyond	simple	tests	to	mimic	server	failure,	and	as	part	of	its	annual	DiRT	(Disaster
-Recovery	Test)	exercises	it	has	simulated	large-scale	disasters	such	as	earthquakes.	Netflix
-also	takes	a	more	aggressive	approach,	by	writing	programs	that	cause	failure	and	running
-them	in	production	on	a	daily	basis.
-The	most	famous	of	these	programs	is	the	Chaos	Monkey,	which	during	certain	hours	of
-the	day	will	turn	off	random	machines.	Knowing	that	this	can	and	willhappen	in
-production	means	that	the	developers	who	create	the	systems	really	have	to	be	prepared
-for	it.	The	Chaos	Monkey	is	just	one	part	of	Netflix’s	Simian	Army	of	failure	bots.	The
-Chaos	Gorilla	is	used	to	take	out	an	entire	availability	center	(the	AWS	equivalent	of	a
-data	center),	whereas	the	Latency	Monkey	simulates	slow	network	connectivity	between
-machines.	Netflix	has	made	these	tools	available	under	an	open	source	license.	For	many,
-the	ultimate	test	of	whether	your	system	really	is	robust	might	be	unleashing	your	very
-own	Simian	Army	on	your	production	infrastructure.
-Embracing	and	inciting	failure	through	software,	and	building	systems	that	can	handle	it,
-is	only	part	of	what	Netflix	does.	It	also	understands	the	importance	of	learning	from	the
-failure	when	it	occurs,	and	adopting	a	blameless	culture	when	mistakes	do	happen.
-Developers	are	further	empowered	to	be	part	of	this	learning	and	evolving	process,	as	each
-developer	is	also	responsible	for	managing	his	or	her	production	services.
+  - Damocles, um homem rico cujo rei o leva a um banquete com uma espada presa por um fio ao teto, bem sobre sua cabeça. Damocles é frágil.
+  - Fênix, um pássaro que renasce das cinzas quando é destruído. A Fênix é resiliente.
+  - Hidra, uma serpente com múltiplas cabeças que, quanto tem uma cabeça cortada, nascem duas. A Hidra é antifrágil.
+-->
 
-By	causing	failure	to	happen,	and	building	for	it,	Netflix	has	ensured	that	the	systems	it
-has	scale	better,	and	better	support	the	needs	of	its	customers.
-Not	everyone	needs	to	go	to	the	sorts	of	extremes	that	Google	or	Netflix	do,	but	it	is
-important	to	understand	the	mindset	shift	that	is	required	with	distributed	systems.	Things
-will	fail.	The	fact	that	your	system	is	now	spread	across	multiple	machines	(which	can	and
-will	fail)	across	a	network	(which	will	be	unreliable)	can	actually	make	your	system	more
-vulnerable,	not	less.	So	regardless	of	whether	you’re	trying	to	provide	a	service	at	the
-scale	of	Google	or	Netflix,	preparing	yourself	for	the	sorts	of	failure	that	happen	with
+Sam Newman, no livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), cita os _game days_, simulações em que sistemas são desligados e os times reagem. Newman diz que a Google vai além e tem os exercícios DiRT (_Disaster Recovery Test_), em que há simulações de desastres em larga escala como terremotos.
 
-more	distributed	architectures	is	pretty	important.	So	what	do	we	need	to	do	to	handle
-failure	in	our	systems?
+Em seu livro, Newman cita um [artigo em que Ariel Tseitlin](https://queue.acm.org/detail.cfm?id=2499552) argumenta que a Netflix é a _organização antifrágil_. Tseitlin revela que a Netflix escreve programas que causam erros e os executa _em produção_ diariamente. Falhas são incitadas para assegurar que os sistemas da Netflix as toleram.
 
-ACM QUeue June 27, 2013 Volume 11, issue 6
-The Antifragile Organization: Embracing Failure to Improve Resilience and Maximize Availability
-Ariel Tseitlin
-https://queue.acm.org/detail.cfm?id=2499552
+A Netflix tem programas como o [Chaos Monkey](https://github.com/Netflix/chaosmonkey), que desliga máquinas aleatoriamente. O que seria um evento raro, uma catástrofe, passa a ser comum. Isso acontece em produção! Assim, os sistemas precisam ser projetados, implementados e configurados para lidar com essas calamidades corriqueiras. O Chaos Gorilla era um projeto que tirava do ar um data center inteiro (ou o equivalente na AWS). Já o Latency Monkey simulava conexões de rede extremamente lentas. O conjunto dos projetos era conhecido como [Simian Army](https://github.com/Netflix/SimianArmy), mas foi descontinuado. Apenas o Chaos Monkey continua sendo ativamente mantido.
 
+Newman relata que, para dar suporte a essa incitação de falhas, a Netflix foca na importância do aprendizado, uma cultura não focada nos culpados e no empoderamento dos desenvolvedores.
 
+Os desenvolvedores da Netflix iniciaram um movimento que chamam de [Chaos Engineering](http://principlesofchaos.org/?lang=PTBRcontent#): _Chaos Engineering é a disciplina de realizar experimentos sobre sistemas distribuídos com o intuito de construir confiança com relação a capacidade de um sistema distribuído suportar condições adversas em produção._
 
- -->
+Service Meshes, que controlam os serviços na própria infraestrutura, como o [Istio](https://istio.io/docs/tasks/traffic-management/fault-injection/) e [Linkerd](https://linkerd.io/2019/07/18/failure-injection-using-the-service-mesh-interface-and-linkerd/), dão suporte ao que chamam de _Fault Injection_.
