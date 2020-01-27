@@ -66,6 +66,8 @@ FIELDING, Roy. _REST APIs must be hypertext-driven._ 2008. Em: https://roy.gbiv.
 
 FOOTE, Brian; YODER, Joseph. _Big Ball Of Mud._ 1999. Em: http://www.laputan.org/mud/mud.html
 
+FOWLER, Martin et al. Refactoring: Improving the Design of Existing Code. Addison-Wesley Professional, 1999. 464 p. Em: https://www.amazon.com/Refactoring-Improving-Design-Existing-Code/dp/0201485672/.
+
 FOWLER, Martin. _Patterns of Enterprise Application Architecture._ Addison-Wesley Professional, 2002. 560 p. Em: https://www.amazon.com/Patterns-Enterprise-Application-Architecture-Martin/dp/0321127420
 
 FOWLER, Martin. _StranglerFigApplication._ 2004. Em: https://martinfowler.com/bliki/StranglerFigApplication.html
@@ -89,6 +91,8 @@ GEERS, Michael. _Micro Frontends._ 2017. Em: https://micro-frontends.org/
 GONIGBERG, Arthur. _Zuul's Journey to Non-Blocking._ Strange Loop, 2017. Em: https://www.youtube.com/watch?v=2oXqbLhMS_A
 
 GRIGORIK, Ilya. _High Performance Browser Networking._ O'Reilly, 2013. 400 p. Em: https://hpbn.co/
+
+HOHPE, Gregor; WOOLF, Bobby. _Enterprise Integration Patterns: Designing, Building, and Deploying Messaging Solutions._ Addison-Wesley Professional, 2003. 741 p. Em: https://www.amazon.com.br/Enterprise-Integration-Patterns-Designing-Deploying/dp/0321200683
 
 JACOBSON, Ivar. _Object Oriented Software Engineering: A Use-Case Driven Approach._ Addison-Wesley Professional, 1992. 552 p. Em: https://www.amazon.com/Object-Oriented-Software-Engineering-Approach/dp/0201544350
 

@@ -1,5 +1,129 @@
 # Mensageria e Eventos
 
+# Uma outra forma de comunicação
+
+Já tentou alugar um imóvel?
+
+Vamos dizer que você não teve muito sucesso nos aplicativos. O que fazer? Primeiro, conseguir uma lista de imobiliárias e corretores na região desejada. Com essa lista em mãos, seria necessário ligar para cada um dos telefones obtidos. A experiência é frustante: ou ninguém atende os telefones; ou a espera é grande para ser atendido; demoramos pra saber que não há imóveis na região ou que os imóveis ultrapassam nosso orçamento. E por aí vai... E o pior de tudo é que, ao passar todo esse tempo no telefone, não é possível fazer outras coisas no trabalho ou em casa.
+
+Será que há outro jeito?
+
+Dos telefones obtidos, a maioria é celular. E a maioria tem WhatsApp. E se mandássemos mensagens para as imobiliárias e corretores? Poderíamos enviar várias mensagens e esquecer do assunto, voltando a realizar as tarefas profissionais ou domésticas. Assim que estivermos livres, podemos ver as respostas, sejam textos ou (os famigerados) áudios.
+
+### Comunicação síncrona x assíncrona
+
+Um telefonema é um estilo de comunicação síncrona. Só é possível haver comunicação se a outra parte estiver disponível.
+
+Uma conversa no WhatsApp é um estilo de comunicação **assíncrona**. Alguém envia uma mensagem sem que, necessariamente, o outro lado esteja disponível. Mesmo numa ligação telefônica, há uma maneira assíncrona de comunicação: o correio de voz (em inglês, _voice mail_), em que deixamos recados que podem ser lidos depois.
+
+É possível que uma mesma mensagem seja enviada para diferentes destinatários. Por exemplo, é o que acontece num grupo de família do WhatsApp.
+
+Mas como é possível mandar uma mensagem sem que o destinatário esteja lendo no mesmo momento? Por meio de um **intermediário**. No caso das mensagens de celular, os servidores do WhatsApp fazem essa intermediação. No caso do correio de voz, os servidores das operadoras.
+
+## Mensageria
+
+> _Ciência da Computação é a disciplina que acredita que todos os problemas podem ser resolvidos com mais uma camada de indireção._
+>
+> Dennis DeBruler, citado por Kent Beck no livro Refactoring (FOWLER et al., 1999)
+
+No livro [Enterprise Integration Patterns](https://www.amazon.com.br/Enterprise-Integration-Patterns-Designing-Deploying/dp/0321200683) (HOHPE; WOOLF, 2003), Gregor Hohpe e Bobby Woolf exploram com detalhes a **Mensageria**: _uma tecnologia que permite comunicação de alta velocidade e assíncrona, programa a programa, com entrega confiável._
+
+<!--@note
+  Apesar do nome, o livro EIP é focado totalmente em Mensageria.
+-->
+
+> **Pattern: Mensageria**
+>
+> Um cliente invoca um serviço usando Mensageria Assíncrona.
+>
+> Chris Richardson, no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a)
+
+Hohpe e Woolf explicam que, em um sistema de Mensageria, o intermediário que provê capacidades de Mensageria é chamado de **Message Broker** ou **Message-Oriented Middleware** (MOM). Um Message Broker pode usar redundância para prover Alta Disponibilidade, Performance e Qualidade de Serviço (em inglês, Quality of Service ou QoS).
+
+Um broker possui Canais (em inglês, **Channels**), caminhos lógicos que conectam os programas e transmitem mensagens.
+
+> No JMS, um Channel é chamado de _Destination_.
+
+Um remetente (em inglês, **Sender**) ou produtor (em inglês, **Producer**) é um programa que envia uma mensagem a um Channel.
+ 
+Um receptor (em inglês, **Receiver**) ou consumidor (em inglês, **Consumer**) é um programa que recebe uma mensagem lendo, e excluindo, de um Channel.
+
+![Conceitos de mensageria {w=55}](imagens/10-mensageria-e-eventos/conceitos-de-mensageria.png)
+
+### Etapas do envio de uma mensagem
+
+Os computadores e as redes que os conectam são inerentemente pouco confiáveis: um Consumer pode não estar disponível para receber mensagens, a rede pode falhar na transmissão dos dados. Como garantir a Confiabilidade na entrega das mensagens?
+
+Os autores do livro [Enterprise Integration Patterns](https://www.amazon.com.br/Enterprise-Integration-Patterns-Designing-Deploying/dp/0321200683) (HOHPE; WOOLF, 2003), listam as seguintes etapas no envio de uma mensagem:
+
+1. _Create_: O Producer cria uma mensagem e a popula com dados.
+2. _Send_: O Producer envia a mensagem para um Channel. Depois de enviada a mensagem, o Producer está liberado para outros trabalhos, sem a necessidade de esperar pelo Consumer. É o que os autores chamam de **Send-and-Forget**. O Message Broker ficará responsável por direcionar uma mensagem ao Consumer, assim que possível.
+3. _Deliver_: O Message Broker move a mensagem do computador do Producer ao computador do Consumer. Para isso, a mensagem é armazenada, na memória ou em disco, no Producer e então é encaminhada ao Consumer, onde também é armazenada. É o que os autores chamam de **Store-and-Forward**. Esse processo pode ser repetido muitas vezes, caso haja algum problema no encaminhamento da mensagem.
+4. _Receive_: O Consumer lê a mensagem do Channel.
+5. _Process_: O Consumer extrai os dados da mensagem.
+
+### Prós e Contras da Mensageria
+
+Para Gregor Hohpe e Bobby Woolf, ainda no livro [Enterprise Integration Patterns](https://www.amazon.com.br/Enterprise-Integration-Patterns-Designing-Deploying/dp/0321200683) (HOHPE; WOOLF, 2003), entre os benefícios da Mensageria estão:
+
+- _Comunicação assíncrona_: o modelo Send-and-Forget permite que o Producer precise somente esperar que a mensagem seja armazenada no Channel, sem estar atrelado ao Consumer.
+- _Taxa de Transferência Máxima_: em uma comunicação síncrona, o Producer aguarda o resultado do Consumer e, por isso, as chamadas são tão rápidas quanto o Consumer pode processá-la. Já no modelo assíncrono da Mensageria, o Producer e o Consumer podem trabalhar em ritmos diferentes. Não há tempo perdido esperando um pelo outro, levando a uma taxa de transferência máxima (em inglês, _maximum throughput_).
+- _Throttling_: um problema com as chamadas síncronas é que muitas delas ao mesmo tempo a um único Consumer podem sobrecarregá-lo, causando degradação no desempenho ou falhas. Como o Message Broker enfileira requests até que o Consumer esteja pronto para processá-las, o Consumer pode controlar a taxa na qual consome, para não ficar sobrecarregado. Os Producers não são afetados por essa limitação porque a comunicação é assíncrona, portanto, não ficam bloqueados.
+- _Comunicação Confiável_: os dados são empacotados como mensagens atômicas e independentes transmitidas com a estratégia Store-and-Forward. Se as mensagens forem armazenadas em disco ao invés da memória, temos Entrega Garantida (em inglês, _Guaranteed Delivery_). Problemas com a rede ou com o computador do Consumer são superados com uma (ou mais) nova tentativa automática (em inglês, _automatic retry_).
+- _Operação Desconectada_: algumas aplicações são executadas desconectadas de uma rede, sincronizando com servidores quando uma conexão estiver disponível. Por exemplo, um geólogo faz medições no solo em lugares remotos e, quando volta ao escritório, tem os novos dados sincronizados. Uma das maneiras de implementar é usando Mensageria.
+- _Mediação_: uma aplicação pode depender do Message Broker, ao invés de depender diretamente de várias outras aplicações. Assim, no caso de algum problema, basta reconectar ao Broker.
+- _Gerenciamento de Threads_: não há a necessidade de bloquear uma _thread_ e esperar por outra aplicação. Assim, evita-se o esgotamento de threads disponíveis.
+
+Os autores listam também alguns desafios:
+
+- _Programação Complexa_: o modelo assíncrono requer um modelo _event-driven_ de programação, levando a diversos _event handlers_ para responder as mensagens que chegam. Desenvolver e debugar pode ser mais complexo, já que não há uma sequência de métodos invocados.
+- _Problemas com sequências_: as mensagens podem ser entregues fora de ordem. Se a ordem for importante, é preciso restabelecer a sequência programaticamente.
+- _Cenários síncronos_: nem todas as aplicações podem operar em um modelo Send-and-Forget.
+- _Performance_: pode ser adicionado algum _overhead_ na comunicação, principalmente para grandes volumes de dados.
+- _Suporte limitado_: algumas tecnologias não tem suporte a alguns Message Brokers.
+- _Vendor lock-in_: muitos Message Brokers implementam protocolos proprietários e usualmente não se conectam uns aos outros. Inclusive, a terminologia é diferente entre muitas das soluções de Mensageria disponíveis.
+
+## Tipos de Channel
+
+Os autores do livro [Enterprise Integration Patterns](https://www.amazon.com.br/Enterprise-Integration-Patterns-Designing-Deploying/dp/0321200683) (HOHPE; WOOLF, 2003), classificam os Message Channels em dois tipos:
+
+- Point-to-Point Channel
+- Publisher-Subscriber Channel
+
+### Point-to-Point Channel
+
+Em um sistema de trading de ações, uma negociação deve ser feita apenas uma vez. Em uma loja de ebooks, um livro comprado por um usuário deve ser gerado apenas uma vez. Como o Producer pode garantir que apenas um Consumer recebe uma determinada mensagem?
+
+Os Consumers poderiam coordenar entre si para saber quem recebeu qual mensagem, garantindo a entrega única. Porém, essa solução seria complexa, aumentaria o tráfego de rede e aumentaria o acoplamento entre Consumers antes independentes.
+
+Uma implementação melhor seria o próprio Message Broker determinar qual Consumer deve obter qual mensagem, garantindo que somente um receba cada mensagem. Hohpe e Woolf chamam esse tipo de comunicação de **Point-to-Point Channel**.
+
+> No JMS, um Point-to-Point Channel é chamado de _Queue_. O Producer é chamado de _Sender_ e o Consumer, de _Receiver_.
+
+Quando um Point-to-Point Channel tem apenas um Consumer, não é nada surpreendente que uma mensagem é consumida apenas uma vez. Mas quando há muitos Consumers para um mesmo Channel, os autores os chamam de **Competing Consumers**.
+
+![Competing Consumers em um Point-to-Point Channel {w=51}](imagens/10-mensageria-e-eventos/point-to-point-channel-competing-consumers.png)
+
+Competing Consumers, em que apenas um dos Receivers disponíveis recebe cada mensagem, permite a Escalabilidade Horizontal. Poderíamos lidar com um aumento na carga do sistema alocando mais Receivers para um mesmo Point-to-Point Channel. O Message Broker ficaria responsável pelo Load Balancing entre as instâncias redundantes.
+
+### Publisher-Subscriber Channel
+
+Quando uma compra é finalizada em uma Loja Online, várias coisas precisam ser feitas: a nota fiscal precisa ser gerada, a entrega precisa ser despachada, o estoque precisa ser atualizado. Se a compra finalizada for uma mensagem, como um Producer pode transmitir uma mensagem para todos os Consumers interessados?
+
+O Producer publica uma mensagem em um Message Channel e o Message Broker fica responsável por notificar todos os Consumers inscritos no Channel. Trata-se de um **Publisher-Subscriber Channel**, em que há um publicador (em inglês, _Publisher_) e vários inscritos (em inglês, _Subscribers_).
+
+> No JMS, um Publisher-Subscriber Channel é chamado de _Topic_. O Producer é chamado de _Publisher_ e o Consumer, de _Subscriber_.
+
+Um Subscriber deve ser notificado de uma mensagem apenas uma vez. Uma mensagem deve ser considerada consumida somente quando todos os Subscribers foram notificados. Subscribers não devem competir entre si, mas receber todas as mensagens de um Publisher-Subscriber Channel.
+
+![Publisher-Subscriber Channel {w=51}](imagens/10-mensageria-e-eventos/publisher-subscriber.png)
+
+Um Publish-Subscribe Channel é, em geral, implementado da seguinte maneira: há um Channel de entrada que é dividido em múltiplos Channels de saída, um para cada Subscriber. Cada mensagem tem uma cópia entregue a cada um dos Channels de saída.
+
+É possível usar um Publisher-Subscriber Channel para monitoramento, bastando plugar um sistema de Monitoramento como um Subscriber.
+
+Digamos que temos um Publish-Subscribe Channel com um sistema de Monitoramento e um sistema de Notas Fiscais como Subscribers. O que acontece quando um Subscriber está fora do ar? Certamente, o outro Subscribers continua a receber as mensagens. Mas e quando o Subscriber volta a funcionar normalmente? Caso seja o sistema de Monitoramento, as mensagens não recebidas podem ser descartadas. Já no caso do sistema de Notas Fiscais, seria interessante que o Message Broker tenha armazenado todas as mensagens não entregues enquanto estava fora do ar. O sistema de Notas Fiscais é o que Hohpe e Woolf chamam de **Durable Subscriber**: um Subscriber que tem as mensagens publicadas salvas enquanto estiver desconectado. 
+
 ## Exercício: um serviço de nota fiscal
 
 1. Baixe o projeto do serviço de nota fiscal para seu Desktop usando o Git, com os seguintes comandos:
@@ -713,3 +837,25 @@ import lombok.AllArgsConstructor;
   Perceba que o novo pedido aparece na tela de pedidos pendentes.
 
   Mude o status do pedido para _Confirmado_ ou _Pronto_ e veja a alteração na tela de acompanhamento do pedido.
+
+## Para saber mais: Brokerless Messaging
+
+No livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), Chris Richardson cita o [ZeroMQ](http://zeromq.org), uma especificação/implementação em que os serviços trocam mensagens diretamente, sem um intermediário.
+
+Entre as vantagens, citadas por Richardson estão: a menor latência e tráfego de rede, já que há menos conexões intermediárias; eliminação do Messager Broker como gargalo de performance e ponto único de falha; menor complexidade operacional.
+
+Entre as desvantagens: necessidade dos serviços saberem os endereços uns dos outros e, consequentemente, de mecanismos de Service Discovery; Disponibilidade reduzida, porque tanto o Producer como o Consumer precisam estar no ar ao mesmo tempo; entrega garantida e outras características de Message Brokers são difíceis de implementar.
+
+## Discussão: Mensageria e Arquitetura
+
+Ao falarmos de Load Balancing, mencionamos características operacionais transversais (ou _ilidades_) como: Escalabilidade Horizontal, Disponibilidade. Já quando estudamos Circuit Breakers e outros patterns associados, mencionamos Resiliência e Estabilidade.
+
+Como Mensageria se relaciona a esses Atributos de Qualidade de uma Arquitetura?
+
+Com um Point-to-Point Channel com Competing Consumers, em que apenas um Consumer de um grupo recebe cada mensagem, temos a característica da _Escalabilidade Horizontal_. Para aguentar uma demanda maior, basta ter mais Consumers competindo pelas mensagens. Por exemplo, uma loja de ebooks tem 2 instâncias para gerar PDFs, que suportam o tráfego usual. Porém, se o tráfego triplica na Black Friday, podemos colocar 6 ou mais instâncias para competir na geração dos PDFs.
+
+E quanto a Disponibilidade? Pelo estilo assíncrono de comunicação, mesmo que os Consumers estejam fora do ar, o Producer pode continuar enviando mensagens.
+
+Um Message Broker oferece uma boa alternativa em termos de Resiliência e Estabilidade, já que os Consumers podem ficar fora do ar momentaneamente, sem que o Producer seja afetado. Porém, ainda assim é possível sobrecarregar um Consumer. Ajustes nas configurações, números de instâncias e técnicas como _back-pressure_ precisam ser levadas em conta.
+
+A assincronicidade afetaria a Usabilidade, já que algumas respostas a ações do usuário só estariam disponíveis posteriormente. Uma boa metáfora ao conversar com os usuários é um sistema de chamados, em que as solicitações só são respondidas depois de algum tempo.
