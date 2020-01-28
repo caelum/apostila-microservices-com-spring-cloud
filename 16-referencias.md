@@ -170,6 +170,8 @@ TALEB, Nassim. _Antifragile: Things That Gain from Disorder._ Random House, 2012
 
 TILKOV, Stefan. _Don't start with a monolith: ... when your goal is a microservices architecture._ 2015. Em: https://martinfowler.com/articles/dont-start-monolith.html
 
+VERNON, Vaughn. _Domain-Driven Design Distilled._ Addison-Wesley Professional, 2016. 176 p. Em: https://www.amazon.com.br/Domain-Driven-Design-Distilled-Vaughn-Vernon/dp/0134434420
+
 VOEGELS, Werner. _A Conversation with Werner Voegels._ ACM Queue, Mai. 2006. Em: https://dl.acm.org/doi/pdf/10.1145/1142055.1142065?download=true
 
 SIMONS, Matthew; LEROY, Jonny. _Contending with Creaky Platforms CIO._ Cutter IT Journal, Dec. 2010. Em: http://jonnyleroy.com/2011/02/03/dealing-with-creaky-legacy-platforms/
