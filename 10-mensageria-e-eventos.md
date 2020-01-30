@@ -1,5 +1,39 @@
 # Mensageria e Eventos
 
+## Um serviço de geração de notas fiscais
+
+Um outro time da Diretoria Financeira do Caelum Eats, alinhado com os especialistas contábeis, preparou um Microservice para a geração de notas fiscais.
+
+Ao receber os ids dos Aggregates `Pagamento` e `Pedido`, os detalhes do pedido são solicitados ao Monólito e usados para gerar um XML com a nota fiscal.
+
+A busca dos detalhes do pedido do Monólito é implementada com o OpenFeign.
+
+O endereço das instâncias disponíveis é obtida .
+
+A geração do XML é feita com a biblioteca FreeMarker.
+
+ A classe que gerencia a emissão das notas fiscais é a `ProcessadorDePagamentos` que, dados os ids de um pagamento e de um pedido, obtém os detalhes do pedido do monólito usando o Feign.
+
+A nota fiscal deve ser gerada assim que um Pagamento for confirmado.
+
+Será que teremos que colocar mais um cliente Feign ou RestTemplate no serviço de Pagamento, para invocar o serviço de Nota Fiscal? E teremos que usar bibliotecas como Ribbon, Eureka Client e Hystrix para Load Balancing, Service Discovery e Resiliência.
+
+Há uma outra maneira de fazer essa implementação?
+
+![Serviço de Nota Fiscal](imagens/10-mensageria-e-eventos/servico-de-nota-fiscal.png)
+
+## Exercício: um serviço de nota fiscal
+
+1. Baixe o projeto do serviço de nota fiscal para seu Desktop usando o Git, com os seguintes comandos:
+
+  ```sh
+  cd ~/Desktop
+  git clone https://gitlab.com/aovs/projetos-cursos/fj33-eats-nota-fiscal-service.git
+  ```
+
+2. Abra o Eclipse, usando o workspace dos microservices.
+3. No Eclipse, acesse _File > Import > Existing Maven Projects_ e clique em _Next_. Em _Root Directory_, aponte para o diretório clonado anteriormente.
+
 # Uma outra forma de comunicação
 
 Já tentou alugar um imóvel?
@@ -39,6 +73,15 @@ No livro [Enterprise Integration Patterns](https://www.amazon.com.br/Enterprise-
 > Chris Richardson, no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a)
 
 Hohpe e Woolf explicam que, em um sistema de Mensageria, o intermediário que provê capacidades de Mensageria é chamado de **Message Broker** ou **Message-Oriented Middleware** (MOM). Um Message Broker pode usar redundância para prover Alta Disponibilidade, Performance e Qualidade de Serviço (em inglês, Quality of Service ou QoS).
+
+Existem diversos Message Brokers no mercado, entre eles:
+
+- [IBM MQ](https://www.ibm.com/products/mq), o antigo MQSeries
+- [TIBCO Messaging](https://www.tibco.com/)
+- [Microsoft BizTalk Server](https://docs.microsoft.com/en-us/biztalk/)
+- [AWS Simple Queue Service](https://aws.amazon.com/pt/sqs/), uma solução mais limitada
+- [RabbitMQ](https://www.rabbitmq.com/)
+- [Apache Kafka](https://kafka.apache.org/), que pode ter diversas outras responsabilidades
 
 Um broker possui Canais (em inglês, **Channels**), caminhos lógicos que conectam os programas e transmitem mensagens.
 
@@ -124,24 +167,6 @@ Um Publish-Subscribe Channel é, em geral, implementado da seguinte maneira: há
 
 Digamos que temos um Publish-Subscribe Channel com um sistema de Monitoramento e um sistema de Notas Fiscais como Subscribers. O que acontece quando um Subscriber está fora do ar? Certamente, o outro Subscribers continua a receber as mensagens. Mas e quando o Subscriber volta a funcionar normalmente? Caso seja o sistema de Monitoramento, as mensagens não recebidas podem ser descartadas. Já no caso do sistema de Notas Fiscais, seria interessante que o Message Broker tenha armazenado todas as mensagens não entregues enquanto estava fora do ar. O sistema de Notas Fiscais é o que Hohpe e Woolf chamam de **Durable Subscriber**: um Subscriber que tem as mensagens publicadas salvas enquanto estiver desconectado.
 
-## Discussão: Mensageria e Arquitetura
-
-Ao falarmos de Load Balancing, mencionamos características operacionais transversais (ou _ilidades_) como: Escalabilidade Horizontal, Disponibilidade. Já quando estudamos Circuit Breakers e outros patterns associados, mencionamos Resiliência e Estabilidade.
-
-Como Mensageria se relaciona a esses Atributos de Qualidade de uma Arquitetura?
-
-Com um Point-to-Point Channel com Competing Consumers, em que apenas um Consumer de um grupo recebe cada mensagem, temos a característica da _Escalabilidade Horizontal_. Para aguentar uma demanda maior, basta ter mais Consumers competindo pelas mensagens. Por exemplo, uma loja de ebooks tem 2 instâncias para gerar PDFs, que suportam o tráfego usual. Porém, se o tráfego triplica na Black Friday, podemos colocar 6 ou mais instâncias para competir na geração dos PDFs.
-
-E quanto a _Disponibilidade_? Pelo estilo assíncrono de comunicação, mesmo que os Consumers estejam fora do ar, o Producer pode continuar enviando mensagens.
-
-Um Message Broker oferece uma boa alternativa em termos de _Resiliência_ e _Estabilidade_, já que os Consumers podem ficar fora do ar momentaneamente, sem que o Producer seja afetado. Porém, ainda assim é possível sobrecarregar um Consumer. Ajustes nas configurações, números de instâncias e técnicas como _back-pressure_ precisam ser levadas em conta.
-
-A Comunicação Assíncrona afeta, de certa forma, a _Usabilidade_, já que algumas respostas a ações do usuário só estariam disponíveis posteriormente. Uma boa metáfora ao conversar com os usuários é um sistema de chamados, em que as solicitações só são respondidas depois de algum tempo.
-
-A "_Debugabilidade_" e a _Observabilidade_ podem ser dificultadas, mas parte da dificuldade é inerente aos Sistemas Distribuídos, usando RPC ou Mensageria. Há ferramentas que ajudam nessas tarefas, que estudaremos mais adiante.
-
-Quanto a _Manutenibilidade_, dependerá da familiaridade dos desenvolvedores com conceitos de Mensageria. Em geral, o estilo assíncrono de programação requer conhecimentos mais avançados do time e os patterns de Mensageria não são tão conhecidos no mercado.
-
 ## Tipos de Mensagens
 
 No livro [Enterprise Integration Patterns](https://www.amazon.com.br/Enterprise-Integration-Patterns-Designing-Deploying/dp/0321200683) (HOHPE; WOOLF, 2003), Gregor Hohpe e Bobby Woolf descrevem uma Mensagem como dados que são transmitidos em um Message Channel e que consistem de um _header_, que contém metadados usados pelo Message Broker, e um _body_, que contém os dados em si.
@@ -158,9 +183,13 @@ Já para uma aplicação, os autores identificam alguns tipos de mensagens:
 
 No livro [Domain-Driven Design Distilled](https://www.amazon.com.br/Domain-Driven-Design-Distilled-Vaughn-Vernon/dp/0134434420) (VERNON, 2016), Vaughn Vernon diz que um **Domain Event** é uma ocorrência significativa em termos de negócio em um determinado Bounded Context.
 
-Vernon ressalta que o nome de um evento é importante, ligando com o conceito de Ubiquitous Language, em que a linguagem de negócio deve estar representada no código. Um bom nome de um Domain Event deve ser uma referência a algo de negócio que já aconteceu. Por exemplo, em um contexto de gerenciamento ágil teríamos os Domain Events `ProdutoCriado` e `ItemDeBacklogPlanejado`.
+Vernon ressalta que o nome de um evento é importante, ligando com o conceito de Ubiquitous Language, em que a linguagem de negócio deve estar representada no código. Um bom nome de um Domain Event deve ser uma referência a algo de negócio que já aconteceu. Por exemplo, em um contexto de gerenciamento ágil teríamos os Domain Events `ProdutoCriado` e `ReleaseAgendada`. Perceba que um Domain Event tem um Aggregate associado, como `Produto` e `Release`.
 
-Mas qual o estímulo que a aplicação recebe para que um Domain Event como `ProdutoCriado` venha a ser publicado? Vernon que um request como `CreateProduct` tem como resultado o `ProdutoCriado`. Esse tipo de ação é chamado por Vernon e pela comunidade DDD de Command. Perceba que interessante: se tivermos tratando de Mensageria nos termos de Gregor Hohpe e Bobby Woolf, uma Command Message pode gerar uma Event Message.
+Mas qual o estímulo que a aplicação recebe para ocorrer um Domain Event como `ProdutoCriado`? Vernon descreve algo como `CriarProduto`, uma ação `Criar` feita por um usuário ou outro Bounded Context no Aggregate `Produto`, teria como resultado um `ProdutoCriado`. Esse tipo de ação é chamado por Vernon e pela comunidade DDD de Command. 
+
+_Observação: o Command do DDD é um conceito de modelagem de domínio, não necessariamente relacionado a integração síncrona ou assíncrona. Portanto, um Command do DDD não necessariamente será um Command Message._
+
+Nos termos do DDD, um Domain Event precisa ser publicado a todos os Bounded Contexts interessados. 
 
 > **Domain Event**
 >
@@ -168,39 +197,19 @@ Mas qual o estímulo que a aplicação recebe para que um Domain Event como `Pro
 >
 > Chris Richardson, no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a)
 
-<!-- TODO:
-
-https://learning.oreilly.com/library/view/domain-driven-design-distilled/9780134434964/ch06.html#ch06
-
-https://learning.oreilly.com/library/view/enterprise-integration-patterns/0321200683/ch04.html
-
-https://learning.oreilly.com/library/view/Microservices+Patterns/9781617294549/kindle_split_013.html#iddle1567
-
 ### Event Storming
 
- -->
+No livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), Chris Richardson cita um workshop usado pela comunidade DDD para explorar e entender um domínio complexo: o **Event Storming**. Para realizar esse workshop, especialistas de domínio devem ser reunidos em uma sala com post-its e um quadro branco.
 
+Richardson cita três passos principais:
 
+1. Peça para os especialistas de domínio fazerem um Brainstorm dos eventos que acontecem no domínio. 
+2. Identifique, junto aos especialistas de domínio, se a origem dos eventos são ações do usuário, um sistema externo, outro Domain Event ou alguma data ou horário.
+3. Colabore com os especialista de domínio para identificar Aggregates, que consomem cada Command e emitem o Domain Event correspondente.
 
+Cada item identificado tem uma cor específica de post-it.
 
-## Exercício: um serviço de nota fiscal
-
-1. Baixe o projeto do serviço de nota fiscal para seu Desktop usando o Git, com os seguintes comandos:
-
-  ```sh
-  cd ~/Desktop
-  git clone https://gitlab.com/aovs/projetos-cursos/fj33-eats-nota-fiscal-service.git
-  ```
-
-2. Abra o Eclipse, usando o workspace dos microservices.
-3. No Eclipse, acesse _File > Import > Existing Maven Projects_ e clique em _Next_. Em _Root Directory_, aponte para o diretório clonado anteriormente.
-4. Observe o projeto. Já há configurações para:
-  - Clientes REST declarativos com Feign
-  - Self registration com Eureka Client
-
-  A classe que gerencia a emissão das notas fiscais é a `ProcessadorDePagamentos` que, dados os ids de um pagamento e de um pedido, obtém os detalhes do pedido do monólito usando o Feign.
-
-  Então, é gerado um XML da nota fiscal usando a biblioteca FreeMarker.
+O resultado é um um Domain Model centrado em Aggregates e Domain Events.
 
 ## Exercício: configurando o RabbitMQ no Docker
 
@@ -905,3 +914,20 @@ Entre as vantagens, citadas por Richardson estão: a menor latência e tráfego 
 
 Entre as desvantagens: necessidade dos serviços saberem os endereços uns dos outros e, consequentemente, de mecanismos de Service Discovery; Disponibilidade reduzida, porque tanto o Producer como o Consumer precisam estar no ar ao mesmo tempo; entrega garantida e outras características de Message Brokers são difíceis de implementar.
 
+## Discussão: Mensageria e Arquitetura
+
+Ao falarmos de Load Balancing, mencionamos características operacionais transversais (ou _ilidades_) como: Escalabilidade Horizontal, Disponibilidade. Já quando estudamos Circuit Breakers e outros patterns associados, mencionamos Resiliência e Estabilidade.
+
+Como Mensageria se relaciona a esses Atributos de Qualidade de uma Arquitetura?
+
+Com um Point-to-Point Channel com Competing Consumers, em que apenas um Consumer de um grupo recebe cada mensagem, temos a característica da _Escalabilidade Horizontal_. Para aguentar uma demanda maior, basta ter mais Consumers competindo pelas mensagens. Por exemplo, uma loja de ebooks tem 2 instâncias para gerar PDFs, que suportam o tráfego usual. Porém, se o tráfego triplica na Black Friday, podemos colocar 6 ou mais instâncias para competir na geração dos PDFs.
+
+E quanto a _Disponibilidade_? Pelo estilo assíncrono de comunicação, mesmo que os Consumers estejam fora do ar, o Producer pode continuar enviando mensagens.
+
+Um Message Broker oferece uma boa alternativa em termos de _Resiliência_ e _Estabilidade_, já que os Consumers podem ficar fora do ar momentaneamente, sem que o Producer seja afetado. Porém, ainda assim é possível sobrecarregar um Consumer. Ajustes nas configurações, números de instâncias e técnicas como _back-pressure_ precisam ser levadas em conta.
+
+A Comunicação Assíncrona afeta, de certa forma, a _Usabilidade_, já que algumas respostas a ações do usuário só estariam disponíveis posteriormente. Uma boa metáfora ao conversar com os usuários é um sistema de chamados, em que as solicitações só são respondidas depois de algum tempo.
+
+A "_Debugabilidade_" e a _Observabilidade_ podem ser dificultadas, mas parte da dificuldade é inerente aos Sistemas Distribuídos, usando RPC ou Mensageria. Há ferramentas que ajudam nessas tarefas, que estudaremos mais adiante.
+
+Quanto a _Manutenibilidade_, dependerá da familiaridade dos desenvolvedores com conceitos de Mensageria. Em geral, o estilo assíncrono de programação requer conhecimentos mais avançados do time e os patterns de Mensageria não são tão conhecidos no mercado.
