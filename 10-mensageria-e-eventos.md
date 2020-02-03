@@ -194,6 +194,8 @@ _Observação: o Command do DDD é um conceito de modelagem de domínio, não ne
 
 Nos termos do DDD, um Domain Event precisa ser publicado a todos os Bounded Contexts interessados. 
 
+Uma Arquitetura de Microservices que usa Domain Events para integrar diferentes serviços, sendo publicados e consumidos em/de Message Brokers, é chamada de Event-Driven Microservices.
+
 > **Domain Event**
 >
 > Um Aggregate publica um Domain Event quando é criado ou sofre outra alteração significativa.
@@ -326,6 +328,29 @@ Mais informações na documentação do RabbitMQ: https://www.rabbitmq.com/tutor
   http://localhost:15672/
 
   O username deve ser _eats_ e a senha _caelum123_.
+
+## Spring Cloud Stream
+
+Parte do Spring Cloud, o Spring Cloud Stream é um framework que facilita a construção de Event-Driven Microservices.
+
+O Spring Cloud Stream provê uma série de abstrações e há uma série de _binders_ para diferentes sistemas de Mensageria. Entre eles:
+
+- RabbitMQ
+- Apache Kafka
+- Kafka Streams
+- Amazon Kinesis
+- Google PubSub
+
+### A terminologia de Stream Processing
+
+O Spring Cloud Stream parte do Spring Messaging e Spring AMQP, mas provê abstrações diferentes, mais relacionadas com o processamento de fluxo de dados (em inglês, _Stream Processing_).
+
+A terminologia de Stream Processing, usada por projetos como [Kafka Streams](https://kafka.apache.org/24/documentation/streams/core-concepts), [Apache Flink](https://ci.apache.org/projects/flink/flink-docs-release-1.9/concepts/programming-model.html) e [Akka Streams](https://doc.akka.io/docs/akka/current/stream/stream-flows-and-basics.html), é baseada nos seguintes termos:
+
+- _Stream_: um fluxo de dados contínuo e sem um fim claro como, por exemplo, os dados de localização de um celular.
+- _Source_: uma fonte de dados, que produz um fluxo de dados. É equivalente a um Producer.
+- _Sink_: um escoadouro, que consome um fluxo de dados. É equivalente a um Consumer.
+- _Processor_: um transformador do fluxo de dados.
 
 ## Publicando um evento de pagamento confirmado com Spring Cloud Stream
 
@@ -695,6 +720,24 @@ spring.cloud.stream.bindings.pagamentosConfirmados.group=notafiscal
 
   Como vimos, os _Consumer Groups_ do Spring Cloud Stream / RabbitMQ implementam os patterns _Competing Consumers_ e  _Durable Subscriber_.
 
+## Notificando o Front-End com um WebSocket
+
+Atualmente no Caelum Eats, quando há uma mudança no status de um Pedido, o usuário tem que recarregar a página para ver a atualização. Por exemplo, quando um Pedido está PAGO e o dono do restaurante confirma  o Pedido, o usuário só verá CONFIRMADO no status quando recarregar a página.
+
+Na tela de Pedidos Pendentes, um dono de restaurante precisa fazer algo semelhante: de tempos em tempos, precisa lembrar de recarregar a página para verificar os novos pedidos que vão chegando.
+
+Os navegadores já tem há algum tempo a API de **WebSocket**, que abre uma conexão entre o navegador e um servidor Web, permitindo uma comunicação full-duplex. Assim, tanto o navegador como o servidor podem iniciar uma nova mensagem. É feita uma transição de protocolos: a conexão a um WebSocket começa com uma requisição HTTP contendo alguns cabeçalhos específicos como `Upgrade` e `Sec-WebSocket-Key` e uma resposta com o status `101 Switching Protocols` com cabeçalhos como `Sec-WebSocket-Accept`. A partir dessas informações, é criada uma conexão não-HTTP entre o navegador e o servidor.
+
+Diversas aplicações usam WebSockets para prover uma boa experiência aos usuários como: chats, páginas de notícias, placares de futebol, home brokers da Bolsa de Valores.
+
+Poderíamos utilizar um WebSocket na página de status de Pedido e na de Pedidos Pendentes.
+
+Mas há um problema: o Zuul é um proxy HTTP e não funciona com outros protocolos. O que fazer?
+
+Poderíamos colocar a implementação de WebSockets no próprio API Gateway, recebendo notificações de alteração no status do Pedido do Monólito por meio de alguma Queue do RabbitMQ e repassando para o Front-End com um WebSocket.
+
+![WebSocket no API Gateway {w=50}](imagens/10-mensageria-e-eventos/websocket-apigateway.png)
+
 ## Configurações de WebSocket para o API Gateway
 
 Adicione a dependência ao starter de WebSocket do Spring Boot no `pom.xml` do API Gateway:
@@ -991,6 +1034,12 @@ No livro [Microservices Patterns](https://www.manning.com/books/microservices-pa
 Entre as vantagens, citadas por Richardson estão: a menor latência e tráfego de rede, já que há menos conexões intermediárias; eliminação do Messager Broker como gargalo de performance e ponto único de falha; menor complexidade operacional.
 
 Entre as desvantagens: necessidade dos serviços saberem os endereços uns dos outros e, consequentemente, de mecanismos de Service Discovery; Disponibilidade reduzida, porque tanto o Producer como o Consumer precisam estar no ar ao mesmo tempo; entrega garantida e outras características de Message Brokers são difíceis de implementar.
+
+<!--
+  TODO:
+    ## Para saber mais: CQRS
+    ## Para saber mais: Saga
+-->
 
 ## Discussão: Mensageria e Arquitetura
 
