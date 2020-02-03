@@ -214,6 +214,33 @@ Cada item identificado tem uma cor específica de post-it.
 
 O resultado é um um Domain Model centrado em Aggregates e Domain Events.
 
+## Domain Events no Caelum Eats
+
+Relembrando: uma nota fiscal deve ser gerada assim que um Pagamento for confirmado.
+
+Isso pode ser modelado como o Domain Event `PagamentoConfirmado`.
+
+O Producer desse evento seria o serviço de Pagamentos, que recebe uma ação do usuário para confirmar um pagamento.
+
+O Consumer seria o serviço de Nota Fiscal, que receberia o evento e geraria a nota fiscal.
+
+O que deveria estar contido no corpo dessa Event Message? Os dados do Pagamento que acabou de ser confirmado e os dados do Pedido relacionado. Como tratam-se de Aggregates do serviço de Pagamentos e do módulo de Pedido do Monólito, respectivamente, poderíamos passar apenas os ids do Pagamento e Pedido na mensagem para o serviço de Nota Fiscal.
+
+![Domain Event PagamentoConfirmado {w=47}](imagens/10-mensageria-e-eventos/domain-event-PagamentoConfirmado.png)
+
+### Revisando as integrações existentes
+
+Quais as integrações que já implementadas poderiam ser modeladas como Domain Events?
+
+O serviço de Pagamentos invoca o módulo de Pedido do Monólito, por meio de HTTP, para avisar que um pagamento foi confirmado.
+
+O módulo de Restaurante do Monólito, também por meio de HTTP, avisa que um novo restaurante foi aprovado e que os dados de um restaurante foram atualizados para o serviço de Distância.
+
+Todas essas integrações poderiam ser modeladas como Domain Events:
+
+- o mesmo Domain Event `PagamentoConfirmado` publicado pelo serviço de Pagamentos poderia ser consumido pelo módulo Pedido do Monólito para atualizar o status do Pedido.
+- os Domain Events `NovoRestauranteAprovado` e `RestauranteAtualizado` poderiam ser publicados pelo módulo de Restaurante do Monólito e consumidos pelo serviço de Distância.
+
 ## Protocolos de Mensageria e AMQP
 
 Existem diferentes protocolos de Mensageria. Entre eles:
