@@ -80,8 +80,9 @@ Existem diversos Message Brokers no mercado, entre eles:
 - [TIBCO Messaging](https://www.tibco.com/)
 - [Microsoft BizTalk Server](https://docs.microsoft.com/en-us/biztalk/)
 - [AWS Simple Queue Service](https://aws.amazon.com/pt/sqs/), uma solução mais limitada
-- [RabbitMQ](https://www.rabbitmq.com/)
-- [Apache Kafka](https://kafka.apache.org/), que pode ter diversas outras responsabilidades
+- [RabbitMQ](https://www.rabbitmq.com/), implementado em Erlang
+- [Apache ActiveMQ](http://activemq.apache.org/), que tem a versão "clássica" e a Artemis, baseada no antigo HornetQ da JBoss/Red Hat
+- [Apache Kafka](https://kafka.apache.org/), que, além de um Message Broker, pode ser usado de outras maneiras
 
 Um broker possui Canais (em inglês, **Channels**), caminhos lógicos que conectam os programas e transmitem mensagens.
 
@@ -90,6 +91,8 @@ Um broker possui Canais (em inglês, **Channels**), caminhos lógicos que conect
 Um remetente (em inglês, **Sender**) ou produtor (em inglês, **Producer**) é um programa que envia uma mensagem a um Channel.
  
 Um receptor (em inglês, **Receiver**) ou consumidor (em inglês, **Consumer**) é um programa que recebe uma mensagem lendo, e excluindo, de um Channel.
+
+Um Consumer que filtra as mensagens de um Channel, recebendo apenas as que atendem a um determinado critério são chamados de **Selective Consumers**.
 
 ![Conceitos de mensageria {w=55}](imagens/10-mensageria-e-eventos/conceitos-de-mensageria.png)
 
@@ -130,8 +133,8 @@ Os autores listam também alguns desafios:
 
 Os autores do livro [Enterprise Integration Patterns](https://www.amazon.com.br/Enterprise-Integration-Patterns-Designing-Deploying/dp/0321200683) (HOHPE; WOOLF, 2003), classificam os Message Channels em dois tipos:
 
-- Point-to-Point Channel
-- Publisher-Subscriber Channel
+- Point-to-Point Channel, análogo a uma conversa um-a-um no WhatsApp
+- Publisher-Subscriber Channel, análogo a um grupo do 
 
 ### Point-to-Point Channel
 
@@ -210,6 +213,54 @@ Richardson cita três passos principais:
 Cada item identificado tem uma cor específica de post-it.
 
 O resultado é um um Domain Model centrado em Aggregates e Domain Events.
+
+## Protocolos de Mensageria e AMQP
+
+Existem diferentes protocolos de Mensageria. Entre eles:
+
+- _STOMP_ (Simple Text-Oriented Messaging Protocol): um protocolo baseado em texto, com alguma similaridade com o HTTP. Possui clientes em diversas linguagens, incluindo JavaScript com WebSocket, que é executado diretamente em navegadores. Diversos Message Brokers implementam esse protocolo, incluindo ActiveMQ (nas versões clássica e Artemis) e RabbitMQ.
+- _MQTT_ (Message Queue Telemetry Transport): focado em IoT, é um protocolo binário muito eficiente e compacto que foi projetado para redes de alta latência e pouca banda como links de satélite e conexões discadas. Só é compatível com Publisher-Subscriber Channels. ActiveMQ (nas duas versões) e RabbitMQ também dão suporte a esse protocolo. É uma especificação mantida pela ISO e OASIS.
+- _AMQP (Advanced Message Queuing Protocol)_: um protocolo bastante abrangente. Há suporte a Point-to-Point e Publisher-Subscriber Channels, além de outros modelos de Mensageria. Na versão 1.0, significativamente diferente da 0-9-1, foi padronizado pela ISO e OASIS. Focado em Confiabilidade e Segurança, é implementado por diversos Message Brokers, como o RabbitMQ (AMQP 0-9-1) e ambas as versões do ActiveMQ (AMQP 1.0).
+
+> **O JMS é um protocolo ou uma API?**
+>
+> O JMS (Java Message Service), especificado no Java EE,  não é um protocolo, mas uma API. Dessa forma, define uma série de abstrações, interfaces e classes utilitárias a serem implementadas em Java pelos fornecedores de Message Brokers. Cada fornecedor pode usar um protocolo diferentes e, por isso, disponibilizam JARs que implementam os detalhes de comunicação.
+
+## RabbitMQ e AMQP
+
+RabbitMQ implementa, além dos protocolos STOMP e MQTT, a versão 0-9-1 do protocolo AMQP. A implementação foi feita em Erlang pela empresa Rabbit Technologies, posteriormente adquirida pela SpringSource/Pivotal.
+
+A versão 0-9-1 do AMQP traz algumas terminologias e conceitos diferentes dos patterns estudados anteriormente.
+
+Por exemplo, no AMQP 0-9-1, channels são várias conexões leves que compartilham uma mesma conexão TCP.
+
+Quem produz as mensagens é chamado de **Publisher** (e não Producer), independente do destino ser um Point-to-Point Channel ou um Publisher-Subscriber Channel.
+
+As mensagens não são publicadas diretamente em um Point-to-Point ou em um Publisher-Subscriber Channel, mas em uma abstração chamada **Exchange**. Dessa forma, um Publisher no AMQP não sabe o tipo de Channel que será utilizado.
+
+A configuração do tipo de Message Channel passa a ser responsabilidade do Message Broker, o que é chamado de _roteamento_. O roteamento é feito, a partir de um Exchange, para um ou mais Point-to-Point Channels chamados de **Queues**, de acordo com regras chamadas **Bindings**. Os **Consumers** recebem mensagens dessas Queues. Um Binding pode ter, opcionalmente, uma _routing key_ que irá influenciar qual Queue recebe uma dada mensagem.
+
+![Conceitos do AMQP {w=67}](imagens/10-mensageria-e-eventos/amqp-conceitos.png)
+
+> O AMQP 0-9-1 é um protocolo "programável" em que a própria aplicação pode criar Exchanges, Bindings e Queues, não apenas o administrador do Message Broker.
+
+Tanto um Exchange como uma Queue podem ter diversos atributos. Entre os mais importantes:
+
+- Nome
+- Durabilidade (em inglês, _Durability_): se for durável, o Exchange não é apagado após uma reinicialização do Message Broker; se for transiente, é preciso redeclará-lo toda vez que o Broker é reiniciado.
+- _Auto-delete_: o Exchange é removido quando a última Queue de um consumidor é desconectado
+
+Um Exchange também pode ter diferentes tipos:
+
+- _Direct Exchange_: faz a entrega de mensagens com base em uma routing key da mensagem, roteando para uma Queue com a mesma routing key. É uma implementação do pattern Selective Consumer. Caso haja múltiplas instâncias da mesma aplicação como Consumers da Queue, é feito um Load Balancing no estilo Round-Robin, implementando o pattern Competing Consumers.
+- _Default Exchange_: um Exchange sem nome, é um caso especial de Direct Exchange, em que é feito o Binding automaticamente com todas as Queues com uma routing key com o mesmo nome da Queue. Uma mensagem que contém como routing key o nome de uma Queue é roteada diretamente para a Queue. Parece um Point-to-Point Channel em que uma mensagem é enviada diretamente a uma Queue, mas tecnicamente não é o que acontece.
+- _Fanout Exchange_: as routing keys são ignoradas. Quando uma mensagem é enviada a um determinado Exchange desse tipo, todas as Queues com Bindings receberão uma cópia da mensagem. Implementa um Publisher-Subscriber Channel.
+- _Topic Exchange_: as mensagens são roteadas a todas as Queues que atendem a algum critério de filtragem,É uma implementação de um Publisher-Subscriber Channel com Selective Consumers.
+- _Headers Exchange_: ignoram routing keys, usando um ou mais atributos do cabeçalho das mensagens para o roteamento.  
+
+O RabbitMQ já vem com alguns Exchanges de cada tipo como `amq.direct`, `(AMQP default)`, `amq.fanout`, `amq.topic` e `amq.headers`.
+
+Mais informações na documentação do RabbitMQ: https://www.rabbitmq.com/tutorials/amqp-concepts.html
 
 ## Exercício: configurando o RabbitMQ no Docker
 
