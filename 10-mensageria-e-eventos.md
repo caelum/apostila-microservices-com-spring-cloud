@@ -1068,6 +1068,10 @@ Poderíamos modelar Domain Events para cada etapa de um pedido, publicando em um
 
 Nesse caso, os Commands seriam as atualizações na Loja e nos serviços de Estoque, Entrega e Financeiro, que gerariam Domain Events. A Query seria o serviço de Dashboard, um Consumer dos Domain Events que transformaria os dados para uma representação própria.
 
+> No livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), Sam Newman discute a implementação de relatórios em uma Arquitetura de Microservices. Uma das soluções é um _Data Pump_, em que um software mantido pelos times dos serviços lê os dados de um serviço específico e os insere em um BD de relatórios compartilhado. Uma abordagem alternativa descrita por Newman é um _Event Data Pump_, que é bastante semelhante ao CQRS.
+
+Com uma API Composition, a implementação da consulta busca dados dos diversos serviços, agregando os resultados. Já no caso do CQRS, os serviços enviam dados (Domain Events) para um intermediário (o Message Broker) e a implementação da consulta obtém os dados desse intermediário. Trata-se de uma Inversão de Controle, só que no nível Arquitetural!
+
 > **Pattern: Command Query Responsibility Segregation (CQRS)**
 >
 > Para implementar uma consulta que envolva dados de vários serviços, use eventos e mantenha uma View que replique os dados dos vários serviços.
