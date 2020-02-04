@@ -74,6 +74,8 @@ FOWLER, Martin. _StranglerFigApplication._ 2004. Em: https://martinfowler.com/bl
 
 FOWLER, Martin. _Richardson Maturity Model._ 2010. Em: https://martinfowler.com/articles/richardsonMaturityModel.html
 
+FOWLER, Martin. _CQRS._ 2011. Em: https://martinfowler.com/bliki/CQRS.html
+
 FOWLER, Martin; LEWIS, James. _Microservices: a definition of this new technical term._ 2014. Em: https://martinfowler.com/articles/microservices.html
 
 FOWLER, Martin. _Microservices and the First Law of Distributed Objects._ 2014a. Em: https://martinfowler.com/articles/distributed-objects-microservices.html

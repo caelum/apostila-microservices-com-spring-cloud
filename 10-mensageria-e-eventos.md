@@ -188,7 +188,7 @@ No livro [Domain-Driven Design Distilled](https://www.amazon.com.br/Domain-Drive
 
 Vernon ressalta que o nome de um evento é importante, ligando com o conceito de Ubiquitous Language, em que a linguagem de negócio deve estar representada no código. Um bom nome de um Domain Event deve ser uma referência a algo de negócio que já aconteceu. Por exemplo, em um contexto de gerenciamento ágil teríamos os Domain Events `ProdutoCriado` e `ReleaseAgendada`. Perceba que um Domain Event tem um Aggregate associado, como `Produto` e `Release`.
 
-Mas qual o estímulo que a aplicação recebe para ocorrer um Domain Event como `ProdutoCriado`? Vernon descreve algo como `CriarProduto`, uma ação `Criar` feita por um usuário ou outro Bounded Context no Aggregate `Produto`, teria como resultado um `ProdutoCriado`. Esse tipo de ação é chamado por Vernon e pela comunidade DDD de Command. 
+Mas qual o estímulo que a aplicação recebe para ocorrer um Domain Event como `ProdutoCriado`? Vernon descreve algo como `CriarProduto`, uma ação `Criar` feita por um usuário ou outro Bounded Context no Aggregate `Produto`, teria como resultado um `ProdutoCriado`. Esse tipo de ação é chamado de Command por Vernon e pela comunidade DDD. 
 
 _Observação: o Command do DDD é um conceito de modelagem de domínio, não necessariamente relacionado a integração síncrona ou assíncrona. Portanto, um Command do DDD não necessariamente será um Command Message._
 
@@ -1031,13 +1031,71 @@ import lombok.AllArgsConstructor;
 
 No livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), Chris Richardson cita o [ZeroMQ](http://zeromq.org), uma especificação/implementação em que os serviços trocam mensagens diretamente, sem um intermediário.
 
-Entre as vantagens, citadas por Richardson estão: a menor latência e tráfego de rede, já que há menos conexões intermediárias; eliminação do Messager Broker como gargalo de performance e ponto único de falha; menor complexidade operacional.
+Entre as vantagens, citadas por Richardson estão: a menor latência e tráfego de rede, já que há menos conexões intermediárias; eliminação do Message Broker como gargalo de performance e ponto único de falha; menor complexidade operacional.
 
 Entre as desvantagens: necessidade dos serviços saberem os endereços uns dos outros e, consequentemente, de mecanismos de Service Discovery; Disponibilidade reduzida, porque tanto o Producer como o Consumer precisam estar no ar ao mesmo tempo; entrega garantida e outras características de Message Brokers são difíceis de implementar.
 
+## Para saber mais: CQRS
+
+Para boa parte das aplicações, CRUD é o suficiente. Apenas um BD pode ser mantido tanto para atualização como para leitura dos dados.
+
+Mas há consultas que são complexas, como as realizadas para relatórios, estatísticas, séries temporais, gráficos, dashboards, busca textual, entre outros cenários.
+
+No caso um Domínio que requer consultas complexas e múltiplas representações dos dados, a [comunidade DDD](https://groups.google.com/forum/#!forum/dddcqrs) tem o costume de ter Domain Models separados: uma para escrita e outro para leitura de informações. Essa técnica é chamada de **Command Query Responsibility Segregation (CQRS)**. O modelo de escrita é chamado de **Command Model** e o de leitura é chamado de **Query Model**.
+
+> Como descrito por Martin Fowler em seu artigo [CQRS](https://martinfowler.com/bliki/CQRS.html) (FOWLER, 2011), os termos Command e Query do CQRS fazem referência ao trabalho de Bertrand Meyer, criador da linguagem Eiffel e pioneiro da Orientação a Objetos. Meyer recomendava que os métodos de um objeto fossem separados em:
+>
+> - Commands: métodos que mudam o estado do objeto mas não retornam valores.
+> - Queries: métodos que retornam valores mas não tem efeitos colaterais, não mudando o estado do objeto.
+>
+> Meyer chamava esse princípio de _Command Query Separation_. Há uma forte influência dessa separação em diversas linguagens, incluindo os getters e setters do Java.
+
+A separação em um Command Model e um Query Model do CQRS pode ser usada tanto em um Monólito como em uma Arquitetura de Microservices.
+
+### CQRS e Microservices
+
+Ao decompor a aplicação em diferentes serviços, cada um com o seu próprio BD, surge a questão: como fazer consultas complexas que agregam dados de vários serviços? Ou ainda, como criar relatórios em uma Arquitetura de Microservices?
+
+Umas das respostas que demos foi implementar uma API Composition, em que os vários serviços são chamados e os dados são agregados por um API Composer, algo similar a um _in-memory join_. Mas para datasets grandes, essa solução pode ser ineficiente.
+
+No livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), Chris Richardson indica CQRS como uma solução para consultas complexas e relatórios, contrastando com API Composition.
+
+Digamos que uma aplicação de e-commerce foi decomposta em diferentes serviços, como Loja, Estoque, Entrega e Financeiro. O diretor comercial quer um dashboard que mostre rapidamente uma visão geral do que está acontecendo na empresa no momento, mostrando estatísticas dos pedidos em cada uma das etapas. Como implementar isso com CQRS?
+
+Poderíamos modelar Domain Events para cada etapa de um pedido, publicando em um Message Channel que tem como Consumer um serviço específico para o Dashboard. Esse serviço de Dashboard receberia cada evento e agregaria os dados, persistindo em BD próprio. Quando o diretor comercial acessar a tela, os dados estarão lá, prontinhos!
+
+![CQRS {w=72}](imagens/10-mensageria-e-eventos/cqrs.png)
+
+Nesse caso, os Commands seriam as atualizações na Loja e nos serviços de Estoque, Entrega e Financeiro, que gerariam Domain Events. A Query seria o serviço de Dashboard, um Consumer dos Domain Events que transformaria os dados para uma representação própria.
+
+> **Pattern: Command Query Responsibility Segregation (CQRS)**
+>
+> Para implementar uma consulta que envolva dados de vários serviços, use eventos e mantenha uma View que replique os dados dos vários serviços.
+>
+> Chris Richardson, no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a)
+
+### Prós e contras do CQRS
+
+No artigo [CQRS](https://martinfowler.com/bliki/CQRS.html) (FOWLER, 2011), Martin Fowler diz que CQRS é adequado em uma minoria de casos em que há um domínio complexo com múltiplas representações de dados. Há ainda um ganho de Performance e Escalabilidade nos casos em que há uma grande disparidade entre escritas e leituras. Para Fowler, a complexidade tecnológica pode diminuir a produtividade e aumentar o risco.
+
+No livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), Chris Richardson identifica os seguintes benefícios quando CQRS é aplicado em uma Arquitetura de Microservices:
+
+- Eficiência: para consultas em datasets grandes, ter os dados já agregados de maneira adequada com CQRS é muito mais eficiente que os in-memory joins feitos em uma API Composition. Além disso, usar CQRS evita as limitações de BDs específicos, permitindo aliar diversidade de consultas com eficiência.
+- Separação de responsabilidades: separando os Domain Models de Command e Query, tanto o código da aplicação quanto o do BD provavelmente serão mais simples e fáceis de manter.
+
+Entre as desvantagens de CQRS em Microservices citadas por Richardson, estão:
+
+- Complexidade da Arquitetura: será necessário de gerenciar e operar mais BDs, muitas vezes de diferentes paradigmas, e Message Brokers. Em termos de desenvolvimento, termos código para cada um dos BDs e para a publicação dos Domain Events.
+- Eventual Consistency: chamada por Richardson de _replication lag_, algo como atraso de replicação, indica que o Query Model pode ainda não ter processado um evento já publicado no Command Model. Por isso, os dados consultados por uma UI, ou outro cliente, podem estar momentaneamente desatualizados.
+
+<!-- @note
+  O Chris Richardson fala, no Microservices Patterns, que podemos fornecer uma número de versão à UI, que ficaria fazendo poll (ou usando um WebSocket) até ter uma versão superior. Outra ideia do Richardson, meio estranha, é que você poderia replicar a lógica da Query na própria UI.
+
+  No Implementing DDD, Vaughn Vernon indica o [post de Udi Dahan](www.udidahan.com/2009/12/09/clarified-cqrs/), em que a data/hora do dados do Query Model são exibidos. Vernon também menciona a ideia do poll e diz que o pode ser avisado, ao facer o Command, que o request foi aceito mais irá requerer algum tempo de processamento.
+-->
 <!--
   TODO:
-    ## Para saber mais: CQRS
+    ## Para saber mais: Event Sourcing
     ## Para saber mais: Saga
 -->
 
