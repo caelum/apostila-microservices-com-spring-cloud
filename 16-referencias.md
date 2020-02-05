@@ -72,6 +72,8 @@ FOWLER, Martin. _Patterns of Enterprise Application Architecture._ Addison-Wesle
 
 FOWLER, Martin. _StranglerFigApplication._ 2004. Em: https://martinfowler.com/bliki/StranglerFigApplication.html
 
+FOWLER, Martin. _EventSourcing._ 2005. Em: https://martinfowler.com/eaaDev/EventSourcing.html
+
 FOWLER, Martin. _Richardson Maturity Model._ 2010. Em: https://martinfowler.com/articles/richardsonMaturityModel.html
 
 FOWLER, Martin. _CQRS._ 2011. Em: https://martinfowler.com/bliki/CQRS.html

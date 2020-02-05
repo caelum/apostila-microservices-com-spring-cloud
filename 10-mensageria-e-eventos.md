@@ -1097,9 +1097,66 @@ Entre as desvantagens de CQRS em Microservices citadas por Richardson, estão:
 
   No Implementing DDD, Vaughn Vernon indica o [post de Udi Dahan](www.udidahan.com/2009/12/09/clarified-cqrs/), em que a data/hora do dados do Query Model são exibidos. Vernon também menciona a ideia do poll e diz que o pode ser avisado, ao facer o Command, que o request foi aceito mais irá requerer algum tempo de processamento.
 -->
+
+## Para saber mais: Event Sourcing
+
+Muitas aplicações, por motivos regulatórios, precisam manter os detalhes de cada transformação nas entidades de negócio ocasionada por ações dos usuários. É o caso de aplicações bancárias e contábeis, que precisam de um log de auditoria bem abrangente.
+
+Mesmo em outros tipos de aplicações, pode ser interessante manter o log das alterações nas entidades de negócio. Por exemplo, os profissionais de suporte poderiam usar essa informação para auxiliar os usuários. Já os desenvolvedores poderiam debugar e testar de maneira mais semelhante ao uso real de um sistema.
+
+Como implementar esse log de auditoria?
+
+Uma abordagem seria persistir os próprios Domain Events que acontecem em um Aggregate na sequência em que aconteceram.
+
+Por exemplo, ao invés de persistir um `Pedido`, persistiríamos `PedidoRealizado`, `PedidoPago`, `PedidoConfirmado`, `PedidoPronto` e assim por diante, ordenados pela ordem em que ocorreram.
+
+O estado atual de um `Pedido` seria reconstruído a partir dos Domain Events que aconteceram nesse Aggregate.
+
+Isso permitiria reconstruir exatamente o estado de um Aggregate no passado, consultar o histórico e ajustar eventos passados caso haja mudanças retroativas.
+
+Esse tipo de solução é descrita por Martin Fowler no artigo **[Event Sourcing](https://martinfowler.com/eaaDev/EventSourcing.html)** (FOWLER, 2005). Fowler menciona que a maioria dos programadores usa rotineiramente algo semelhante: um Sistema de Controle de Versões. Além disso, Fowler faz uma analogia com um livro contábil de um contador, em que todas as transações são mantidas mas não o estado final de uma conta.
+
+> **Pattern: Event Sourcing**
+>
+> Persista um Aggregate como uma sequência de Domain Events que representam as mudanças de estado.
+>
+> Chris Richardson, no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a)
+
+Em seu livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), Chris Richardson descreve o conceito de um _Event Store_: um híbrido entre um BD, que persiste os dados de um Aggregate, e um Message Broker, que permite que Consumers se inscrevam em Domain Events.
+
+Uma maneira de implementar um _Event Store_ é usar um BD Relacional com uma ou mais tabelas de eventos, com os Subscribers fazendo SELECTs diretamente nessas tabelas. Outra maneira é usar ferramentas com versões open-source como:
+
+- [Event Store](https://github.com/EventStore/EventStore): implementado em .NET por Greg Young, pioneiro do DDD e Event Sourcing.
+- [Axon Server](https://github.com/AxonIQ/axon-server-se): implementado em Java, disponibiliza também um framework integrado com o ecossistema Spring, facilitando a implementação.
+- [Apache Kafka](http://kafka.apache.org/uses#uses_eventsourcing): se configurado para manter eventos por um longo prazo, pode ser usado como um Event Store.
+- [Eventuate](https://github.com/eventuate-local/eventuate-local): implementado em Java por Chris Richardson, usa BD Relacionais ou Apache Kafka como Event Stores.
+
+Um Event Store pode ser mais eficiente que um BD comum, já que os novos Domain Events são inseridos no fim de uma sequência, sem a necessidade de alterações em um registro já existente.
+
+Event Sourcing pode influenciar positivamente no desacoplamento: um novo serviço pode ser adicionado e montar seu próprio modelo de dados a partir dos eventos já persistidos.
+
+### Dificuldades ao implementar Event Sourcing
+
+Implementar Event Sourcing traz uma série de dificuldades.
+
+Há a curva de aprendizado, já que é uma maneira de programar incomum para a maioria dos desenvolvedores.
+
+Outra dificuldade é de infraestrutura, já que precisaremos de gerenciar e operar um Event Store e/ou um Message Broker.
+
+Implementar consultas, mesmo das mais simples, pode ser ineficiente. Uma solução comum é usar CQRS, tendo um serviço que se inscreve no Event Store e, a partir da sequência de eventos, mantém o Query Model atualizado.
+
+Como representar o estado atual de um Aggregate, como um `Pedido`? Em seu artigo [Event Sourcing](https://martinfowler.com/eaaDev/EventSourcing.html) (FOWLER, 2005), Fowler cita três abordagens:
+
+- sempre refazer o estado a partir dos eventos, o que seria bastante lento quando há muitos eventos;
+- persistir, em paralelo, o estado final e os eventos, o que poderia levar a inconsistências;
+- ou manter snapshots em um dado momento, minimizando o número de eventos necessários para refazer o estado final, algo semelhante ao que é feito pelos contadores nos balanços trimestrais.
+
+A integração com sistemas externos pode impedir o replay dos eventos. Uma das estratégias descritas por Fowler é implementar um intermediário que não reenvia aos sistemas externos chamadas originadas por eventos repetidos.
+
+E quando os Domain Events são modificados? No livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), Chris Richardson classifica as mudanças nos eventos entre compatíveis e não compatíveis. Apenas adicionar novos Domain Events e novos campos em eventos já existentes são mudanças compatíveis. A maioria das mudanças são incompatíveis, como mudar nomes ou remover Aggregates, Domain Events ou campos.
+
 <!--
   TODO:
-    ## Para saber mais: Event Sourcing
     ## Para saber mais: Saga
 -->
 
