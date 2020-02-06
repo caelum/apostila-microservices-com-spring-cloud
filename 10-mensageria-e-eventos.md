@@ -92,7 +92,7 @@ Um remetente (em inglês, **Sender**) ou produtor (em inglês, **Producer**) é 
  
 Um receptor (em inglês, **Receiver**) ou consumidor (em inglês, **Consumer**) é um programa que recebe uma mensagem lendo, e excluindo, de um Channel.
 
-Um Consumer que filtra as mensagens de um Channel, recebendo apenas as que atendem a um determinado critério são chamados de **Selective Consumers**.
+Os Consumers que filtram as mensagens de um Channel, recebendo apenas as que atendem a um determinado critério são chamados de **Selective Consumers**.
 
 ![Conceitos de mensageria {w=55}](imagens/10-mensageria-e-eventos/conceitos-de-mensageria.png)
 
@@ -272,7 +272,7 @@ Um Exchange também pode ter diferentes tipos:
 - _Direct Exchange_: faz a entrega de mensagens com base em uma routing key da mensagem, roteando para uma Queue com a mesma routing key. É uma implementação do pattern Selective Consumer. Caso haja múltiplas instâncias da mesma aplicação como Consumers da Queue, é feito um Load Balancing no estilo Round-Robin, implementando o pattern Competing Consumers.
 - _Default Exchange_: um Exchange sem nome, é um caso especial de Direct Exchange, em que é feito o Binding automaticamente com todas as Queues com uma routing key com o mesmo nome da Queue. Uma mensagem que contém como routing key o nome de uma Queue é roteada diretamente para a Queue. Parece um Point-to-Point Channel em que uma mensagem é enviada diretamente a uma Queue, mas tecnicamente não é o que acontece.
 - _Fanout Exchange_: as routing keys são ignoradas. Quando uma mensagem é enviada a um determinado Exchange desse tipo, todas as Queues com Bindings receberão uma cópia da mensagem. Implementa um Publisher-Subscriber Channel.
-- _Topic Exchange_: as mensagens são roteadas a todas as Queues que atendem a algum critério de filtragem,É uma implementação de um Publisher-Subscriber Channel com Selective Consumers.
+- _Topic Exchange_: as mensagens são roteadas a todas as Queues que atendem a algum critério de filtragem. É uma implementação de um Publisher-Subscriber Channel com Selective Consumers.
 - _Headers Exchange_: ignoram routing keys, usando um ou mais atributos do cabeçalho das mensagens para o roteamento.  
 
 O RabbitMQ já vem com alguns Exchanges de cada tipo como `amq.direct`, `(AMQP default)`, `amq.fanout`, `amq.topic` e `amq.headers`.
