@@ -96,18 +96,6 @@ Um Consumer que filtra as mensagens de um Channel, recebendo apenas as que atend
 
 ![Conceitos de mensageria {w=55}](imagens/10-mensageria-e-eventos/conceitos-de-mensageria.png)
 
-### Etapas do envio de uma mensagem
-
-Os computadores e as redes que os conectam são inerentemente pouco confiáveis: um Consumer pode não estar disponível para receber mensagens, a rede pode falhar na transmissão dos dados. Como garantir a Confiabilidade na entrega das mensagens?
-
-Os autores do livro [Enterprise Integration Patterns](https://www.amazon.com.br/Enterprise-Integration-Patterns-Designing-Deploying/dp/0321200683) (HOHPE; WOOLF, 2003), listam as seguintes etapas no envio de uma mensagem:
-
-1. _Create_: O Producer cria uma mensagem e a popula com dados.
-2. _Send_: O Producer envia a mensagem para um Channel. Depois de enviada a mensagem, o Producer está liberado para outros trabalhos, sem a necessidade de esperar pelo Consumer. É o que os autores chamam de **Send-and-Forget**. O Message Broker ficará responsável por direcionar uma mensagem ao Consumer, assim que possível.
-3. _Deliver_: O Message Broker move a mensagem do computador do Producer ao computador do Consumer. Para isso, a mensagem é armazenada, na memória ou em disco, no Producer e então é encaminhada ao Consumer, onde também é armazenada. É o que os autores chamam de **Store-and-Forward**. Esse processo pode ser repetido muitas vezes, caso haja algum problema no encaminhamento da mensagem.
-4. _Receive_: O Consumer lê a mensagem do Channel.
-5. _Process_: O Consumer extrai os dados da mensagem.
-
 ### Prós e Contras da Mensageria
 
 Para Gregor Hohpe e Bobby Woolf, ainda no livro [Enterprise Integration Patterns](https://www.amazon.com.br/Enterprise-Integration-Patterns-Designing-Deploying/dp/0321200683) (HOHPE; WOOLF, 2003), entre os benefícios da Mensageria estão:
@@ -347,7 +335,7 @@ O Spring Cloud Stream parte do Spring Messaging e Spring AMQP, mas provê abstra
 
 A terminologia de Stream Processing, usada por projetos como [Kafka Streams](https://kafka.apache.org/24/documentation/streams/core-concepts), [Apache Flink](https://ci.apache.org/projects/flink/flink-docs-release-1.9/concepts/programming-model.html) e [Akka Streams](https://doc.akka.io/docs/akka/current/stream/stream-flows-and-basics.html), é baseada nos seguintes termos:
 
-- _Stream_: um fluxo de dados contínuo e sem um fim claro como, por exemplo, os dados de localização de um celular.
+- _Stream_: um fluxo de dados contínuo e sem um fim claro como, por exemplo, os dados de localização de um celular ou os logs de um sistema.
 - _Source_: uma fonte de dados, que produz um fluxo de dados. É equivalente a um Producer.
 - _Sink_: um escoadouro, que consome um fluxo de dados. É equivalente a um Consumer.
 - _Processor_: um transformador do fluxo de dados.
