@@ -122,7 +122,7 @@ Os autores listam também alguns desafios:
 Os autores do livro [Enterprise Integration Patterns](https://www.amazon.com.br/Enterprise-Integration-Patterns-Designing-Deploying/dp/0321200683) (HOHPE; WOOLF, 2003), classificam os Message Channels em dois tipos:
 
 - Point-to-Point Channel, análogo a uma conversa um-a-um no WhatsApp
-- Publisher-Subscriber Channel, análogo a um grupo do 
+- Publisher-Subscriber Channel, análogo a um grupo do WhatsApp
 
 ### Point-to-Point Channel
 
@@ -162,7 +162,7 @@ Digamos que temos um Publish-Subscribe Channel com um sistema de Monitoramento e
 
 No livro [Enterprise Integration Patterns](https://www.amazon.com.br/Enterprise-Integration-Patterns-Designing-Deploying/dp/0321200683) (HOHPE; WOOLF, 2003), Gregor Hohpe e Bobby Woolf descrevem uma Mensagem como dados que são transmitidos em um Message Channel e que consistem de um _header_, que contém metadados usados pelo Message Broker, e um _body_, que contém os dados em si.
 
-Para um Message Broker, todas as mensagens são semelhantes: alguns dados no _body_ a serem transmitidos de acordo com o configurado no _header_. Uma Mensagem podem ser binária, um texto CSV, XML ou JSON ou um objeto Java serializado, por exemplo.
+Para um Message Broker, todas as mensagens são semelhantes: alguns dados no _body_ a serem transmitidos de acordo com o configurado no _header_. Uma Mensagem pode ser binária, um texto CSV, XML ou JSON ou um objeto Java serializado, por exemplo.
 
 Já para uma aplicação, os autores identificam alguns tipos de mensagens:
 
