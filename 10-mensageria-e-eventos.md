@@ -1143,10 +1143,102 @@ A integração com sistemas externos pode impedir o replay dos eventos. Uma das 
 
 E quando os Domain Events são modificados? No livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), Chris Richardson classifica as mudanças nos eventos entre compatíveis e não compatíveis. Apenas adicionar novos Domain Events e novos campos em eventos já existentes são mudanças compatíveis. A maioria das mudanças são incompatíveis, como mudar nomes ou remover Aggregates, Domain Events ou campos.
 
-<!--
-  TODO:
-    ## Para saber mais: Saga
+## Para saber mais: Saga
+
+Consistência dos dados é algo importante em aplicações corporativas.
+
+Em uma aplicação monolítica que tem apenas um BD, essa consistência não é tão complexa. Podemos usar transações, muitas vezes auxiliados por frameworks. No Spring, temos transações declarativas com a anotação `@Transactional`.
+
+Mas em uma Arquitetura de Microservices (ou até em um Monólito) com múltiplos BDs e Message Brokers, a complexidade de manter a consistência dos dados aumenta drasticamente.
+
+Como mencionamos anteriormente, Eric Brewer cunhou na publicação [Towards Robust Distributed Systems](http://pld.cs.luc.edu/courses/353/spr11/notes/brewer_keynote.pdf) (BREWER, 2000) o Teorema CAP, que indica que não é possível termos simultaneamente mais que duas das seguintes características: Consistência dos dados, Disponibilidade (_Availability_, em inglês) e tolerância a Partições de rede. Esse teorema foi ampliado por Daniel Abadi, no paper [Consistency Tradeoffs in Modern Distributed Database System Design](http://www.cs.umd.edu/~abadi/papers/abadi-pacelc.pdf) (ABADI, 2012), de maneira a incluir alta latência de rede como uma forma de indisponibilidade.
+
+### Two-Phase Commit e XA
+
+Uma das maneiras de termos transações distribuídas é similar ao que Jim Gray e Andreas Reuter chamam, no livro [Transaction Processing: Concepts and Techniques](https://books.google.com.br/books?id=VFKbCgAAQBAJ&pg=PA7&dq=marriage+two+phase+commit) (GRAY; REUTER, 1992) de "protocolo de casamento". Pense nos personagens de um casamento de novela: os noivos, a plateia e o padre. O padre serve como coordenador da transação. Inicialmente, o padre pergunta aos noivos e a plateia se todos concordam que o casamento aconteça. Se todos concordarem, o casamento é confirmado (commit). Se alguma das partes discordarem, o casamento não é realizado (rollback). Há duas fases: uma fase de votação e uma fase de execução do commit, ambas gerenciadas por um coordenador. Esse tipo de protocolo é chamado de _Two-Phase Commit (2PC)_.
+
+Há uma especificação para 2PC mantida pelo The Open Group chamada _eXtended Architecture (XA)_. É mantida uma transação global e cada participante tem que ser compatível com XA. É o caso de boa parte dos BDs relacionais, de alguns Message Brokers mais antigos e do Java/Jakarta EE, com a especificação JTA. Por exemplo, a classe `MysqlXADataSource` implementa um `DataSource` compatível com XA, assim permitindo transações distribuídas.
+
+Um problema é que muitas tecnologias mais modernas não dão suporte a XA, desde BDs como o MongoDB e Cassandra a Message Brokers como RabbitMQ e Kafka.
+
+Essa incompatibilidade está relacionada com a escolha de Consistência em detrimento da Disponibilidade. Transações distribuídas com 2PC são essencialmente síncronas: todos os envolvidos, assim como o coordenador, precisam estar disponíveis ao mesmo tempo.
+
+### Sagas
+
+No livro [Implementing Domain-Driven Design](https://www.amazon.com.br/Implementing-Domain-Driven-Design-Vaughn-Vernon/dp/0321834577) (VERNON, 2013), Vaughn Vernon afirma que há domínios em que vários Domain Events devem acontecer para que um processo de longa duração seja finalizado. Esse tipo de processo composto por diferentes etapas é chamado de _Long-Running Process_ ou **Saga**.
+
+<!--@note
+Vernon descreve três abordagens:
+
+- Manter um _Executive component_, um coordenador baseado em eventos. Cada etapa é disparada através de eventos e eventos são recebidos assim que as tarefas forém finalizadas. Esse Executive component mantém um objeto Saga, que representa o estado geral do processo.
+- Ter um conjunto de Aggregates que implementam partes do processos e também agem como coordenadores, mantendo o estado geral. Segundo Vernon, é a abordagem promovida por [Pat Helland](https://www.ics.uci.edu/~cs223/papers/cidr07p15.pdf), da Amazon.
+- Cada etapa é um processador de eventos, que recebe um evento com  informações do progresso, além das de domínio, agregando mais informações. O estado geral do processo é mantido apenas nos próprios eventos, sem a necessidade de um coordenador.
+
+A França construiu a Linha Maginot, uma extensa fortaleza em toda a fronteira com a Alemanha. Os nazistas invadiram pela Bélgica. Para Pat Helland, 2PC, Paxos e algoritmos de consenso são a Linha Maginot da computação distribuída.
 -->
+
+Vernon também indica que Sagas podem ser usadas para processamento paralelo distribuído, sem a necessidade de transações distribuídas ou 2PC.
+
+No livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), Chris Richardson foca em Sagas como uma maneira de implementar transações em uma Arquitetura de Microservices.
+
+> **Pattern: Saga**
+>
+> Mantenha a consistência de dados entre serviços usando uma sequência de transações locais coordenados por Mensageria.
+>
+> Chris Richardson, no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a)
+
+Richardson descreve duas abordagens de estruturação de Sagas.
+
+- Orquestração
+- Coreografia
+
+#### Sagas com Orquestração
+
+Numa Orquestra Sinfônica, há um maestro responsável por coordenar as atividades dos músicos.
+
+Uma Saga pode ter um coordenador central, o orquestrador, que envia Command Messages para cada serviço. Então, se necessário, os serviços enviam eventos de resposta.
+
+Uma Saga pode ser modelada como um objeto, que mantém o estado geral da transação. Frameworks como o [Axon](https://docs.axoniq.io/reference-guide/architecture-overview/ddd-cqrs-concepts#saga), escrito em Java, e [NServiceBus](https://docs.particular.net/tutorials/nservicebus-sagas/), escrito em C#, ajudam na implementação.
+
+É o estilo recomendado por Chris Richardson, já que: 
+
+- evita dependências cíclicas entre serviços;
+- minimiza os eventos para os quais os serviços precisam ser inscritos; 
+- separa a lógica de coordenação da implementação de cada etapa da Saga nos serviços.
+
+Um grande risco é centralizar as regras de negócio, perdendo a autonomia de cada serviço. Richardson recomenda evitar regras de negócio nos orquestradores, mantendo apenas a responsabilidade de sequenciamento das etapas.
+
+#### Coreografia
+
+Num espetáculo de dança, os dançarinos seguem uma sequência de movimentos pré-estabelecida, sem a necessidade de um coordenador.
+
+Uma Saga pode ser coreografada. Cada serviço recebe um evento com informações do progresso e de domínio, implementa uma etapa do processo agregando mais informações e publica um novo evento. O estado geral do processo é mantido apenas nos próprios eventos, sem a necessidade de um coordenador.
+
+Chris Richardson argumenta que a principal vantagem de uma Saga coreografada é o baixo acoplamento, já que os serviços dependem somente de eventos, sem a necessidade de conhecerem uns aos outros.
+
+Porém, Richardson lista algumas desvantagens:
+
+- pode ser difícil de entender, já que não há um lugar único que define as etapas de uma saga. A lógica está distribuída no código de diversos serviços.
+- podem acontecer dependências cíclicas: um serviço pode consumir um evento, publicando outro evento que é consumido por outro serviço que, por sua vez, publica um evento que será consumido pelo primeiro serviço!
+- se um dado serviço consumir muitos eventos, pode levar a uma maior sincronização dos deploys entre serviços que deveriam ser autônomo.
+
+No livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), Sam Newman diz preferir uma abordagem coreografada. Segundo Newman, sistemas que seguem essa abordagem ter menor acoplamento, são mais flexíveis e com menor custo de mudanças. Porém, Newman reconhece que monitorar e rastrear os processos requer mais eforço.
+
+#### Erros em uma Saga
+
+O que acontece se houver uma falha em um dos participantes de uma Saga?
+
+Não há uma transação global como no 2PC, então não é possível fazer um rollback global.
+
+Tudo o que foi feito até a etapa do processo em ocorreu a falha deve ser desfeito. São as transações de compensação (em inglês, _compensating transactions_). É algo relativamente comum no sistema bancário em que um pagamento, por exemplo, não pode ser cancelado mas pode ser feito um estorno.
+
+Chris Richardson indica que as compesating transactions devem ser realizadas na ordem inversa das sequência de etapas que já foram aplicadas no processo.
+
+Richardson classifica as etapas de um processo em três tipos:
+
+- _compensatable transactions_: são seguidas por etapas que podem falhar e, por isso, precisam fornecer formas de desfazer o que já foi feito, as compensating transactions.
+- _retryable transactions_: podem ser feitas novas tentativas até que a etapa seja bem sucedida. Por isso, nunca falham.
+- _pivot transactions_: são seguidas por etapas que nunca falham.
 
 ## Discussão: Mensageria e Arquitetura
 

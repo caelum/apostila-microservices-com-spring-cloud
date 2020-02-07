@@ -94,6 +94,8 @@ GEERS, Michael. _Micro Frontends._ 2017. Em: https://micro-frontends.org/
 
 GONIGBERG, Arthur. _Zuul's Journey to Non-Blocking._ Strange Loop, 2017. Em: https://www.youtube.com/watch?v=2oXqbLhMS_A
 
+GRAY, Jim; REUTER, Andreas. _Transaction Processing: Concepts and Techniques._ Morgan Kaufmann, 1992. 1070 p. Em: https://books.google.com.br/books?id=VFKbCgAAQBAJ&pg=PA7&dq=marriage+two+phase+commit
+
 GRIGORIK, Ilya. _High Performance Browser Networking._ O'Reilly, 2013. 400 p. Em: https://hpbn.co/
 
 HOHPE, Gregor; WOOLF, Bobby. _Enterprise Integration Patterns: Designing, Building, and Deploying Messaging Solutions._ Addison-Wesley Professional, 2003. 741 p. Em: https://www.amazon.com.br/Enterprise-Integration-Patterns-Designing-Deploying/dp/0321200683
@@ -173,6 +175,8 @@ TALWAR, Varun. _gRPC: a true internet-scale RPC framework is now 1.0 and ready f
 TALEB, Nassim. _Antifragile: Things That Gain from Disorder._ Random House, 2012. 519 p. Em: https://www.amazon.com.br/Antifragile-Things-That-Gain-Disorder/dp/1400067820/
 
 TILKOV, Stefan. _Don't start with a monolith: ... when your goal is a microservices architecture._ 2015. Em: https://martinfowler.com/articles/dont-start-monolith.html
+
+VERNON, Vaughn. _Implementing Domain-Driven Design._ Addison-Wesley Professional, 2013. 656 p. Em: https://www.amazon.com.br/Implementing-Domain-Driven-Design-Vaughn-Vernon/dp/0321834577
 
 VERNON, Vaughn. _Domain-Driven Design Distilled._ Addison-Wesley Professional, 2016. 176 p. Em: https://www.amazon.com.br/Domain-Driven-Design-Distilled-Vaughn-Vernon/dp/0134434420
 
