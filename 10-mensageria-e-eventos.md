@@ -1238,7 +1238,7 @@ Richardson classifica as etapas de um processo em três tipos:
 
 - _compensatable transactions_: são seguidas por etapas que podem falhar e, por isso, precisam fornecer formas de desfazer o que já foi feito, as compensating transactions.
 - _retryable transactions_: podem ser feitas novas tentativas até que a etapa seja bem sucedida. Por isso, nunca falham.
-- _pivot transactions_: são seguidas por etapas que nunca falham.
+- _pivot transactions_: são seguidas por etapas que nunca falham. Por isso, se essa etapa não falhar, a Saga será finalizada com sucesso.
 
 ## Discussão: Mensageria e Arquitetura
 
