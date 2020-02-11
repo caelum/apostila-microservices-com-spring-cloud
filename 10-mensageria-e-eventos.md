@@ -86,8 +86,6 @@ Existem diversos Message Brokers no mercado, entre eles:
 
 Um broker possui Canais (em inglês, **Channels**), caminhos lógicos que conectam os programas e transmitem mensagens.
 
-> No JMS, um Channel é chamado de _Destination_.
-
 Um remetente (em inglês, **Sender**) ou produtor (em inglês, **Producer**) é um programa que envia uma mensagem a um Channel.
  
 Um receptor (em inglês, **Receiver**) ou consumidor (em inglês, **Consumer**) é um programa que recebe uma mensagem lendo, e excluindo, de um Channel.
@@ -132,8 +130,6 @@ Os Consumers poderiam coordenar entre si para saber quem recebeu qual mensagem, 
 
 Uma implementação melhor seria o próprio Message Broker determinar qual Consumer deve obter qual mensagem, garantindo que somente um receba cada mensagem. Hohpe e Woolf chamam esse tipo de comunicação de **Point-to-Point Channel**.
 
-> No JMS, um Point-to-Point Channel é chamado de _Queue_. O Producer é chamado de _Sender_ e o Consumer, de _Receiver_.
-
 Quando um Point-to-Point Channel tem apenas um Consumer, não é nada surpreendente que uma mensagem é consumida apenas uma vez. Mas quando há muitos Consumers para um mesmo Channel, os autores os chamam de **Competing Consumers**.
 
 ![Competing Consumers em um Point-to-Point Channel {w=51}](imagens/10-mensageria-e-eventos/point-to-point-channel-competing-consumers.png)
@@ -145,8 +141,6 @@ Competing Consumers, em que apenas um dos Receivers disponíveis recebe cada men
 Quando uma compra é finalizada em uma Loja Online, várias coisas precisam ser feitas: a nota fiscal precisa ser gerada, a entrega precisa ser despachada, o estoque precisa ser atualizado. Se a compra finalizada for uma mensagem, como um Producer pode transmitir uma mensagem para todos os Consumers interessados?
 
 O Producer publica uma mensagem em um Message Channel e o Message Broker fica responsável por notificar todos os Consumers inscritos no Channel. Trata-se de um **Publisher-Subscriber Channel**, em que há um publicador (em inglês, _Publisher_) e vários inscritos (em inglês, _Subscribers_).
-
-> No JMS, um Publisher-Subscriber Channel é chamado de _Topic_. O Producer é chamado de _Publisher_ e o Consumer, de _Subscriber_.
 
 Um Subscriber deve ser notificado de uma mensagem apenas uma vez. Uma mensagem deve ser considerada consumida somente quando todos os Subscribers foram notificados. Subscribers não devem competir entre si, mas receber todas as mensagens de um Publisher-Subscriber Channel.
 
@@ -242,6 +236,13 @@ Existem diferentes protocolos de Mensageria. Entre eles:
 > **O JMS é um protocolo ou uma API?**
 >
 > O JMS (Java Message Service), especificado no Java EE,  não é um protocolo, mas uma API. Dessa forma, define uma série de abstrações, interfaces e classes utilitárias a serem implementadas em Java pelos fornecedores de Message Brokers. Cada fornecedor pode usar um protocolo diferentes e, por isso, disponibilizam JARs que implementam os detalhes de comunicação.
+>
+> A terminologia do JMS é própria:
+>
+> - o conceito de Channel, mais amplo, é chamado de _Destination_.
+> - um Point-to-Point Channel é chamado de _Queue_. O Producer é chamado de _Sender_ e o Consumer, de _Receiver_.
+> - um Publisher-Subscriber Channel é chamado de _Topic_. O Producer é chamado de _Publisher_ e o Consumer, de _Subscriber_.
+
 
 ## RabbitMQ e AMQP
 
