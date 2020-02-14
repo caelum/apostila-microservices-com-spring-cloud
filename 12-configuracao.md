@@ -1,4 +1,4 @@
-# External Configuration
+# Configuração
 
 ## Implementando um Config Server
 
