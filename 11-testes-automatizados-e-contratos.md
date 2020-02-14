@@ -329,7 +329,7 @@ O Monólito, nos temos do Spring Cloud Contract, seria o Producer. Já o serviç
 
 Do lado do Producer, usamos o Spring Cloud Contract Verifier. Com esse projeto, podemos definir exemplos de request/response HTTP ou mensagens usando uma DSL Groovy ou YAML. Esse arquivo é a materialização do contrato entre os serviços.
 
-Ainda do lado do Producer, através de um plugin do Maven, esse contrato é usado para gerar Component Tests, verificando se o próprio Producer segue os contratos.
+Ainda do lado do Producer, através de um plugin do Maven, esse contrato é usado para gerar automaticamente Component Tests, verificando se o próprio Producer segue os contratos. É necessário fornecer uma classe base que é estendida por todos os Component Tests gerados. Por exemplo, para um contrato de API REST, a classe base ficaria responsável por configurar o `RestAssuredMockMvc`.
 
 No caso do build do Maven ser bem sucedido, é gerado um JAR contendo o contrato. No caso de contratos de APIs REST, o JAR também contém um JSON no formato do WireMock . É o caso da integração entre o serviço de Pagamentos e o Monólito.  Esse JAR é publicado em algum repositório de artefatos como o Nexus, Archiva ou localmente no diretório `.m2`.
 
