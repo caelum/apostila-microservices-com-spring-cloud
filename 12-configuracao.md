@@ -1,5 +1,107 @@
 # Configuração
 
+## Externalizando as configurações
+
+Boa parte das aplicações precisa manter uma série de configurações como credenciais de BD e Message Brokers, URLs e API keys de serviços externos, entre diversas outras.
+
+Há relatos de aplicações implementadas em Java cujas configurações de diferentes ambientes são hard-coded no próprio código. Por exemplo, as credenciais de BD de desenvolvimento seriam usadas por padrão, enquanto credenciais de outros ambientes, como homologação e produção, ficariam comentadas. No caso de um deploy em produção, os desenvolvedores precisariam comentar as configurações de desenvolvimento, descomentando as de produção. O código então teria que ser novamente compilado e só então o entregável (JAR, WAR ou EAR) seria implantado em produção. Além disso, seria uma forte falha de segurança!
+
+No livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), Chris Richardson recomenda que um único build possa ser implantado em diferentes ambientes, cada um com suas configurações. Para isso, um mecanismo deve prover configurações em _runtime_.
+
+> **Pattern: Externalized configuration**
+>
+> Forneça valores de configuração a um serviço, como credenciais do banco de dados e URLs, em tempo de execução.
+>
+> Chris Richardson, no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a)
+
+Richardson identifica duas abordagens para a externalização de configurações:
+
+- Push
+- Pull
+
+### Push
+
+No modelo de Push, a própria infraestrutura contém as configurações, por exemplo, por meio de variáveis de ambiente do Sistema Operacional ou arquivos de configuração.
+
+Esse é o modelo de tecnologias de containers como Docker e orquestradores de containers como o Kubernetes.
+
+Plataformas como o Heroku, com seus [12 fatores](https://www.12factor.net), pregam a definição de configurações em variáveis de ambiente, já que são uma maneira multiplataforma e externa à base de código.
+
+O Spring Boot tem um mecanismo bastante flexível de [configurações externalizadas](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html) que obtém configurações de diversas fontes, com regras de precedência bem definidas. Segue uma lista das fontes de configuração mais úteis, da menos importante à mais importante:
+
+- o arquivo de configuração `application.properties` (ou `application.yml`)
+
+  Para definir uma taxa de desconto, poderíamos fazer:
+
+  ```properties
+  taxa.desconto=0.5
+  ```
+
+- Variáveis de ambiente
+
+  O nome seria o mesmo da propriedade anterior, mas em uppercase e com underscore como separador.
+  
+  No Linux, em um Terminal, a definiríamos como `export TAXA_DESCONTO=0.4`
+
+- JVM System properties
+
+  Para defini-las, passaríamos no comando `java` com a opção `-D`:
+
+  ```sh
+  java -Dtaxa.desconto=0.3 -jar app.jar
+  ```
+
+- Argumentos da linha de comando
+
+  ```sh
+  java -jar app.jar --taxa.desconto=0.3 
+  ```
+
+Uma limitação do push model é que reconfigurar um serviço já executado requer a reinicialização. Outro problema é o risco das configurações ficarem espalhadas na definição de centenas de serviços.
+
+### Pull
+
+No modelo de Pull de configurações, uma instância de um serviço lê os valores de um **Configuration Server**.
+
+Ao ser inicializado, a instância consulta o servidor para obter suas configurações. A URL do Configuration Server tem que ser mantida em um modelo de Push, com variáveis de ambiente ou arquivos de configuração.
+
+Segundo Richardson, usar um Configuration Server traz diversos benefícios:
+
+- Configuração centralizada: toda as configurações são armazenadas em um só lugar, fazendo com que sejam mais fáceis de gerenciar e eliminando duplicação. É possível definir valores padrão que podem ser sobrescritos em serviços específicos.
+- Reconfiguração dinâmica: um serviço pode detectar os valores de configuração que foram atualizados e reconfigurar a si mesmo.
+- Criptografia: algumas implementações podem manter chaves criptográficas, decriptando valores que os serviços demandarem. 
+
+Para Richardson, a principal desvantagem de manter um Configuration Server é que trata-se de mais uma peça na infraestrutura que precisa ser mantida.
+
+Entre os Configuration Servers disponíveis no mercado, temos:
+
+- AWS Parameter Store
+- Vault, um gerenciador de credenciais da HashiCorp, que permite armazenamento de credenciais, API Keys e outros dados sensíveis
+- Spring Cloud Config Server
+
+## Spring Cloud Config
+
+O Spring Cloud Config Server pode armazenar as configurações em:
+
+- arquivos `.properties` ou `.yml`
+- repositório Git
+- BD acessado por JDBC
+- Redis
+- AWS S3
+- CredHub, um gerenciador de credenciais da Cloud Foundry
+- Vault, um gerenciador de credenciais da HashiCorp
+
+Cada serviço deve ter o projeto Spring Cloud Config Client, que obtém os valores das configurações do servidor na inicialização do serviço e as injeta no `ApplicationContext` do Spring.
+
+![Spring Cloud Config Server no Caelum Eats {w=79}](imagens/12-configuracao/configuration-server.png)
+
+Surge uma questão: a URL do Config Server realmente ser configurada em cada serviço ou podemos obtê-la do Service Registry?
+
+A [documentação do Spring Cloud Config](https://cloud.spring.io/spring-cloud-config/reference/html/#_spring_cloud_config_client) descreve duas abordagens:
+
+- Config First Bootstrap: a URL do Config Server fica em um arquivo `bootstrap.properties` de cada serviço.
+- Discovery First Bootstrap: o Config Server é registrado no Service Registry (no nosso caso, o Eureka), de onde cada serviço obtém a URL do servidor de configuração. Para isso, a URL do Service Registry deve ser definida no `bootstrap.properties` dos serviços. 
+
 ## Implementando um Config Server
 
 Pelo navegador, abra `https://start.spring.io/`.
@@ -106,6 +208,10 @@ spring.application.name=pagamentos
 spring.cloud.config.uri=http://localhost:8888
 ```
 
+<!--@note
+  Na verdade, podemos omitir essa configuração e o bootstrap.properties, já que essa é a configuração padrão.
+-->
+
 Faça o mesmo para:
 
 - o API Gateway
@@ -114,40 +220,6 @@ Faça o mesmo para:
 - o serviço de distância
 
 _Observação: no monólito, as configurações devem ser feitas no módulo `eats-application`._
-
-## Exercício: Externalizando configurações para o Config Server
-
-1. Faça o clone do Config Server para o seu Desktop com o seguinte comando:
-
-  ```sh
-  cd ~/Desktop
-  git clone https://gitlab.com/aovs/projetos-cursos/fj33-config-server.git
-  ```
-
-  No Eclipse, no workspace de microservices, importe o projeto `config-server`, usando o menu _File > Import > Existing Maven Projects_.
-
-  Execute a classe `ConfigServerApplication`.
-
-2. Obtenha a branch `cap13-configuracao-externalizada-para-o-config-server` dos projetos dos serviços de pagamentos, de distância e de nota fiscal, do monólito e do API Gateway:
-
-  ```sh
-  cd ~/Desktop/fj33-eats-pagamento-service
-  git checkout -f cap13-configuracao-externalizada-para-o-config-server
-
-  cd ~/Desktop/fj33-eats-distancia-service
-  git checkout -f cap13-configuracao-externalizada-para-o-config-server
-
-  cd ~/Desktop/fj33-eats-nota-fiscal-service
-  git checkout -f cap13-configuracao-externalizada-para-o-config-server
-
-  cd ~/Desktop/fj33-eats-monolito-modular
-  git checkout -f cap13-configuracao-externalizada-para-o-config-server
-
-  cd ~/Desktop/fj33-api-gateway
-  git checkout -f cap13-configuracao-externalizada-para-o-config-server
-  ```
-
-3. Reinicie todos os serviços. Garanta que a UI esteja no ar. Teste a aplicação, por exemplo, fazendo um pedido até o final e confirmando-o no restaurante. Deve funcionar!
 
 ## Git como backend do Config Server
 
@@ -188,17 +260,21 @@ spring.cloud.config.server.git.uri=git@github.com:organizacao/repositorio-de-con
 
 É possível manter as chaves SSH no próprio `application.properties` do Config Server.
 
-O Config Server ainda tem como backend para as configurações:
-
-- BD acessado por JDBC
-- Redis
-- AWS S3
-- CredHub, um gerenciador de credenciais da Cloud Foundry
-- Vault, um gerenciador de credenciais da HashiCorp
-
 ## Exercício: repositório Git local no Config Server
 
-1. Faça checkout da branch `cap13-repositorio-git-no-config-server` do projeto do Config Server:
+
+1. Faça o clone do Config Server para o seu Desktop com o seguinte comando:
+
+  ```sh
+  cd ~/Desktop
+  git clone https://gitlab.com/aovs/projetos-cursos/fj33-config-server.git
+  ```
+
+  No Eclipse, no workspace de microservices, importe o projeto `config-server`, usando o menu _File > Import > Existing Maven Projects_.
+
+  Execute a classe `ConfigServerApplication`.
+
+2. Faça checkout da branch `cap13-repositorio-git-no-config-server` do projeto do Config Server:
 
   ```sh
   cd ~/Desktop/fj33-config-server
@@ -207,7 +283,7 @@ O Config Server ainda tem como backend para as configurações:
 
   Reinicie o Config Server, parando e rodando novamente a classe `ConfigServerApplication`.
 
-2. No exercício, vamos usar um repositório local do Git para manter nossas configurações.
+3. No exercício, vamos usar um repositório local do Git para manter nossas configurações.
 
   Crie um repositório Git no diretório `config-repo` do seu Desktop com os comandos:
 
@@ -235,7 +311,7 @@ O Config Server ainda tem como backend para as configurações:
   git commit -m "versão inicial do application.properties"
   ```
 
-3. Com o Config Server no ar, acesse a seguinte URL: http://localhost:8888/application/default
+4. Com o Config Server no ar, acesse a seguinte URL: http://localhost:8888/application/default
 
   Você deve obter como resposta, um JSON semelhante a:
 
@@ -263,7 +339,7 @@ O Config Server ainda tem como backend para as configurações:
 
   Faça alguma mudança no `application.properties` do `config-repo` e acesse novamente a URL anterior. Perceba que o Config Server precisa de um repositório Git, mas obtém o conteúdo do próprio arquivo (_working directory_ nos termos do Git), mesmo sem as alterações terem sido comitadas. Isso acontece apenas quando usamos um repositório Git local, o que deve ser usado apenas para testes.
 
-4. Reinicie todos os serviços. Teste a aplicação. Deve continuar funcionando!
+5. Reinicie todos os serviços. Teste a aplicação. Deve continuar funcionando!
 
   Observação: as configurações só são obtidas no start up da aplicação. Se alguma configuração for modificada no Config Server, só será obtida pelos serviços quando forem reiniciados.
 
@@ -408,3 +484,8 @@ s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶.̶m̶o̶n̶g̶o̶d̶b̶.̶p̶o̶r̶t̶=̶2̶7�
   O código anterior está na URL: https://gitlab.com/snippets/1896527
 
 5. Faça com que os serviços sejam reiniciados, para obterem as novas configurações do Config Server. Acesse a UI e teste as funcionalidades.
+
+<!-- TODO:
+  Para saber mais: Push Notifications and Spring Cloud Bus
+  https://cloud.spring.io/spring-cloud-config/reference/html/#_push_notifications_and_spring_cloud_bus
+-->

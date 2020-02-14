@@ -65,6 +65,21 @@ Sam Newman, no livro [Building Microservices](https://learning.oreilly.com/libra
 
 _Microservices são serviços pequenos e autônomos que trabalham juntos._
 
+<!-- TODO
+  citar https://www.oreilly.com/ideas/should-i-use-microservices, do Sam Newman
+
+  Quando não usar Microservices:
+  - domínio ainda incipiente
+  - falta de necessidade de escalar
+  - time pequeno
+
+  Quando usar Microservices:
+  - escalar pessoas
+  - deploys independentes, minimizando downtime
+  - flexibilidade na escola de tecnologia e providers de cloud
+
+ -->
+
 ## Prós e contras de uma Arquitetura de Microservices
 
 ### PRÓ: Times Pequenos e Autônomos
