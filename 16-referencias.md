@@ -40,6 +40,8 @@ CALÇADO, Phil. 2018. Em: https://twitter.com/pcalcado/status/963183090339385345
 
 CHRISTENSEN, Ben. _Optimizing the Netflix API._ 2013. Em: https://medium.com/netflix-techblog/optimizing-the-netflix-api-5c9ac715cf19
 
+CLEMSON, Toby. _Testing Strategies in a Microservice Architecture._ 2014. Em: https://martinfowler.com/articles/microservice-testing/
+
 COCKCROFT, Adrian. _Patterns for Continuous Delivery, High Availability, DevOps & Cloud Native Open Source with NetflixOSS._ 2013. Em: https://www.slideshare.net/adrianco/yowworkshop-131203193626phpapp01-1
 
 COHEN, Mickey. _Zuul @ Netflix._ SpringOne Platform, 2016. Em: https://www.slideshare.net/MikeyCohen1/zuul-netflix-springone-platform
@@ -55,6 +57,8 @@ DEAN, Jeffrey. _Designs, Lessons and Advice from Building Large Distributed Syst
 DUSSEAULT, Lisa; SNELL James M. _PATCH Method for HTTP._ Internet Engineering Task Force (IETF), 2010. Em: https://tools.ietf.org/html/rfc5789
 
 EVANS, Eric. _Domain-Driven Design: Tackling Complexity in the Heart of Software._ Addison-Wesley Professional. 2003. 560 p. Em: https://www.amazon.com/Domain-Driven-Design-Tackling-Complexity-Software/dp/0321125215
+
+FEATHERS, Michael. _The Deep Synergy Between Testability and Good Design_ 2007. Em: https://michaelfeathers.typepad.com/michael_feathers_blog/2007/09/the-deep-synerg.html
 
 FEATHERS, Michael. _Microservices Until Macro Complexity._ 2014. Em: https://michaelfeathers.silvrback.com/microservices-until-macro-complexity
 
@@ -74,9 +78,17 @@ FOWLER, Martin. _StranglerFigApplication._ 2004. Em: https://martinfowler.com/bl
 
 FOWLER, Martin. _EventSourcing._ 2005. Em: https://martinfowler.com/eaaDev/EventSourcing.html
 
+FOWLER, Martin. _Detestable._ 2005b. Em: https://martinfowler.com/bliki/Detestable.html
+
+FOWLER, Martin. _TestDouble._ 2006. Em: https://www.martinfowler.com/bliki/TestDouble.html
+
 FOWLER, Martin. _Richardson Maturity Model._ 2010. Em: https://martinfowler.com/articles/richardsonMaturityModel.html
 
 FOWLER, Martin. _CQRS._ 2011. Em: https://martinfowler.com/bliki/CQRS.html
+
+FOWLER, Martin. _BroadStackTest._ 2013. Em: https://www.martinfowler.com/bliki/BroadStackTest.html
+
+FOWLER, Martin. _ThresholdTest._ 2013b. Em: https://www.martinfowler.com/bliki/ThresholdTest.html
 
 FOWLER, Martin; LEWIS, James. _Microservices: a definition of this new technical term._ 2014. Em: https://martinfowler.com/articles/microservices.html
 
@@ -84,11 +96,17 @@ FOWLER, Martin. _Microservices and the First Law of Distributed Objects._ 2014a.
 
 FOWLER, Martin. _MicroservicePrerequisites._ 2014b. Em: https://martinfowler.com/bliki/MicroservicePrerequisites.html
 
+FOWLER, Martin. _UnitTest._ 2014c. Em: https://martinfowler.com/bliki/UnitTest.html
+
 FOWLER, Martin. _Microservice Trade-Offs._ 2015a. Em: https://martinfowler.com/articles/microservice-trade-offs.html
 
 FOWLER, Martin. _MicroservicePremium._ 2015b. Em: https://martinfowler.com/bliki/MicroservicePremium.html
 
 FOWLER, Martin. _MonolithFirst._ 2015c. Em: https://martinfowler.com/bliki/MonolithFirst.html
+
+FOWLER, Martin. _Integration Test._ 2018. Em: https://martinfowler.com/bliki/IntegrationTest.html
+
+FREEMAN, Steve et al. _Mock Roles, not Objects._  2004. Em: http://jmock.org/oopsla2004.pdf 
 
 GEERS, Michael. _Micro Frontends._ 2017. Em: https://micro-frontends.org/
 
@@ -179,6 +197,8 @@ TILKOV, Stefan. _Don't start with a monolith: ... when your goal is a microservi
 VERNON, Vaughn. _Implementing Domain-Driven Design._ Addison-Wesley Professional, 2013. 656 p. Em: https://www.amazon.com.br/Implementing-Domain-Driven-Design-Vaughn-Vernon/dp/0321834577
 
 VERNON, Vaughn. _Domain-Driven Design Distilled._ Addison-Wesley Professional, 2016. 176 p. Em: https://www.amazon.com.br/Domain-Driven-Design-Distilled-Vaughn-Vernon/dp/0134434420
+
+VOCKE, Ham. _The Practical Test Pyramid_. 2018. Em: https://martinfowler.com/articles/practical-test-pyramid.html
 
 VOEGELS, Werner. _A Conversation with Werner Voegels._ ACM Queue, Mai. 2006. Em: https://dl.acm.org/doi/pdf/10.1145/1142055.1142065?download=true
 

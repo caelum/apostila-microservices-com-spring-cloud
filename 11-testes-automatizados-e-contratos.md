@@ -1,4 +1,343 @@
-# Contratos
+# Testes Automatizados e Contratos
+
+## O perigo de testar tarde demais
+
+Em tempos remotos, havia uma maneira tradicional de desenvolver, o [Waterfall](https://en.wikipedia.org/wiki/Waterfall_model), em que testar o software era uma atividade realizada depois de todo o código pronto e por um grupo diferente de pessoas: a equipe de Testes (em inglês, _Quality Assurance_ ou QA). Testes seriam trabalho do time de QA. Programadores ajudarem nos testes seria um desperdício do precioso tempo dos programadores.
+
+Essa separação da programação dos testes trazia uma série de desvantagens. Entre elas:
+
+- uma cultura de conflito entre programadores e QA.
+- ineficiência, já que boa parte dos cenários de teste eram roteiros seguidos à risca pelo time de QA, repetidamente.
+- acúmulo de trabalho não finalizado, levando a uma sobrecarga do time de QA em fases tardias do projeto
+- como QA está no final do processo, tende a ser descartado à medida que a pressão de entrega aumenta
+
+<!--@note
+  Alexandre - costumo a brincar que a mentalidade de dev é construção e de QA é destruição. Ambos se completam. 
+-->
+
+Com o surgimento de outras maneiras de desenvolver software, que pregavam entrega constante de software de valor por times autônomos, as Metodologias Ágeis, houve uma mudança no processo. Para que um software pudesse ser potencialmente colocado em produção continuamente, a verificação proporcionada pelo time de QA deveria ser feita a todo momento.
+
+À medida que mais funcionalidades e código vão se acumulando no decorrer de um projeto, seguir roteiros de teste passa a ser um esforço repetitivo muito árduo para o time de QA.
+
+## Testes Automatizados
+
+Para que seja possível testar continuamente o software de maneira eficiente, as tarefas repetitivas precisam ser minimizadas. Precisamos automatizar os testes!
+
+Para isso, devemos criar um código que invoca o sistema, ou partes dele, com os parâmetros necessários e verifica se o resultado é o esperado.
+
+Há diversos frameworks que ajudam nessa tarefa. Entre os principais da plataforma Java:
+
+- [JUnit](https://junit.org/)
+- [TestNG](https://testng.org/doc/)
+- [Spock](http://spockframework.org/), em que os testes são feitos na linguagem Groovy
+
+> Nunca no desenvolvimento de software tanto foi devido por tantos a tão poucas linhas de código.
+>
+> Martin Fowler, citado na página principal de [versões antigas do JUnit](https://web.archive.org/web/20070220102853/http://junit.org/index.htm)
+
+### Tipos de Testes Automatizados
+
+Digamos que somos do time do serviço de Pagamentos e desejamos implementar testes automatizados.
+
+Primeiramente, precisamos ter uma ideia de como está organizado o código.
+
+No serviço de Pagamentos, temos:
+
+- `PagamentoController`, que recebe requests HTTP do API Gateway que, por sua vez, é chamado pela UI
+- `PagamentoRepository`, que cuida da persistência de um pagamento no MySQL desse serviço
+- `PedidoRestClient`, que invoca o módulo de Pedido do Monólito para avisar que um pedido foi pago
+- `NotificadorPagamentoConfirmado`, que manda uma mensagem do Domain Event `PagamentoConfirmado` para um Message Channel que será consumido pelo serviço de Nota Fiscal
+- diversas outras classes internas, que não tem nenhuma responsabilidade nas bordas desse sistema 
+
+![Visão geral das classes do serviço de Pagamentos {w=72}](imagens/11-testes-automatizados-e-contratos/servico-de-pagamento-visao-geral-das-classes.png)
+
+Classes com diferentes responsabilidades podem ser testadas de diferentes maneiras.
+
+Como diz Ham Vocke no artigo [The Practical Test Pyramid](https://martinfowler.com/articles/practical-test-pyramid.html) (VOCKE, 2018), a terminologia usada na classificação de tipos de testes automatizados é muito confusa. Não há termos bem definidos: o que é teste de componentes para uns, é chamado de testes de integração ou de serviços para outros. E as nuances na escrita e arquitetura fazem com que os termos sejam mais um espectro que definições precisas. A dica de Vocke é ter um consenso nos termos usados pelo time.
+
+Vamos usar a mesma terminologia de Chris Richardson no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a):
+
+- Unidade
+- Integração
+- Componentes
+- End-to-End
+
+#### Testes de Unidade
+
+De acordo com Martin Fowler, em seu artigo **[Unit Test](https://martinfowler.com/bliki/UnitTest.html)** (FOWLER, 2014c), há diversas variações na definição do que é um Teste de Unidade, mas há alguns elementos em comum:
+
+- são de baixo nível, exercitando uma pequena parte do sistema (ou unidade).
+- são escritos pelos próprios programadores usando ferramentas corriqueiras e frameworks como o JUnit.
+- são rápidos
+
+Mas o que seria essa unidade a ser testada e cujos resultados são verificados?
+
+Alguns, como Sam Newman no livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), consideram que uma unidade é um único método ou função.
+
+Tanto para Martin Fowler, ainda no artigo [Unit Test](https://martinfowler.com/bliki/UnitTest.html) (FOWLER, 2014c), como para Chris Richardson no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), em linguagens OO, uma unidade é uma classe.
+
+![Testes de unidade no serviço de Pagamentos {w=72}](imagens/11-testes-automatizados-e-contratos/servico-de-pagamento-testes-de-unidade.png)
+
+É comum que uma Unidade seja testada de maneira isolada. Isso é trivial para uma regra de negócio que recebe alguns parâmetros, faz alguns cálculos e retorna algum valor.
+
+Mas boa parte das Unidades interagem com outras classes. Nesse caso, há duas abordagens.
+
+Em uma das abordagens, as dependências da Unidade que está sendo testada são trocadas por _Test Doubles_ (algo como dublês de teste), que são objetos projetados para serem usados especificamente nos testes. Martin Fowler chama essa abordagem de Testes Solitários (em ingleŝ, _Solitary Tests_), citando o termo criado por Jay Fields. 
+
+A outra abordagem traz um conceito diferente de Unidade. Martin Fowler diz que frequentemente considera um conjunto de classes relacionadas como uma Unidade. Os testes para esse tipo de Unidade seriam Testes Sociáveis (em inglês, _Sociable Tests_), em que os colaboradores de uma classe são invocados.
+
+Toby Clemson, na palestra [Testing Strategies in a Microservice Architecture](https://martinfowler.com/articles/microservice-testing/) (CLEMSON, 2014), argumenta que, para lógica de domínio complexa, faz mais sentido usar Sociable Tests, que invocam os cálculos e transições de estados dos próprios objetos de domínio.
+
+#### Testes de Integração
+
+Como testar Unidades na "borda" de uma aplicação, que invocam recursos externos como serviços remotos, BDs e Message Brokers?
+
+Para exercitar essas partes do código, os recursos externos precisam ter resultados pré-estabelecidos. Para isso, são usados Test Doubles.
+
+É o que Chris Richardson, no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), chama de Testes de Integração (em inglês, **Integration Tests**).
+
+Um Integration Test tende a ser bem mais lento que um Unit Test.
+
+No artigo [Integration Test](https://martinfowler.com/bliki/IntegrationTest.html) (FOWLER, 2018), Martin Fowler indica que há duas noções de Integration Tests no mercado:
+
+- Testes de Integração restritos (em inglês, _Narrow Integration Tests_), mais focados nos pontos de integração de uma aplicação com recursos externos. É a abordagem usada por aqui.
+- Testes de Integração amplos (em inglês, _Broad Integration Tests_), que é o que chamamos aqui de Testes de Componentes.
+
+No Caelum Eats, faríamos Integration Tests (restritos) para classes como:
+
+- `PagamentoRepository`, que integra com o MySQL
+- `PedidoRestClient`, que invoca o Monólito usando HTTP como protocolo
+- `NotificadorPagamentoConfirmado`, que publica o Domain Event `PagamentoConfirmado` no um Message Channel `pagamentosConfirmados`
+
+![Testes de integração no serviço de Pagamentos {w=72}](imagens/11-testes-automatizados-e-contratos/servico-de-pagamento-testes-de-integracao.png)
+
+Para a testar um ponto de integração com um BD, como `PagamentoRepository`, podemos usar um BD em memória como [H2](https://www.h2database.com/html/main.html), [HSQLDB](http://hsqldb.org/) ou [Derby](http://db.apache.org/derby/). Outra abordagem é usar um BD real, que pode apresentar erros que não seriam apresentados em um BD em memória. Tecnologias como [Testcontainers](https://www.testcontainers.org/modules/databases/) ajudam no gerenciamento desses BD reais. Ferramentas de migration como o [Flyway](https://flywaydb.org/) ou [Liquibase](https://www.liquibase.org/) auxiliam a criar a estrutura de um BD relacional necessária para os testes.
+
+E como testar integrações com outros serviços e com Message Channels? Veremos isso mais adiante.
+
+#### Testes de Componentes
+
+Uma outra abordagem seria testar a integração entre os vários componentes de uma aplicação. No caso de uma Arquitetura de Microservices, estaríamos exercitando um serviço individualmente por sua API e verificando se os resultados retornados correspondem aos esperados.
+
+Os recursos usados pelo serviço a ser testado, como BDs, caches, Message Brokers e outros serviços, seriam trocados por Test Doubles.
+
+Chris Richardson chama esse tipo de teste, no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), de Testes de Componentes (em inglês, **Component Tests**). Essa nomenclatura também é [usada por Martin Fowler](https://www.martinfowler.com/bliki/ComponentTest.html).
+
+Há bastante discussão sobre a nomenclatura desse tipo de teste.
+
+Alguns usam o termo Integration Tests, equivalendo aos Broad Integration Tests do artigo [Integration Test](https://martinfowler.com/bliki/IntegrationTest.html) (FOWLER, 2018) de Martin Fowler.
+
+Como os testes não são pela UI, mas diretamente pela API de um serviço isolado, como se fossem por baixo da "pele" do sistema, Martin Fowler também usa o termo [Subcutaneous Test](https://martinfowler.com/bliki/SubcutaneousTest.html).
+
+Sam Newman, no livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), usa o termo _Service Tests_, citando o agilista Mike Cohn.
+
+No Caelum Eats, um Component Tests para o serviço de Pagamentos exercitaria o `PagamentoController` que, por sua vez, chamaria o restante das classes.
+
+![Testes de componentes no serviço de Pagamentos {w=72}](imagens/11-testes-automatizados-e-contratos/servico-de-pagamento-testes-de-componente.png)
+
+#### Testes End-to-End
+
+Testes End-to-End (em inglês, **End-to-End Tests**) exercitam uma aplicação como um todo. Em uma Arquitetura de Microservices, os diversos serviços e toda a infraestrutura usada por esses serviços deve ser colocada no ar.
+
+Sam Newman, no livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), cita o trabalho do agilista Mike Cohn para explicar que o intuito dos End-to-End Tests é exercitar as funcionalidades por meio da UI, passando por tudo o que estiver abaixo, de maneira oferecer uma verificação de grande quantidade do sistema.
+
+Assim como em outros tipos de testes, a terminologia é variada.
+
+Martin Fowler, por exemplo, também usa os nomes _[Broad-stack Test e Full-stack Test](https://www.martinfowler.com/bliki/BroadStackTest.html)_.
+
+No Caelum Eats, um End-to-End Test deveria ter no ar: a UI, o API Gateway, o Monólito, o serviço de Pagamentos, o serviço de Distância, o serviço de Nota Fiscal, além do Service Registry, do Message Broker e dos BDs de cada serviço. É muita coisa!
+
+![Testes de end-to-end no Caelum Eats {w=56}](imagens/11-testes-automatizados-e-contratos/testes-end-to-end.png)
+
+Martin Fowler argumenta, no artigo [Broad-stack Test](https://www.martinfowler.com/bliki/BroadStackTest.html) (FOWLER, 2013), que End-to-End Tests não necessariamente precisam usar a UI. O sistema pode ser exercitado por uma API, ainda mantendo no ar vários serviços e a infraestrutura necessária. Ou seja, End-to-End Tests podem ser o que Fowler chama de [Subcutaneous Tests](https://martinfowler.com/bliki/SubcutaneousTest.html).
+
+Uma ideia comum nos End-to-End Tests é simular um fluxo do usuário, baseado nos critérios de aceitação de Histórias do Usuário (em inglês, User Stories). Uma vantagem é prover rastreabilidade entre os requisitos e a execução dos testes. Esse tipo de teste é chamado por Martin Fowler de [StoryTest](https://www.martinfowler.com/bliki/StoryTest.html).
+
+No livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), Sam Newman lista diversos pontos negativos de End-to-End Tests:
+
+- Fragilidade: ao testar uma funcionalidade que passa por quatro ou cinco serviços, há muita coisa que pode dar errado. Por exemplo, pode haver uma falha momentânea na rede ou uma demora que leva a um timeout, quebrando o teste mesmo que a funcionalidade sendo testada esteja sem defeitos. Executar novamente o mesmo teste pode levá-lo a passar. A confiança no resultado diminui, o que pode levar os testes a serem ignorados. Newman recomenda uma ideia de Martin Fowler de colocar testes frágeis em quarentena, removendo-os da suíte de testes e encontrando maneiras de deixá-los mais estáveis.
+- Código sem dono: quem mantém os End-to-End Tests? Se forem todos os times de todos os serviços, quando houver uma falha há o risco de cada time ignorar, achando que é um problema dos outros times. Tem um time dedicado a End-to-End Tests é ruim, porque tira a autonomia dos times dos serviços.
+- Lentidão: há suítes de End-to-End Tests que duram horas, dias e até semanas para serem executadas. O feedback proporcionado pelos testes fica prejudicado. Além disso, colocar esses testes lentos em um Build Pipeline que entrega software continuamente, faria com que mudanças fossem empilhadas. Isso aliado à fragilidade é desastroso!
+
+Newman relata que é comum, em empresas que usam uma Arquitetura de Microservices, remover os End-to-End Tests, favorecendo monitoramento detalhado.
+
+Para minimizar o número de End-to-End Tests, diversos autores como Chris Richardson, Sam Newman e Martin Fowler, recomendam simular não uma User Story, mas uma série de interações do usuário que visam atingir algum objetivo de negócio. Por exemplo, não seria criado um End-to-End Test somente da primeira etapa de um pedido. O teste deveria incluir da criação e pagamento até a finalização do pedido, sem considerar casos de exceção. É o que Martin Fowler chama de Testes de Jornadas de Usuário (em inglês, _[User Journey Tests](https://www.martinfowler.com/bliki/UserJourneyTest.html)_).
+
+#### Ainda outros tipos de testes
+
+Como testar de maneira automatizada a Usabilidade do Sistema?
+
+Testes repetitivos, que verificam funcionalidades e detectam regressões devem ser automatizados. Mas ainda são necessários testes manuais, que permitam que o software seja criticado com um olhar humano.
+
+Além de Usabilidade, podem ser feitos Testes Exploratórios por especialistas em testes, buscando maneiras de quebrar o sistema.
+
+Há ainda testes de _iliades_, requisitos técnicos e transversais como Performance, Escalabilidade, Segurança. Esse tipo de teste pode ser feito por especialistas, auxiliados pelas ferramentas adequadas.
+
+Martin Fowler argumenta no artigo [Threshold Test](https://www.martinfowler.com/bliki/ThresholdTest.html) (FOWLER, 2013b), que até é possível fazer testes de Performance de maneira automatizada. Poderíamos chamar um conjunto de operações do sistema, anotando o tempo de resposta. Mas ao invés de verificarmos valores exatos, compararíamos com um valor limite. Num ambiente de Integração Contínua, esse tipo de teste ajuda a identificar uma degradação de performance assim que o código for comitado.
+
+### Pirâmide de Testes
+
+Testes de Unidade são rápidos: uma suíte extensa em geral é executada em milissegundos ou segundos. Além disso, são bem baratos de se escrever porque estão isolados e no mesmo nível de abstração do código. Aliados a práticas como TDD e refatoração, influenciam positivamente no design do nosso código.
+
+Testes de Integração e de Componentes são um pouco mais lentos, tendo uma suíte executada em alguns minutos, em geral. É comum acessarem outras peças da infra-estrutura como Bancos de Dados ou WebServices. Por isso, seu setup é mais complicado e tais testes acabam sendo mais caros de desenvolver.
+
+Testes End-to-End são os mais lentos, chegando a horas de execução, além de caros, pela complexidade de escrevê-los. Há diversos motivos para pode quebrá-los e, às vezes, apresentam falhas intermitentes.
+
+Martin Fowler cita a ideia do agilista Mike Cohn de uma Pirâmide de Testes, que indica que Testes de Unidade devem ser favorecidos, em detrimento de formas de testes mais lentas, caras e frágeis.
+
+![Pirâmide de Testes com Testes Manuais no topo {w=44}](imagens/11-testes-automatizados-e-contratos/piramide-de-testes.png)
+
+> Há relatos de sistemas no mercado que têm classes responsáveis por diversas funcionalidades e regras de negócio, chegando a 15 mil linhas de código.
+>
+> Além de incompreensível, um código tão desorganizado é difícil de testar porque torna-se complicado exercitar isoladamente uma regra de negócio ou um ponto de integração. Em geral, apenas testes end-to-end são possíveis para esse tipo de código. Como diz Michael Feathers em um [post em seu blog](https://michaelfeathers.typepad.com/michael_feathers_blog/2007/09/the-deep-synerg.html) (FEATHERS, 2007), há uma forte sinergia entre um bom design de código e testabilidade.
+>
+> Martin Fowler [relata em seu blog](https://martinfowler.com/bliki/Detestable.html) (FOWLER, 2005b) que uma pessoa no grupo de eXtreme Programming de Sidney fez a seguinte brincadeira:
+>
+> Detestável (adjetivo): software que não é testável.
+
+## Test Doubles
+
+Conforme mencionamos, Testes de Unidade do estilo Solitário, Testes de Integração e Testes de Componentes, trocam dependências a serviços externos com o BDs ou outros serviços por _Test Doubles_, objetos projetados para serem usados especificamente nos testes.
+
+De maneira semelhante às outras terminologias de Testes Automatizados, há uma grande confusão na classificação de Test Doubles. Muitas vezes, o único termo usado é Mock.
+
+No artigo [Test Double](https://www.martinfowler.com/bliki/TestDouble.html) (FOWLER, 2006), Martin Fowler sugere o uso dos termos de Gerard Meszaros:
+
+- _Dummy_: um objeto passado apenas para preencher argumentos de um método, mas que não é realmente invocado.
+- _Fake_: um objeto com uma implementação funcional, mas que não deve ser usada em produção. Por exemplo, um BD em memória.
+- _Stub_: provê respostas pré-estabelecidas às chamadas feitas durante um teste. Ignoram chamadas não esperadas.
+- _Spy_: stubs que gravam informações sobre como foram chamados. Por exemplo, um serviço de email que conta quantas mensagens foram enviadas.
+- _Mock_: especifica as interações exatas com objetos que o usam. Há uma verificação de que todas as chamadas esperadas devem ser realizadas, retornando os resultados pré-estabelecidos. Nenhuma chamada a mais pode ser feita.
+
+No paper [Mock Roles, not Objects](http://jmock.org/oopsla2004.pdf) (FREEMAN et al., 2004), os autores, pioneiros de Test Doubles, descrevem o princípio _Only Mock Types You Own_: não devem ser feitos Mocks de tipos (classes, interfaces, etc) cujo código não podemos modificar, como tipos de bibliotecas externas.
+
+## Stub Services e WireMock
+
+Quando implementamos Integration e Component Tests, precisamos exercitar as integrações com serviços externos.
+
+Mas invocar instâncias reais desses serviços externos é algo bastante trabalhoso. Seria necessário executar toda a infraestrutura e os serviços externos usados por esses serviços externos. A complexidade aumentaria absurdamente.
+
+Uma abordagem mais interessante é usar Test Doubles para cada um dos serviços externos usados por uma aplicação. Usando a terminologia estudada anteriormente, criaríamos Stubs para esses serviços.
+
+No livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), Sam Newman relata que já criou esses **Stub Services** na mão, executando código baseado em servidores HTTP como Apache, Nginx, Jetty ou implementados em Python.
+
+Mas existem Stub Services já prontos, como:
+
+- [mountebank](http://www.mbtest.org/), escrito em NodeJS
+- [WireMock](http://wiremock.org/), escrito em Java
+
+Ambos provêem uma API RESTful que permite que aplicações escritas em múltiplas plataformas registrem quais os requests esperados e os responses associados a esses requests. Então, testes usariam a API como um Stub do serviço real. 
+
+Também há como verificar as chamadas realmente realizadas durante o teste, servindo como um Mock.
+
+### WireMock
+
+Focando no WireMock, para executá-lo, podemos disparar o JAR executável da seguinte forma:
+
+```sh
+java -jar wiremock-standalone-2.26.0.jar --port 7070
+```
+
+_Observação: a porta padrão é a `8080`. Com a opção `--port`, modificamos a porta do WireMock para `7070`._
+
+Para registrar um novo request e o respectivo response, de maneira a simular uma chamada que obtém os detalhes de um pedido do Monólito, faríamos:
+
+```
+POST http://localhost:7070/__admin/mappings/new
+```
+
+```json
+{
+  "request": {
+    "url": "/pedidos/1", 
+    "method": "GET"
+  }, 
+  "response": {
+    "status": 200,
+    "body": "{\"id\": 1, \"dataHora\": \"2019-07-18T08:22:01\", \"status\": \"PAGO\"}"
+  }
+}
+```
+
+Então, qualquer request à URL http://localhost:7070/pedidos/1, teria como response o status code `200 OK` e um JSON com os dados do pedido registrados no passo anterior.
+
+Requisições a outras URLs ocasionariam um status code `404 Not Found`.
+
+### Quem deve manter o código do Stub Service?
+
+Digamos que estamos criando um Integration Test da classe `PedidoRestClient`: o ponto de integração do serviço de Pagamentos com o módulo de Pedido do Monólito.
+
+O Integration Test do serviço de Pagamentos poderia utilizar o WireMock para subir um Stub Service do Monólito e carregá-lo com uma série de requests e responses pré-determinados.
+
+![Stub Service do Monólito {w=36}](imagens/11-testes-automatizados-e-contratos/stub-service-do-monolito.png)
+
+Mas quem deve manter esse conjunto de requests e responses?
+
+Seguindo o princípio _Only Mock Types You Own_, o serviço de Pagamentos não deveria manter o Stub Service do Monólito. Deveria ser o próprio time que desenvolve o Monólito.
+
+Para auxiliar nessa tarefa, poderiam ser usados contratos.
+
+## Contratos entre serviços
+
+Nesse momento, há diversas integrações entre os serviços.
+
+Temos integrações síncronas e RESTful, que usam HTTP:
+
+- o API Gateway invoca os módulos do Monólito e os serviços de Pagamentos e Distância, tanto como Proxy quanto como API Composer
+- o serviço de Pagamentos invoca o módulo de Pedido do Monólito, avisando que um pedido foi pago
+- o módulo de Restaurante do Monólito invoca o serviço de Distância, informando que novos restaurantes foram aprovados ou que um restaurante foi atualizado
+- o serviço de Nota Fiscal busca detalhes de um pedido do módulo de Pedido do Monólito
+
+Temos integrações assíncronas, que usam Mensageria com AMQP:
+
+- o serviço de Pagamentos produz um Domain Event que indica que um pagamento foi confirmado, que é consumido pelo serviço de Nota Fiscal
+- o módulo de Pedido do Monólito produz um Domain Event para cada atualização de status de um pedido, cujo consumidor é o API Gateway, que usa um WebSocket para notificar o front-end
+
+![Integrações entre os serviços, omitindo o Service Registry {w=47}](imagens/11-testes-automatizados-e-contratos/integracoes-entre-os-servicos.png)
+
+Em cada uma dessas integrações há um contrato.
+
+Chris Richardson, no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), diz que no caso das endpoints REST, oum contrato é composto por:
+
+- o método HTTP usado no request
+- a URL invocada no request
+- os cabeçalhos HTTP no request e no response, como `Content-Type` e `Accept`
+- o corpo do request e do response, que contém os dados
+- o status code do response
+
+Já para integrações que usam Mensageria, Richardson indica que o contrato é composto por:
+
+- a estrutura do corpo da mensagem
+- o Message Channel utilizado
+
+## Testes de Contratos
+
+Os contratos entre serviços mencionados anteriormente poderiam ser usados para influenciar na criação de Stub Services que são usados em Integration e Component Tests.
+
+Esse contratos seriam materializados em um ou mais arquivos que provêem exemplos dos requests, responses ou mensagens trafegadas na integração entre os serviços.
+
+Algumas ferramentas ajudam a definir e executar esses contratos. Entre elas:
+
+- [Pact](https://docs.pact.io/), uma ferramenta que checa se chamadas ao serviço real tem os mesmos resultados das definidas no contrato. É implementado em diversas linguagens.
+- [Spring Cloud Contract](https://spring.io/projects/spring-cloud-contract), uma ferramenta do ecossistema Spring que ajuda a definir contratos tanto para APIs REST como para Mensageria, que são usados para gerar testes automatizados e Stub Services.
+
+### Spring Cloud Contract
+
+Voltando à integração entre o serviço de Pagamentos e o Monólito, como usar o Spring Cloud Contract para testá-la?
+
+O Monólito, nos temos do Spring Cloud Contract, seria o Producer. Já o serviço de Pagamentos, seria o Consumer.
+
+Do lado do Producer, usamos o Spring Cloud Contract Verifier. Com esse projeto, podemos definir exemplos de request/response HTTP ou mensagens usando uma DSL Groovy ou YAML. Esse arquivo é a materialização do contrato entre os serviços.
+
+Ainda do lado do Producer, através de um plugin do Maven, esse contrato é usado para gerar Component Tests, verificando se o próprio Producer segue os contratos.
+
+No caso do build do Maven ser bem sucedido, é gerado um JAR contendo o contrato. No caso de contratos de APIs REST, o JAR também contém um JSON no formato do WireMock . É o caso da integração entre o serviço de Pagamentos e o Monólito.  Esse JAR é publicado em algum repositório de artefatos como o Nexus, Archiva ou localmente no diretório `.m2`.
+
+Já do lado do Consumer, o JAR é obtido e executado usando o Spring Cloud Contract Stub Runner. No caso de uma API REST, o WireMock é iniciado e o JSON com os exemplos de request/response são carregados.
+
+Então, os pontos de integração são exercitados pelos testes automatizados usando o Stub fornecido pelo Producer.
+
+![Fluxo do Spring Cloud Contract para APIs REST {w=46}](imagens/11-testes-automatizados-e-contratos/spring-cloud-contract-rest.png)
 
 ## Fornecendo stubs do contrato a partir do servidor
 
@@ -842,3 +1181,23 @@ Rode o teste. Sucesso!
   Clique com o botão direito na classe `ProcessadorDePagamentosTest` e, então, em _Run As... > Run Configurations..._. Clique com o botão direito em _JUnit_ e, a seguir, em _New Configuration_. Em _Test runner_, escolha o JUnit 4. Então, clique em _Run_.
 
   Aguarde a execução dos testes. Sucesso!
+
+## Para saber mais: Consumer-driven Contract Tests
+
+Em uma abordagem aderente ao TDD, iniciamos uma implementação com um teste que falha, provando que a aplicação ainda não tem o comportamento sob teste.
+
+Como aplicar essa ideia a Contract Tests?
+
+Uma nova funcionalidade que requer a integração entre serviços, poderia ser iniciada pelo lado do Consumer, definindo um novo contrato e, em seguida, compartilhando com o time que mantém o Producer. Poderiam ser utilizados Pull Requests para essa tarefa.
+
+O novo contrato ainda não atendido pelo lado do Producer iria falhar quando  exercitado por Component Tests semelhantes aos do gerados pelo Spring Cloud Contract Verifier.
+
+Então, o time do Producer faria esses Component Tests passarem. Se tudo der certo com o build, um novo JAR com o contrato seria publicado no repositório de artefatos.
+
+Esse novo JAR seria obtido pelo time do Consumer e poderia ser usado em Integration Tests nos pontos de integração com o Producer.
+
+> **Pattern: Consumer-driven contract test**
+>
+> Verifique que o serviço atende às expectativas de seus clientes.
+>
+> Chris Richardson no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a)
