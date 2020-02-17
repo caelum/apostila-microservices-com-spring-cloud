@@ -182,7 +182,7 @@ docker container stop eats.mysql
 Baixe a imagem do MongoDB 3.6 com o comando a seguir:
 
 ```sh
-docker container pull mongo:3.6
+docker image pull mongo:3.6
 ```
 
 Execute o MongoDb 3.6 em um container com o comando:
@@ -662,7 +662,7 @@ Note que a porta `3307` foi incluída na URL, mas mantivemos ainda `localhost`.
 
 2. Abra um Terminal e crie um novo pagamento:
 
-   ```sh
+  ```sh
   curl -X POST
     -i
     -H 'Content-Type: application/json'
