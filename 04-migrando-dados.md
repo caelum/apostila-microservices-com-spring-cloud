@@ -551,10 +551,10 @@ O script com o dump pode ser carregado no outro MySQL, específico de Pagamentos
   > Caso o MYSQL monolítico esteja dockerizado, execute o comando `mysqldump` pelo Docker:
   > 
   > ```sh
-  >  docker exec -it <NOME-DO-CONTAINER> mysqldump -u root -p --opt eats_pagamento > eats_pagamento.sql
+  >  docker exec -it <NOME-DO-CONTAINER-DO-MYSQL-DO-MONOLITO> mysqldump -u root -p --opt eats_pagamento > eats_pagamento.sql
   > ```
   > 
-  > O valor de `<NOME-DO-CONTAINER>` deve ser o nome do container do MySQL do monólito, que pode ser descoberto com o comando `docker ps`.
+  > O valor de `<NOME-DO-CONTAINER-DO-MYSQL-DO-MONOLITO>` deve ser o nome do container do MySQL do monólito, que pode ser descoberto com o comando `docker ps`.
 
 2. Garanta que o container MySQL do serviço de pagamentos está sendo executado. Para isso, execute em um Terminal:
 
@@ -577,13 +577,13 @@ O script com o dump pode ser carregado no outro MySQL, específico de Pagamentos
   > No caso do comando anterior não funcionar, copie o arquivo `eats_pagamento.sql` para o container do MySQL de pagamentos usando o Docker:
   > 
   > ```sh
-  > docker cp eats_pagamento.sql <NOME-DO-CONTAINER>:/eats_pagamento.sql
+  > docker cp eats_pagamento.sql <NOME-DO-CONTAINER-DO-MYSQL-DE-PAGAMENTOS>:/eats_pagamento.sql
   > ```
   >
   >  Então, execute o `bash` no container do MySQL de pagamentos:
   > 
   > ```sh
-  > docker exec -it <NOME-DO-CONTAINER> bash
+  > docker exec -it <NOME-DO-CONTAINER-DO-MYSQL-DE-PAGAMENTOS> bash
   > ```
   > 
   > Finalmente, dentro do container do MySQL de pagamentos, faça o import do dump:
@@ -592,7 +592,7 @@ O script com o dump pode ser carregado no outro MySQL, específico de Pagamentos
   > mysql -upagamento -p eats_pagamento < eats_pagamento.sql
   > ```
   >
-  > Lembrando que o `<NOME-DO-CONTAINER>` pode ser descoberto com um `docker ps`.
+  > Lembrando que o `<NOME-DO-CONTAINER-DO-MYSQL-DE-PAGAMENTOS>` pode ser descoberto com um `docker ps`.
 
 
 4. Para verificar se a importação do dump foi realizada com sucesso, vamos acessar o comando `mysql` sem passar nenhum arquivo:
@@ -608,7 +608,7 @@ O script com o dump pode ser carregado no outro MySQL, específico de Pagamentos
   > Se o comando `mysql` não funcionar, execute o `bash` no container do MySQL de pagamentos:
   > 
   > ```sh
-  > docker exec -it <NOME-DO-CONTAINER> bash
+  > docker exec -it <NOME-DO-CONTAINER-DO-MYSQL-DE-PAGAMENTOS> bash
   > ```
   > 
   > Dentro do container, execute o comando `mysql`:
@@ -750,10 +750,10 @@ mongoimport --db eats_distancia --collection restaurantes --type csv  --fields=_
   > Caso a instância do MySQL monolítico esteja dockerizada, execute o comando `mysql` pelo Docker:
   > 
   > ```sh
-  > docker exec -it <NOME-DO-CONTAINER> mysql -u root -p eats
+  > docker exec -it <NOME-DO-CONTAINER-DO-MYSQL-DO-MONOLITO> mysql -u root -p eats
   > ```
   > 
-  > Digite a senha de root do MySQL do monólito. Execute a query, salvando o arquivo `restaurantes.csv` no diretório `/var/lib/mysql-files/`.
+  > Digite a senha de root do MySQL do monólito, se houver. Execute a query, salvando o arquivo `restaurantes.csv` no diretório `/var/lib/mysql-files/`.
   > 
   > ```sh
  >  mysql> select r.id, r.cep, r.tipo_de_cozinha_id from restaurante r where r.aprovado = true into outfile '/var/lib/mysql-files/restaurantes.csv' fields terminated by ',' enclosed by '"' lines terminated by '\n';
@@ -764,10 +764,10 @@ mongoimport --db eats_distancia --collection restaurantes --type csv  --fields=_
   > Então, obtenha o texto do `restaurantes.csv` e o copie para o diretório `/tmp` com o seguinte comando:
   > 
   > ```sh
-  > docker exec -it <NOME-DO-CONTAINER> cat /var/lib/mysql-files/restaurantes.csv > /tmp/restaurantes.csv
+  > docker exec -it <NOME-DO-CONTAINER-DO-MYSQL-DO-MONOLITO> cat /var/lib/mysql-files/restaurantes.csv > /tmp/restaurantes.csv
   > ```
   >
-  > Lembrando que o `<NOME-DO-CONTAINER>` pode ser descoberto com um `docker ps`.
+  > Lembrando que o `<NOME-DO-CONTAINER-DO-MYSQL-DO-MONOLITO>` pode ser descoberto com um `docker ps`.
 
 2. Certifique-se que o container MongoDB do serviço de distância definido no Docker Compose esteja no ar. Para isso, execute em um Terminal:
 
