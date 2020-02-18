@@ -1,4 +1,6 @@
-Git
+16 GB de RAM
+
+Git 2.25.0
 
 Java 8 (openjdk version "1.8.0_212")
 Eclipse 2018-12 com Lombok 1.18.6 configurado
@@ -8,14 +10,14 @@ Maven 3.5.4
 
 Node 8
 Angular CLI 7
-Visual Studio Code
+Visual Studio Code 1.41.1
 
-MySQL 5.6
+MySQL 5.6 com mysqldump
 
 Docker 17.05
 Docker Compose 1.22
 
-curl
-Postman
+curl 7.35.0
+Postman 3.1.8
 
-ab (Apache Bench)
+ab (Apache Bench) 2.3
