@@ -2,6 +2,16 @@
 
 ## Externalizando as configurações
 
+<!--@note
+  No livro Microservices Patterns, no capítulo 11 (Developing production-ready Microservices), Chris Richardson discute os impactos de 3 "atributos de qualidade" que são críticos para colocar uma Arquitetura de Microservices em produção:
+
+  - configurabilidade
+  - observabilidade
+  - segurança
+
+  Os próximos 3 capítulos da apostila tratam dessas questões.
+-->
+
 Boa parte das aplicações precisa manter uma série de configurações como credenciais de BD e Message Brokers, URLs e API keys de serviços externos, entre diversas outras.
 
 Há relatos de aplicações implementadas em Java cujas configurações de diferentes ambientes são hard-coded no próprio código. Por exemplo, as credenciais de BD de desenvolvimento seriam usadas por padrão, enquanto credenciais de outros ambientes, como homologação e produção, ficariam comentadas. No caso de um deploy em produção, os desenvolvedores precisariam comentar as configurações de desenvolvimento, descomentando as de produção. O código então teria que ser novamente compilado e só então o entregável (JAR, WAR ou EAR) seria implantado em produção. Além disso, seria uma forte falha de segurança!

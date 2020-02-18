@@ -166,6 +166,13 @@ A documentação do Hystrix descreve o funcionamento do Circuit Breaker em detal
 
 O projeto Hystrix não está mais sendo ativamente desenvolvido e passou para modo de manutenção (não revisarão issues e não aceitarão pull requests), de acordo com a documentação da biblioteca. Na Netflix, o Hystrix é usado apenas em aplicações já existentes. Para novos projetos, a Netflix diz usar bibliotecas como Resilience4j. A documentação diz que, ao invés de configurações estáticas, o foco está em implementações adaptativas que reagem a performance em produção.
 
+<!--@note
+  Ben Christensen e outros engenheiros da Netflix tem posts e palestras bem interessantes sobre o Hystrix:
+
+  https://netflixtechblog.com/introducing-hystrix-for-resilience-engineering-13531c1ab362
+  https://speakerdeck.com/benjchristensen/performance-and-fault-tolerance-for-the-netflix-api-august-2012
+-->
+
 ### Spring Cloud Netflix Hystrix
 
 O Spring Cloud provê o projeto `spring-cloud-starter-netflix-hystrix`, que integra o Circuit Breaker da Netflix com o ecossistema Spring.
