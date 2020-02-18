@@ -23,11 +23,41 @@ Então, movemos as seguintes classes do módulo Administrativo do monólito para
 - TipoDeCozinhaController
 - TipoDeCozinhaRepository
 
-O serviço administrativo deve apontar para o Config Server, definindo um `bootstrap.properties` com `administrativo` como _application name_. No arquivo `administrativo.properties` do `config-repo`, definiremos as configurações de data source.
+O serviço administrativo deve apontar para o Config Server, definindo um `bootstrap.properties` com o _application name_ `administrativo`.
+
+####### fj33-eats-administrativo-service/src/main/resources/bootstrap.properties
+
+```properties
+spring.application.name=administrativo
+spring.cloud.config.uri=http://localhost:8888
+```
+
+No arquivo `administrativo.properties` do `config-repo`, definiremos as configurações de data source.
+
+####### fj33-config-repo/administrativo.properties
+
+```properties
+#DATASOURCE CONFIGS
+spring.datasource.url=jdbc:mysql://localhost/eats?createDatabaseIfNotExist=true
+spring.datasource.username=root
+spring.datasource.password=
+```
 
 Inicialmente, o serviço administrativo pode apontar para o mesmo BD do monólito. Aos poucos, deve ser feita a migração das tabelas `forma_de_pagamento` e `tipo_de_cozinha` para um BD próprio.
 
-No `application.properties`, deve ser definida `8084` na porta a ser utilizada.
+No `application.properties`, deve ser definida `8084` na porta a ser utilizada, além de outras configurações.
+
+####### fj33-eats-administrativo-service/src/main/resources/application.properties
+
+```properties
+server.port=8084
+
+#JPA CONFIGS
+spring.jpa.hibernate.ddl-auto=validate
+spring.jpa.show-sql=true
+
+spring.jackson.serialization.fail-on-empty-beans=false
+```
 
 Então, o módulo `eats-administrativo` do monólito pode ser removido, assim como suas autorizações no módulo `eats-seguranca`.
 
@@ -61,7 +91,7 @@ No projeto pai dos módulos, o projeto `eats`, remova o módulo `eats-administra
 
 Apague o módulo `eats-administrativo` do monólito. Pelo Eclipse, tecle _Delete_ em cima do módulo, selecione a opção _Delete project contents on disk (cannot be undone)_ e clique em _OK_.
 
-Remova, da classe `SecurityConfig` do módulo `eats-seguranca` do monólito,  as configurações de autorização dos endpoints que foram movidos:
+Remova, da classe `SecurityConfig` do módulo `eats-seguranca` do monólito, as configurações de autorização dos endpoints que foram movidos:
 
 ####### fj33-eats-monolito-modular/eats/eats-seguranca/src/main/java/br/com/caelum/eats/SecurityConfig.java
 
@@ -188,24 +218,24 @@ Mas quando alguma máquina falhar, o usuário seria deslogado e não teria mais 
 
 ## REST, stateless sessions e self-contained tokens
 
-Em sua tese de doutorado _Architectural Styles and the Design of Network-based Software Architectures_, Roy Fielding descreve o estilo arquitetural da Web e o chama de **Representational State Transfer (REST)**. Uma das características do REST é que a comunicação deve ser **Stateless**: toda informação deve estar contida na requisição do cliente ao servidor, sem a necessidade de nenhum contexto armazenado no servidor.
+Em sua tese de doutorado [Architectural Styles and the Design of Network-based Software Architectures](https://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm) (FIELDING, 2000), Roy Fielding descreve o estilo arquitetural da Web e o chama de **Representational State Transfer (REST)**. Uma das características do REST é que a comunicação deve ser **Stateless**: toda informação deve estar contida na requisição do cliente ao servidor, sem a necessidade de nenhum contexto armazenado no servidor.
 
 Manter sessões nos servidores é manter estado. Portanto, podemos dizem que utilizar sessões não é RESTful porque não segue a característica do REST de ser stateless.
 
 Mas então como fazer um mecanismo de autenticação que seja stateless e, por consequência, mais próximo do REST?
 
-Usando tokens! Há tokens opacos, que são apenas um texto randômico e que não carregam nenhuma informação. Porém, há os **self-contained tokens**, que contém informações sobre o usuário e/ou sobre o sistema cliente. Cada requisição teria um self-contained token em seu cabeçalho, com todas as informações necessárias para a aplicação. Assim, tiramos a necessidade de armazenamento da sessão no lado do servidor.
+Como Raphael Lacerda revela no post [Morte à sessão! Entenda esse tal de stateless session com tokens](https://blog.caelum.com.br/morte-a-sessao-entenda-esse-tal-de-stateless-session-com-tokens/) (LACERDA, 2017): usando tokens! Há tokens opacos, que são apenas um texto randômico e que não carregam nenhuma informação. Porém, há os **self-contained tokens**, que contém informações sobre o usuário e/ou sobre o sistema cliente. Cada requisição teria um self-contained token em seu cabeçalho, com todas as informações necessárias para a aplicação. Assim, tiramos a necessidade de armazenamento da sessão no lado do servidor.
 
 A grande questão é como ter um token que contém informações e, ao mesmo tempo, garantir sua integridade, confirmando que os dados do token não foram manipulados?
 
 ## JWT e JWS
 
-JWT (JSON Web Token) é um formato de token compacto e self-contained que serve propagar informações de identidade, permissões de um usuário em uma aplicação de maneira segura. Foi definido na RFC 7519 da Internet Engineering Task Force (IETF), em Maio de 2015.
+JWT (JSON Web Token) é um formato de token compacto e self-contained que serve propagar informações de identidade, permissões de um usuário em uma aplicação de maneira segura. Foi definido na [RFC 7519](https://tools.ietf.org/html/rfc7519) (JONES, 2015) da Internet Engineering Task Force (IETF).
 
 O Working Group da IETF chamado Javascript Object Signing and Encryption (JOSE), definiu duas outras RFCs relacionadas:
 
-- JSON Web Signature (JWS), definido na RFC 7515, que representa em JSON conteúdo assinado digitalmente
-- JSON Web Encryption (JWE), definido na RFC 7516, que representa em JSON conteúdo criptografado
+- JSON Web Signature (JWS), definido na [RFC 7515](https://tools.ietf.org/html/rfc7515) (JONES, 2015b), que representa em JSON conteúdo assinado digitalmente
+- JSON Web Encryption (JWE), definido na [RFC 7516](https://tools.ietf.org/html/rfc7516) (JONES, 2015c), que representa em JSON conteúdo criptografado
 
 Para garantir a integridade dos dados de um token, é suficiente usarmos o JWS.
 
@@ -318,7 +348,7 @@ class JwtTokenManager {
   private String secret;
   private long expirationInMillis;
 
-  public JwtTokenManager(	@Value("${jwt.secret}") String secret, 
+  public JwtTokenManager(@Value("${jwt.secret}") String secret, 
               @Value("${jwt.expiration}") long expirationInMillis) {
     this.secret = secret;
     this.expirationInMillis = expirationInMillis;
@@ -381,7 +411,7 @@ Autenticar apenas uma vez e repassar as dados do usuário autenticado permite qu
 
 ## Autenticação no API Gateway e Autorização nos Serviços
 
-No livro Microservice Patterns, Chris Richardson descreve uma maneira comum de lidar com autenticação em uma arquitetura de Microservices: implementá-la API Gateway, o único edge service que fica exposto para o mundo externo. Dessa maneira, as chamadas a URLs protegidas já seriam barradas antes de passar para a rede interna, no caso do usuário não estar autenticado.
+No livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), Chris Richardson descreve uma maneira comum de lidar com autenticação em uma arquitetura de Microservices: implementá-la API Gateway, o único edge service que fica exposto para o mundo externo. Dessa maneira, as chamadas a URLs protegidas já seriam barradas antes de passar para a rede interna, no caso do usuário não estar autenticado.
 
 E a autorização? Poderíamos fazê-la também no API Gateway. É algo razoável para role-based authorization, em que é preciso saber apenas o ROLE do usuário. Porém, implementar ACL-based authorization no API Gateway levaria a um alto acoplamento com os serviços, já que precisamos saber se um dado usuário tem permissão para um objeto de negócio específico. Então, provavelmente uma atualização em um serviço iria querer uma atualização sincronizada no API Gateway, diminuindo a independência de cada serviço. Portanto, uma ideia melhor é fazer a autorização, role-based ou ACL-based, em cada serviço.
 
@@ -397,6 +427,8 @@ Há duas alternativas:
 > **Pattern: Acess Token**
 > 
 > O API Gateway passa um token contendo informações sobre o usuário, como sua identidade e seus roles, para os demais serviços.
+>
+> Chris Richardson, no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a) 
 
 Implementamos stateless sessions no monólito com um JWS, um tipo de JWT que é um token self-contained e assinado. Podemos usar o mesmo mecanismo, fazendo com que o API Gateway repasse o JWT para cada serviço. Cada serviço checaria a assinatura e extrairia, do payload do JWT, o subject, que contém o id do usuário, e os respectivos roles, usando essas informações para checar a permissão do usuário ao recurso solicitado.
 
@@ -1135,15 +1167,15 @@ Da maneira como implementamos a autenticação anteriormente, acabamos definindo
 
 Autenticação, autorização, tokens, usuário e roles são necessidades comuns e poderiam ser implementadas de maneira genérica. Melhor ainda se houvesse um padrão aberto, que permitisse implementação por diferentes fornecedores. Assim, os desenvolvedores poderiam focar mais em código de negócio e menos em código de segurança.
 
-Há um framework de autorização baseado em tokens que permite que não nos preocupemos com detalhes de implementação de autenticação e autorização: o padrão **OAuth 2.0**. Foi definido na RFC 6749 da Internet Engineering Task Force (IETF), em Outubro de 2012.
+Há um framework de autorização baseado em tokens que permite que não nos preocupemos com detalhes de implementação de autenticação e autorização: o padrão **OAuth 2.0**. Foi definido na [RFC 6749](https://tools.ietf.org/html/rfc6749) (HARDT, 2012) da Internet Engineering Task Force (IETF).
 
-Há extensões do OAuth 2.0 como o OpenID Connect (OIDC), que fornece uma camada de autenticação baseada em tokens JWT em cima do OAuth 2.0.
+Há extensões do OAuth 2.0 como o [OpenID Connect (OIDC)](https://openid.net/connect/), que fornece uma camada de autenticação baseada em tokens JWT em cima do OAuth 2.0.
 
 O foco original do OAuth 2.0, na verdade, é permitir que aplicações de terceiros usem informações de usuários em serviços como Google, Facebook e GitHub. Quando efetuamos login em uma aplicação com uma conta do Facebook ou quando permitimos que um serviço de Integração Contínua como o Travis CI acesse nosso repositório no GitHub, estamos usando OAuth 2.0.
 
 Um padrão como o OAuth 2.0 nos permite instalar softwares como KeyCloak, WSO2 Identity Server, OpenAM ou Gluu e até usar soluções prontas de _identity as a service_ (IDaaS) como Auth0 ou Okta.
 
-E, claro, podemos usar as soluções do Spring: **Spring Security OAuth**, que estende o Spring Security fornecendo implementações para OAuth 1 e OAuth 2.0. Há ainda o **Spring Cloud Security**, que traz soluções compatíveis com outros projetos do Spring Cloud.
+E, claro, podemos usar as soluções do Spring: **[Spring Security OAuth](https://spring.io/projects/spring-security-oauth)**, que estende o Spring Security fornecendo implementações para OAuth 1 e OAuth 2.0. Há ainda o **[Spring Cloud Security](https://spring.io/projects/spring-cloud-security)**, que traz soluções compatíveis com outros projetos do Spring Cloud.
 
 ## Roles
 
@@ -1165,7 +1197,7 @@ O padrão OAuth 2.0 é bastante flexível e especifica diferentes maneiras de um
 - **Authorization Code**: usada quando aplicações de terceiros desejam acessar informações de um recurso protegido sem que o Client conheça explicitamente as credenciais do usuário. Por exemplo, quando um usuário (Resource Owner) permite que o Travis CI (Client) acesse os seus repositórios do GitHub (Authorization Server e Resource Server). No momento em que o usuário cadastra seu GitHub no Travis CI, é redirecionado para uma tela de login do GitHub. Depois de efetuar o login no GitHub e escolher as permissões (ou _scopes_ nos termos do OAuth), é redirecionado para um servidor do Travis CI com um _authorization code_ como parâmetro da URL. Então, o Travis CI invoca o GitHub passando esse authorization code para obter um access token. As aplicações de terceiro que utilizam um authorization code são, em geral, aplicações Web clássicas com renderização das páginas no _serve-side_.
 - **Implicit**: o usuário é direcionado a uma página de login do Authorization Server, mas o redirect é feito diretamente para o user-agent (o navegador, no caso da Web) já enviando o access token. Dessa forma, o Client SPA ou Mobile conhece diretamente o access token. Isso traz uma maior eficiência porém traz vulnerabilidades.
 
-> A RFC 8252 (OAuth 2.0 for Native Apps), de Outubro de 2017, traz indicações de como fazer autenticação e autorização com OAuth 2.0 para aplicações mobile nativas.
+> A [RFC 8252 (OAuth 2.0 for Native Apps)](https://tools.ietf.org/html/rfc8252), de Outubro de 2017, traz indicações de como fazer autenticação e autorização com OAuth 2.0 para aplicações mobile nativas.
 
 No OAuth 2.0, um access token deve ter um tempo de expiração. Um token expirado levaria à necessidade de nova autenticação pelo usuário. Um Authorization Server pode emitir um _refresh token_, de expiração mais longa, que seria utilizado para obter um novo access token, sem a necessidade de nova autenticação. De acordo com a especificação, o grant type Implicit não deve permitir um refresh token, já que o token é conhecido e armazenado no próprio user-agent.
 
@@ -1899,7 +1931,7 @@ Mesmo investindo esforço em proteger a rede, a comunicação entre os serviços
 
 Uma vulnerabilidade está nos dados armazenados (_data at rest_) em BDs, arquivos de configuração e backups. Em especial, devemos proteger dados sensíveis como cartões de crédito, senhas e chaves criptográficas. Muitos ataques importantes exploraram a falta de criptografia de dados armazenados ou falhas nos algoritmos criptográficos utilizados.
 
-Em seu livro _Building Microservices_, Sam Newman indica algumas medidas que devem ser tomadas para proteger os dados armazenados:
+Em seu livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), Sam Newman indica algumas medidas que devem ser tomadas para proteger os dados armazenados:
 
 - use implementações padrão de algoritmos criptográficos conhecidos, ficando atento a possíveis vulnerabilidades e aplicando _patches_ regularmente. Não tente criar o seu algoritmo. Para senhas, use Strings randômicas (salts) que minimizam ataques baseados em tabelas de hashes.
 - limite a encriptação a tabelas dos BDs e a arquivos que realmente são sensíveis para evitar impactos negativos na performance da aplicação
@@ -1909,32 +1941,32 @@ Em seu livro _Building Microservices_, Sam Newman indica algumas medidas que dev
 
 ## Rotação de credenciais
 
-Em Junho de 2014, a Code Spaces, uma concorrente do GitHub que fornecia Git e SVN na nuvem, sofreu um ataque em que o invasor, após chantagem, apagou quase todos os dados, configurações de máquinas e backups da empresa. O ataque levou a empresa à falência! Isso aconteceu porque o invasor teve acesso ao painel de controle do AWS e conseguiu apagar quase todos os artefatos, incluindo os backups.
+Conforme relatado em artigos como [Murder in the Amazon cloud](https://www.infoworld.com/article/2608076/murder-in-the-amazon-cloud.html) (VENEZIA, 2014), em Junho de 2014, a Code Spaces, uma concorrente do GitHub que fornecia Git e SVN na nuvem, sofreu um ataque em que o invasor, após chantagem, apagou quase todos os dados, configurações de máquinas e backups da empresa. O ataque levou a empresa à falência! Isso aconteceu porque o invasor teve acesso ao painel de controle do AWS e conseguiu apagar quase todos os artefatos, incluindo os backups.
 
 Não se sabe ao certo como o invasor conseguiu o acesso indevido ao painel de controle do AWS, mas há a hipótese de que obteve as credenciais de acesso de um antigo funcionário da empresa.
 
 É imprescindível que as credenciais tenham acesso limitado, minimizando o potencial de destruição de um possível invasor.
 
-Outra coisa importante é que as senhas dos usuários, chaves criptográficas, API keys e outras credenciais sejam modificadas de tempos em tempos. Assim, ataques feitos com a ajuda funcionários desonestos terão efeito limitado. Se possível, essa **rotação de credenciais** deve ser feita de maneira automatizada.
+No curso [Building Secure Microservices Architectures](https://learning.oreilly.com/learning-paths/learning-path-building/9781492041481/) (NEWMAN, 2018), Sam Newman recomenda que as senhas dos usuários, chaves criptográficas, API keys e outras credenciais sejam modificadas de tempos em tempos. Assim, ataques feitos com a ajuda funcionários desonestos terão efeito limitado. Se possível, essa **rotação de credenciais** deve ser feita de maneira automatizada.
 
 Há alguns softwares que automatizam o gerenciamento de credenciais:
 
-- Vault, da HashiCorp
-- AWS Secrets Manager
-- KeyWiz, da Square
-- CredHyb, da Cloud Foundry
+- [Vault](https://www.vaultproject.io/), da HashiCorp
+- [AWS Secrets Manager](https://aws.amazon.com/pt/secrets-manager/)
+- [KeyWiz](https://square.github.io/keywhiz/), da Square
+- [CredHub](https://docs.cloudfoundry.org/credhub/), da Cloud Foundry
 
 > Um outro aspecto do caso da Code Spaces é que os backups eram feitos no próprio AWS. É importante que tenhamos offsite backups, em caso de comprometimento de um provedor de cloud computing.
 
 ### Vault
 
-Vault é uma solução de gerenciamento de credenciais da HashiCorp, a mesma empresa que mantém o Vagrant, Consul, Terraform, entre outros.
+[Vault](https://www.vaultproject.io/) é uma solução de gerenciamento de credenciais da HashiCorp, a mesma empresa que mantém o Vagrant, Consul, Terraform, entre outros.
 
 O Vault armazena de maneira segura e controla o acesso de tokens, senhas, API Keys, chaves criptográficas, e certificados digitais. Provê uma CLI, uma API HTTP e uma UI Web para gerenciamento. É possível criar, revogar e rotacionar credenciais de maneira automatizada.
 
 Para que a senha, por exemplo, de um BD seja alterada pelo Vault, é necessário que seja configurado um usuário do BD que possa criar e remover outros usuários.
 
-Segue um exemplo dos comandos da CLI do Vault para criação de credenciais com duração de 1 hora no MySQL:
+Na [documentação do Vault](https://www.vaultproject.io/docs/secrets/mysql/), há um exemplo dos comandos da CLI do Vault para criação de credenciais com duração de 1 hora no MySQL:
 
 ```sh
 vault secrets enable mysql
@@ -1953,59 +1985,13 @@ Há ainda o Spring Cloud Vault, que provê um cliente Vault para aplicações Sp
 
 ## Segurança em um Service Mesh
 
-Conforme discutimos em capítulos anteriores, um Service Mesh como Istio ou Linkerd cuidam de várias necessidades de infraestrutura em uma Arquitetura de Microservices como resiliência, monitoramento, load balancing e service discovery.
+Conforme discutimos em capítulos anteriores, um Service Mesh como [Istio](https://istio.io) ou [Linkerd](https://linkerd.io/) cuidam de várias necessidades de infraestrutura em uma Arquitetura de Microservices como Resiliência, Monitoramento, Load balancing e Service Discovery.
 
 Além dessas, um Service Mesh pode cuidar de necessidades de segurança como Confidencialidade, Autenticidade, Autenticação, Autorização e Auditoria. Assim, removemos a responsabilidade da segurança dos serviços e passaríamos para a infraestrutura que os conecta.
 
-O Istio, por exemplo, provê de maneira descomplicada:
+O [Istio](https://istio.io/docs/concepts/security/), por exemplo, provê de maneira descomplicada:
 
 - Mutual Authentication com TLS 
 - gerenciamento de chaves e rotação de credenciais com o componente Citadel
 - whitelists e blacklists para restringir o acesso de certos serviços
 - configuração de rate limiting, afim de evitar ataques DDoS (Distributed Denial of Service)
-
-<!-- 
-Referências:
-
-https://blog.caelum.com.br/morte-a-sessao-entenda-esse-tal-de-stateless-session-com-tokens/
-
-https://scotch.io/tutorials/the-ins-and-outs-of-token-based-authentication
-
-https://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm
-
-https://microservices.io/patterns/security/access-token.html
-
-Spring Microservices in Action
-John Carnell; Kalpit Patel - Manning 2017
-Capítulo 7 - Securing Microservices
-Apêndice B - OAuth2 grant types
-https://learning.oreilly.com/library/view/spring-microservices-in/9781617293986/OEBPS/Text/B.html
-
-Microservices Patterns
-Chris Richardson - Manning
-Capítulo 11 (Developing production-ready services) - Seção 11.1 (DEVELOPING SECURE SERVICES)
-https://learning.oreilly.com/library/view/microservices-patterns/9781617294549/kindle_split_019.html
-
-Microservices for the Enterprise: Designing, Developing, and Deploying
-Kasun Indrasiri; Prabath Siriwardena - Apress 2018
-Capítulo 11 (Microservices Security Fundamentals)
-Capítulo 12 (Securing Microservices)
-https://learning.oreilly.com/library/view/microservices-for-the/9781484238585/html/461146_1_En_11_Chapter.xhtml
-
-Building Secure Microservices Architectures
-Sam Newman - O'Reilly Media, Inc.
-April 2018
-https://learning.oreilly.com/learning-paths/learning-path-building/9781492041481/
-
-Building Microservices
-Sam Newman  - O'Reilly Media, Inc.
-February 2015
-https://learning.oreilly.com/library/view/building-microservices/9781491950340/
-
-CodeSpaces
-https://www.infoworld.com/article/2608076/murder-in-the-amazon-cloud.html
-
-https://pt.slideshare.net/AWSAktuell/secret-management-with-hashicorps-vault
-
-https://istio.io/docs/concepts/security/
--->

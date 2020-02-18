@@ -116,9 +116,17 @@ GRAY, Jim; REUTER, Andreas. _Transaction Processing: Concepts and Techniques._ M
 
 GRIGORIK, Ilya. _High Performance Browser Networking._ O'Reilly, 2013. 400 p. Em: https://hpbn.co/
 
+HARDT, Dick. _The OAuth 2.0 Authorization Framework._ Internet Engineering Task Force (IETF), 2012. Em: https://tools.ietf.org/html/rfc6749
+
 HOHPE, Gregor; WOOLF, Bobby. _Enterprise Integration Patterns: Designing, Building, and Deploying Messaging Solutions._ Addison-Wesley Professional, 2003. 741 p. Em: https://www.amazon.com.br/Enterprise-Integration-Patterns-Designing-Deploying/dp/0321200683
 
 JACOBSON, Ivar. _Object Oriented Software Engineering: A Use-Case Driven Approach._ Addison-Wesley Professional, 1992. 552 p. Em: https://www.amazon.com/Object-Oriented-Software-Engineering-Approach/dp/0201544350
+
+JONES, Michael et al. _JSON Web Token (JWT)._ Internet Engineering Task Force (IETF), 2015. Em: https://tools.ietf.org/html/rfc7519
+
+JONES, Michael et al. _JSON Web Signature (JWS)._ Internet Engineering Task Force (IETF), 2015b. Em: https://tools.ietf.org/html/rfc7515
+
+JONES, Michael et al. _JSON Web Encryption (JWE)._ Internet Engineering Task Force (IETF), 2015c. Em: https://tools.ietf.org/html/rfc7516
 
 JOSUTTIS, Nicholai. _SOA in Practice: The Art of Distributed System Design._ O'Reilly Media, 2007. 344 p. Em: https://www.amazon.com.br/Soa-Practice-Distributed-System-Design/dp/0596529554
 
@@ -127,6 +135,8 @@ KELLY, Mike. _JSON Hypertext Application Language_. Internet Engineering Task Fo
 KNOERNSCHILD, Kirk. _Java Application Architecture: Modularity Patterns with Examples Using OSGi._ Prentice Hall, 2012. 384 p. Em: https://www.amazon.com.br/Java-Application-Architecture-Modularity-Patterns/dp/0321247132.
 
 KRIENS, Peter. _µServices._ 2010. Em: https://blog.osgi.org/2010/03/services.html
+
+LACERDA, Raphael. _Morte à sessão! Entenda esse tal de stateless session com tokens._ 2017. Em: https://blog.caelum.com.br/morte-a-sessao-entenda-esse-tal-de-stateless-session-com-tokens/
 
 LAMPORT, Leslie. _distribution._ 1987. Em: https://lamport.azurewebsites.net/pubs/distributed-system.txt
 
@@ -151,6 +161,8 @@ NELSON, Teodhor Holm. _Complex Information Processing: A File Structure for the 
 NEWMAN, Sam. _Building Microservices: Designing Fine-Grained Systems._ O'Reilly, 2015. 280 p. Em: https://www.oreilly.com/library/view/building-microservices/9781491950340/
 
 NEWMAN, Sam. _Pattern: Backends For Frontends._ 2015b. Em: https://samnewman.io/patterns/architectural/bff/
+
+NEWMAN, Sam. _Building Secure Microservices Architectures._ 2018. Em: https://learning.oreilly.com/learning-paths/learning-path-building/9781492041481/
 
 NEWMAN, Sam. _Monolith to Microservices: Evolutionary Patterns to Transform Your Monolith._ O'Reilly, 2019. Early Release. 284 p. Em: https://learning.oreilly.com/library/view/monolith-to-microservices/9781492047834/
 
@@ -197,6 +209,8 @@ TALWAR, Varun. _gRPC: a true internet-scale RPC framework is now 1.0 and ready f
 TALEB, Nassim. _Antifragile: Things That Gain from Disorder._ Random House, 2012. 519 p. Em: https://www.amazon.com.br/Antifragile-Things-That-Gain-Disorder/dp/1400067820/
 
 TILKOV, Stefan. _Don't start with a monolith: ... when your goal is a microservices architecture._ 2015. Em: https://martinfowler.com/articles/dont-start-monolith.html
+
+VENEZIA, Paul. _Murder in the Amazon cloud._ 2014. Em: https://www.infoworld.com/article/2608076/murder-in-the-amazon-cloud.html
 
 VERNON, Vaughn. _Implementing Domain-Driven Design._ Addison-Wesley Professional, 2013. 656 p. Em: https://www.amazon.com.br/Implementing-Domain-Driven-Design-Vaughn-Vernon/dp/0321834577
 
