@@ -556,12 +556,6 @@ Não é possível usar um debugger ou profiler para um serviço específico, com
 
 Há ferramentas que permitem esse rastreamento, que implementam um Rastreamento Distribuído (em inglês, **Distributed Tracing**).
 
-> **Pattern: Distributed tracing**
->
-> Atribua a cada request externo um ID único e registre, em um servidor centralizado, como esse request flui pelo sistema de um serviço a outro. O servidor central fornece visualização e análise.
->
-> Chris Richardson, no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a) 
-
 Há três conceitos importantes:
 
 - _Trace_: o rastreamento de um request, que pode conter vários spans.
@@ -569,6 +563,12 @@ Há três conceitos importantes:
 - _Correlation ID_: uma ID único de um trace que é propagado em cada span.
 
 ![Traces e spans {w=42}](imagens/13-monitoramento-e-observabilidade/trace-e-spans.png)
+
+> **Pattern: Distributed tracing**
+>
+> Atribua a cada request externo um ID único e registre, em um servidor centralizado, como esse request flui pelo sistema de um serviço a outro. O servidor central fornece visualização e análise.
+>
+> Chris Richardson, no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a) 
 
 Cada serviço tem suas chamadas instrumentadas por alguma biblioteca e as informações são enviadas para um servidor central. Esse servidor central faz análises e permite visualizações e consultas.
 
