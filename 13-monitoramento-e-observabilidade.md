@@ -1,5 +1,47 @@
 # Monitoramento e Observabilidade
 
+## Monitorando um sistema complexo 
+
+À medida que fomos avançando no curso, a Arquitetura do Caelum Eats foi aumentando progressivamente de complexidade. Temos cada vez mais componentes e, consequentemente, cada vez mais coisas podem apresentar erros.
+
+![Componentes do back-end do Caelum Eats, com BDs omitidos {w=79}](imagens/13-monitoramento-e-observabilidade/backend-caelum-eats-todos-os-componentes-menos-bd.png)
+
+Se houver uma demora no sistema, como descobrir a causa? Um request passa por quais componentes?
+
+Não é possível debugar um Sistema Distribuído de maneira fácil, auxiliado por uma IDE, como é comum com um Monólito.
+
+A _ilidade_ associada à capacidade de conhecer o estado de um sistema é chamada de **Observabilidade**. No artigo [Observability — A 3-Year Retrospective](https://thenewstack.io/observability-a-3-year-retrospective/) (MAJORS, 2019), Charity Majors, a CTO da Honeycomb, indica que o termo passou a ser utilizado por volta de 2016 por times de operações de empresas como Twitter, Stripe e Google.
+
+Veremos algumas ideias e ferramentas que auxiliam a aumentar a Observabilidade de um sistema.
+
+## Health Check API
+
+É possível que uma instância de um serviço esteja no ar, recebendo requests, mas em um estado em que não consegue completá-las. Por exemplo, o BD pode estar momentaneamente fora do ar.
+
+Para auxiliar na Observabilidade, uma instância de um serviço deve informar o seu estado interno, se consegue ou não lidar com requests. Uma solução comum é que essa informação seja parte da API do serviço.
+
+> **Pattern: Health check API**
+>
+> Um serviço deve expor um endpoint em sua API que descreve sua saúde.
+>
+> Chris Richardson, no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a) 
+
+Um Service Registry como o Eureka pode ser configurado para invocar a Health Check API de um serviço, de maneira a descobrir quais instâncias estão realmente disponíveis. Orquestradores de containers como o Kubernetes podem usar essa informação de um serviço para matar instâncias pouco saudáveis, criando novas. Ferramentas de monitoramento podem prover um dashboard com a saúde das instâncias e até disparar alertas.
+
+No ecossistema Spring, o projeto [Spring Boot Actuator](https://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-features.html) provê essa API na URL `/actuator/health`. Se o serviço estiver disponível, é retornado `{ "status": "UP" }` no corpo do response com um status `200 OK`. Já se houver indisponibilidade, é retornado `{ "status": "DOWN" }`, com um status `503 Service Unavailable`.
+
+O Spring Boot Actuator executa uma série de checagens baseadas na infraestrutura usada pelo serviço. Se for usado um BD relacional, haverá checagem que executa um consulta de teste. Se for usado um Message Broker, é testada uma conexão. É possível adicionar checagens customizadas implementando a interface `HealthIndicator`.
+
+## Métricas
+
+No livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), Chris Richardson indica que um sistema de monitoramento deve agregar métricas, de maneira a prover informações críticas sobre a saúde de uma aplicação. Essa métricas podem ser de infraestrutura, como informações sobre o uso de CPU, de memória e de disco. Mas também podem ser métricas da própria aplicação, como o número de pedidos realizados ou de pagamentos confirmados.
+
+> **Pattern: Application metrics**
+>
+> Os serviços enviam métricas a um servidor central que provê agregação, visualização e alertas.
+>
+> Chris Richardson, no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a) 
+
 ## Expondo endpoints do Spring Boot Actuator
 
 Adicione uma dependência ao _starter_ do Spring Boot Actuator:
@@ -147,35 +189,46 @@ http://localhost:9999/actuator/filters
 
   http://localhost:9999/actuator/hystrix.stream
 
+  Dica: a URL anterior funciona melhor no Google Chrome.
+
   Também é possível explorar os links retornados pela seguinte URL, trocando `{porta}` pelas portas dos serviços:
 
   http://localhost:{porta}/actuator
 
 
-<!-- TODO:
+## Monitorando Circuit Breakers com Hystrix Dashboard
 
-## Monitorando Circuit Breakers
+Uma maneira interessante de monitorar o que acontece em uma Arquitetura de Microservices é verificar o seu ponto de entrada: o API Gateway. Nosso API Gateway, o Zuul, usa um Circuit Breaker, o Hystrix, para cada roteamento. Além disso, a API Composition que implementamos no Zuul, que invoca o módulo de Restaurante do Monólito e o serviço de Distância, tem o Hystrix para cada chamada remota.
 
-Do Release It Second Edition
+Como diz Michael Nygard, em seu livro [Release It! Second Edition](https://pragprog.com/book/mnee2/release-it-second-edition) (NYGARD, 2018), o estado dos Circuit Breaker de um sistema é importante para o pessoal de operações e deve ser exposto para monitoramento. A partir das estatísticas de um Circuit Breaker, podemos ter uma ideia do volume de chamadas e dos tempos de resposta.
 
-The state of the circuit breakers in a system is important to another set of
-stakeholders: operations. Changes in a circuit breaker’s state should always
-be logged, and the current state should be exposed for querying and monitor-
-ing. In fact, the frequency of state changes is a useful metric to chart over
-time; it is a leading indicator of problems elsewhere in the enterprise. Likewise,
-Operations needs some way to directly trip or reset the circuit breaker. The
-circuit breaker is also a convenient place to gather metrics about call volumes
-and response times.
+Muitas informações úteis para monitoramento estão na URL `http://localhost:9999/actuator/hystrix.stream`. Mas não é algo fácil de entender por um humano. Por isso, o time da Netflix criou um projeto que serve como uma visualização do fluxo de estatísticas do Hystrix: o [Hystrix Dashboard](https://github.com/Netflix-Skunkworks/hystrix-dashboard).
 
-**Expose, track, and report state changes.**
+![Diagrama anotado do estado de um Circuit Breaker. Da documentação do Hystrix Dashboard: https://github.com/Netflix-Skunkworks/hystrix-dashboard/wiki {w=84}](imagens/13-monitoramento-e-observabilidade/dashboard-annoted-circuit-640.png)
 
-Popping a Circuit Breaker always indicates something abnormal. It should
-be visible to Operations. It should be reported, recorded, trended, and
-correlated.
+A representação gráfica do Hystrix Dashboard traz as seguintes informações:
 
- -->
+- o status do Circuit Breaker, se está Fechado ou Aberto
+- o tamanho do círculo representa o volume de chamadas por segundo. Quanto maior, mais chamadas.
+- a cor do círculo mostra o estado do Circuit Breaker. Verde significa que o circuito está fechado e operando normalmente. Vermelho significa que o circuito está aberto.
+- o gráfico atrás do círculo exibe 2 minutos da evolução no volume de chamadas
+- o número de hosts do cluster e a volume de chamadas por segundo de um host específico e do cluster em geral
+- a porcentagem de falhas na janela de tempo de 10 segundos
+- estatísticas descritivas da latência do último minuto
+- em verde, o número de chamadas bem sucedidas
+- em laranja, o número de timeouts
+- em roxo, o número de chamadas rejeitadas por não haver threads disponíveis
+- em vermelho, o número de falhas do serviço remoto (erros 500)
+- em azul, o número de chamadas que falharam rápido,  feitas enquanto o circuito estava aberto
 
-## Configurando o Hystrix Dashboard
+<!--@note
+  Ben Christensen e outros engenheiros da Netflix tem palestras e vídeos em que mostram o Hystrix Dashboard na prática:
+
+  https://speakerdeck.com/benjchristensen/performance-and-fault-tolerance-for-the-netflix-api-august-2012?slide=39
+  https://www.youtube.com/watch?v=zWM7oAbVL4g
+-->
+
+## Implementando um visualizador com Hystrix Dashboard
 
 Pelo navegador, abra `https://start.spring.io/`.
 Em _Project_, mantenha _Maven Project_.
@@ -263,6 +316,24 @@ server.port=7777
 
 ## Agregando dados dos circuit-breakers com Turbine
 
+Há cenários em que queremos monitorar as métricas dos Circuit Breakers de diversos serviços. Precisamos de um agregador dos diversos streams. É o que faz o projeto [Turbine](https://github.com/Netflix/Turbine), da iniciativa open-source da Netflix.
+
+Segundo a [documentação do Turbine](https://github.com/Netflix/Turbine/wiki), é feito o monitoramento de vários servidores agrupados em _clusters_. O cluster padrão é o default.
+
+Para descobrir os serviços disponíveis, o Turbine pode usar as informações de instâncias disponíveis do Eureka, entre outras estratégias. No nosso caso, a configuração da URL do Eureka deve ser obtida do Config Server.
+
+Então, é feita a coleta dos dados consultando as streams de todos os serviços configurados.
+
+![Turbine como agregador de estatísticas de Circuit Breakers {w=34}](imagens/13-monitoramento-e-observabilidade/agregador-com-turbine.png)
+
+<!--@note
+  Ben Christensen e outros engenheiros da Netflix tem um post interessante sobre o lançamento do Turbine como ferramenta open-source:
+
+  https://netflixtechblog.com/hystrix-dashboard-turbine-stream-aggregator-60985a2e51df
+-->
+
+## Implementando um agregador com Turbine
+
 Pelo navegador, abra `https://start.spring.io/`.
 Em _Project_, mantenha _Maven Project_.
 Em _Language_, mantenha _Java_.
@@ -332,6 +403,18 @@ spring.cloud.config.uri=http://localhost:8888
 ```
 
 ## Agregando baseado em eventos com Turbine Stream
+
+No caso de muitas instâncias de cada serviço, a agregação pode sobrecarregar o Turbine, já que seriam diversos streams de métricas do Hystrix. 
+
+O Turbine Stream inverte a dependência usando um Message Broker: ao invés do Turbine depender de vários serviços, cada serviço envia seus dados para um Message Channel que é lido pelo Turbine Stream no ritmo adequado.
+
+Para isso, cada serviço cujo stream será agregado deve usar a biblioteca `spring-cloud-netflix-hystrix-stream`, que enviará os dados ao Message Channel `springCloudHystrixStream`.
+
+Como o Turbine Stream não precisa saber o endereço das instâncias disponíveis, podemos remover a dependência ao Service Registry.
+
+![Turbine Stream agregando métricas com Mensageria {w=49}](imagens/13-monitoramento-e-observabilidade/agregador-com-turbine-stream.png)
+
+## Turbine Stream
 
 No `pom.xml` do projeto `turbine`, troque a dependência ao starter do Turbine pela do Turbine Stream. Remova a dependência ao starter do Eureka Client. Além disso, adicione o binder do Spring Cloud Stream ao RabbitMQ:
 
@@ -464,6 +547,39 @@ spring.cloud.stream.bindings.hystrixStreamOutput.destination=springCloudHystrixS
   Faça algumas chamadas ao API Gateway. Veja os status dos circuit breakers.
   
   Pare os serviços e o monólito e faça mais chamadas ao API Gateway. Veja o resultado no Hystrix Dashboard.
+
+## Rastreamento Distribuído
+
+Digamos que, em uma Arquitetura de Microservices, um request passa a apresentar alta latência. A hipótese de um problema na infraestrutura é rapidamente descartada. O vilão é um de nosso serviços. Mas qual deles? Pode ser o API Gateway ou qualquer um dos serviços pelos quais o request passa.
+
+Não é possível usar um debugger ou profiler para um serviço específico, como é comum em um Monólito. Para investigar e resolver o problema, precisamos de uma maneira de rastrear todas as etapas por onde passa um request, identificando a principal culpada pela demora.
+
+Há ferramentas que permitem esse rastreamento, que implementam um Rastreamento Distribuído (em inglês, **Distributed Tracing**).
+
+> **Pattern: Distributed tracing**
+>
+> Atribua a cada request externo um ID único e registre, em um servidor centralizado, como esse request flui pelo sistema de um serviço a outro. O servidor central fornece visualização e análise.
+>
+> Chris Richardson, no livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a) 
+
+Há três conceitos importantes:
+
+- _Trace_: o rastreamento de um request, que pode conter vários spans.
+- _Span_: uma etapa do rastreamento, parte de um trace. As informações principais são o nome da operação, o timestamp de início e o de fim.
+- _Correlation ID_: uma ID único de um trace que é propagado em cada span.
+
+![Traces e spans {w=42}](imagens/13-monitoramento-e-observabilidade/trace-e-spans.png)
+
+Cada serviço tem suas chamadas instrumentadas por alguma biblioteca e as informações são enviadas para um servidor central. Esse servidor central faz análises e permite visualizações e consultas.
+
+Entre os servidores open-source, estão:
+
+- [Zipkin](https://zipkin.io/), lançado em 2012 pelos engenheiros do Twitter
+- [Jaeger](https://www.jaegertracing.io/), lançado em 2017 pelos engenheiros do Uber, implementa a API [OpenTracing](https://opentracing.io/), é parte da [Cloud Native Computing Foundation](https://www.cncf.io/) e tem o orquestrador de containers Kubernetes como plataforma 
+
+No ecossistema Spring, a biblioteca de instrumentação é o [Spring Cloud Sleuth](https://spring.io/projects/spring-cloud-sleuth). São instrumentados pontos comuns de entrada e saída de aplicações Spring como Zuul Filters, RestTemplate, clientes Feign e Message Channels.
+
+Para enviar os traces para o Zipkin, basta usar a biblioteca `spring-cloud-starter-zipkin`. Por padrão, os traces são enviados via HTTP para `http://localhost:9411`. Esse endereço pode ser modificado pela configuração `spring.zipkin.baseUrl`. Se o RabbitMQ estiver no Classpath, é possível usá-lo no envio das informações com a configuração `spring.zipkin.sender.type`.
 
 ## Exercício: configurando o Zipkin no Docker Compose
 
@@ -621,6 +737,10 @@ spring.application.name=adminserver
 spring.cloud.config.uri=http://localhost:8888
 ```
 
+## Spring Boot Admin
+
+O [Spring Boot Admin](https://github.com/codecentric/spring-boot-admin) é um projeto open-source da consultoria alemã [codecentric AG](https://www.codecentric.de/), que tem integração com diversas ferramentas do ecossistema Spring, incluindo Spring Boot Actuator e Spring Cloud Netflix Eureka. Dessa forma, é possível exibir todas as instâncias de serviços disponíveis no Eureka Server e visualizar a saúde de cada instância e suas métricas, das técnicas às customizadas.
+
 ## Exercício: Visualizando os microservices com Spring Boot Admin
 
 1. Faça clone do projeto `fj33-admin-server`:
@@ -640,3 +760,27 @@ spring.cloud.config.uri=http://localhost:8888
   Veja informações sobre as aplicações e instâncias.
 
   Em _Wallboard_, há uma visualização interessante do status dos serviços.
+
+## Monitoramento x Observabilidade
+ 
+No livro [Distributed Systems Observability](https://learning.oreilly.com/library/view/distributed-systems-observability/9781492033431/) (SRIDHARAN, 2018), Cindy Sridharan indica que Monitoramento trata de conhecer a saúde do sistema e prover alertas, a partir de falhas previsíveis.
+
+Para a autora, Observabilidade é uma propriedade de um sistema que foi projetado, construído, testado e é operado considerando a infinidade de falhas parciais imprevisíveis que podem acontecer em um Sistema Distribuído. Sridharan recomenda que o software seja implementado e testado considerando falhas e facilidade de ser debugado.
+
+São listados três pilares da Observabilidade:
+
+- Event Logs: logs devem ser implementados como um fluxo de eventos que aconteceram no passado. É uma estratégia semelhante à descrita nos [12 fatores](https://12factor.net/) do Heroku.
+- Métricas: dados numéricos agregados em intervalos de tempo, que podem ser usados para identificar tendências.
+- Traces: ajudam a rastrear a série de etapas pelas quais um request passa em um Sistema Distribuído.
+
+No livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), Chris Richardson lista _patterns_ que auxiliam na Observabilidade de um sistema. Alguns desses estudamos nesse capítulo:
+
+- API de Health Check: expor um recurso que retorna a saúde de um sistema
+- Métricas de aplicação: cada serviço provê métricas que são expostas a um servidor de métricas.
+- Rastreamento Distribuído: cada request externo passa a ter um ID único que é usado no rastreamento das chamadas entre os serviços.
+
+Mas Richardson lista outros patterns relacionados:
+
+- Agregação de Logs: a atividade de cada serviço é agregada em um servidor central, que provê buscas e alertas.
+- Log de auditoria: é mantido um log das ações do usuário.
+- Rastreamento de exceções: exceções são centralizadas em um serviço central que remove duplicações e alerta os desenvolvedores.

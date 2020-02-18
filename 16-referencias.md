@@ -134,6 +134,8 @@ LEWIS, James. _Episode 213: James Lewis on Microservices._ 2014. Em: https://www
 
 MACCORMACK, Alan et al. _Exploring the Duality between Product and Organizational Architectures: A Test of the “Mirroring” Hypothesis._ 2008. Em: https://www.hbs.edu/faculty/Publication%20Files/08-039_1861e507-1dc1-4602-85b8-90d71559d85b.pdf
 
+MAJORS, Charity. _Observability — A 3-Year Retrospective._ 2019. Em: https://thenewstack.io/observability-a-3-year-retrospective/
+
 MARTIN, Robert Cecil. _Clean Code: A Handbook of Agile Software Craftsmanship._  Prentice Hall, 2009. 464 p. Em: https://www.amazon.com/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882
 
 MARTIN, Robert Cecil. _Screaming Architecture._ 2011. Em: https://blog.cleancoder.com/uncle-bob/2011/09/30/Screaming-Architecture.html
@@ -181,6 +183,8 @@ RUBEY, Raymond J. _Pasta Theory of Software._ 1992. Em: https://www.gnu.org/fun/
 SADALAGE, Pramod; AMBER, Scott. _Refactoring Databases: Evolutionary Database Design._ Addison-Wesley Professional, 2006. 384 p. Em: https://learning.oreilly.com/library/view/refactoring-databases-evolutionary/0321293533/
 
 SARDINHA, Renato. _Introdução ao Change Data Capture (CDC)._ 2019. Em: https://elo7.dev/cdc-parte-1/
+
+SRIDHARAN, Cindy. _Distributed Systems Observability._ O'Reilly, 2018. Em: https://learning.oreilly.com/library/view/distributed-systems-observability/9781492033431/
 
 SIMONS, Matthew; LEROY, Jonny. _Contending with Creaky Platforms CIO._ Cutter IT Journal, Dec. 2010. Em: http://jonnyleroy.com/2011/02/03/dealing-with-creaky-legacy-platforms/
 
