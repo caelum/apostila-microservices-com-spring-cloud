@@ -180,6 +180,32 @@ spring.rabbitmq.password=caelum123
 eureka.client.serviceUrl.defaultZone=${EUREKA_URI:http://localhost:8761/eureka/}
 ```
 
+Pelo Eclipse, execute a classe `ConfigServerApplication` e acesse a URL http://localhost:8888/application/default.
+
+Deve ser retornado um JSON com as configurações:
+
+```json
+{
+   "name":"application",
+   "profiles":[
+      "default"
+   ],
+   "label":null,
+   "version":null,
+   "state":null,
+   "propertySources":[
+      {
+         "name":"classpath:/configs/application.properties",
+         "source":{
+            "spring.rabbitmq.username":"eats",
+            "spring.rabbitmq.password":"caelum123",
+            "eureka.client.serviceUrl.defaultZone":"${EUREKA_URI:http://localhost:8761/eureka/}"
+         }
+      }
+   ]
+}
+```
+
 ## Configurando Config Clients nos serviços
 
 Vamos usar como exemplo a configuração do Config Client no serviço de pagamento. Os passos para os demais serviços serão semelhantes.
