@@ -179,7 +179,7 @@ A comunicação intraprocesso, com as chamadas em memória, é centenas de milha
 - Referência Cache L2: 7 ns
 - Referência à Memória Principal: 100 ns
 - Round trip dentro do mesmo data center: 500 000 ns (0,5 ms)
-- Roud trip Califórnia-Holanda: 150 000 000 ns (150 ms)
+- Round trip Califórnia-Holanda: 150 000 000 ns (150 ms)
 
 Uma versão mais atualizada e interativa dessa tabela pode ser encontrada em: https://people.eecs.berkeley.edu/~rcs/research/interactive_latency.html
 

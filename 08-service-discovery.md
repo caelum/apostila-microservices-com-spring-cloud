@@ -385,20 +385,20 @@ eureka.client.serviceUrl.defaultZone=${EUREKA_URI:http://localhost:8761/eureka/}
 
 1. Interrompa a execução do monólito, dos serviços de pagamentos e distância e do API Gateway.
 
-  Faça o checkout da branch `cap9-self-registration-no-eureka-server` nos projetos do monólito, do API Gateway e dos serviço de pagamentos e distância:
+  Faça o checkout da branch `cap8-self-registration-no-eureka-server` nos projetos do monólito, do API Gateway e dos serviço de pagamentos e distância:
 
   ```sh
   cd ~/Desktop/fj33-eats-monolito-modular
-  git checkout -f cap9-self-registration-no-eureka-server
+  git checkout -f cap8-self-registration-no-eureka-server
 
   cd ~/Desktop/fj33-api-gateway
-  git checkout -f cap9-self-registration-no-eureka-server
+  git checkout -f cap8-self-registration-no-eureka-server
 
   cd ~/Desktop/fj33-eats-distancia-service
-  git checkout -f cap9-self-registration-no-eureka-server
+  git checkout -f cap8-self-registration-no-eureka-server
 
   cd ~/Desktop/fj33-eats-pagamento-service
-  git checkout -f cap9-self-registration-no-eureka-server
+  git checkout -f cap8-self-registration-no-eureka-server
   ```
 
 2. Pare as instâncias do serviço de distância.
@@ -488,17 +488,17 @@ r̶i̶b̶b̶o̶n̶.̶e̶u̶r̶e̶k̶a̶.̶e̶n̶a̶b̶l̶e̶d̶=̶f̶a̶l̶s̶e�
 
 1. Pare o monólito, o serviço de pagamentos e o API Gateway.
 
-  Obtenha o código da branch `cap9-client-side-discovery` dos repositórios do monólito, do API Gateway e do serviço de pagamentos:
+  Obtenha o código da branch `cap8-client-side-discovery` dos repositórios do monólito, do API Gateway e do serviço de pagamentos:
 
   ```sh
   cd ~/Desktop/fj33-eats-monolito-modular
-  git checkout -f cap9-client-side-discovery
+  git checkout -f cap8-client-side-discovery
 
   cd ~/Desktop/fj33-api-gateway
-  git checkout -f cap9-client-side-discovery
+  git checkout -f cap8-client-side-discovery
 
   cd ~/Desktop/fj33-eats-pagamento-service
-  git checkout -f cap9-client-side-discovery
+  git checkout -f cap8-client-side-discovery
   ```
 
   Execute novamente o monólito, o serviço de pagamentos e o API Gateway.

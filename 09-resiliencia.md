@@ -283,11 +283,11 @@ import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 
 ## Exercício: Circuit Breaker com Hystrix
 
-1. Mude para a branch `cap10-circuit-breaker-com-hystrix` do projeto `fj33-api-gateway`:
+1. Mude para a branch `cap9-circuit-breaker-com-hystrix` do projeto `fj33-api-gateway`:
 
   ```sh
   cd ~/Desktop/fj33-api-gateway
-  git checkout -f cap10-circuit-breaker-com-hystrix
+  git checkout -f cap9-circuit-breaker-com-hystrix
   ```
 
 2. Reinicie o API Gateway e execute novamente a simulação com o ApacheBench, com o comando:
@@ -399,11 +399,11 @@ Observação: uma solução interessante seria manter um cache das distâncias e
   - _porCepEId timed-out and fallback failed._
   - _porCepEId short-circuited and fallback failed._
 
-2. No projeto `fj33-api-gateway`, obtenha o código da branch `cap10-fallback-no-hystrix-command`:
+2. No projeto `fj33-api-gateway`, obtenha o código da branch `cap9-fallback-no-hystrix-command`:
 
   ```sh
   cd ~/Desktop/fj33-api-gateway
-  git checkout -f cap10-fallback-no-hystrix-command
+  git checkout -f cap9-fallback-no-hystrix-command
   ```
   
   Reinicie o API Gateway.
@@ -500,11 +500,11 @@ A integração entre o Feign e o Hystrix vem desabilitada por padrão, nas vers�
 
 ## Exercício: Integração entre Hystrix e Feign
 
-1. Faça o checkout da branch `cap10-circuit-breaker-com-hystrix-no-feign` do projeto `fj33-api-gateway`:
+1. Faça o checkout da branch `cap9-circuit-breaker-com-hystrix-no-feign` do projeto `fj33-api-gateway`:
 
   ```sh
   cd ~/Desktop/fj33-api-gateway
-  git checkout -f cap10-circuit-breaker-com-hystrix-no-feign
+  git checkout -f cap9-circuit-breaker-com-hystrix-no-feign
   ```
 
   Reinicie o API Gateway.
@@ -578,11 +578,11 @@ interface RestauranteRestClient {
 
 ## Exercício: Fallback com Feign
 
-1. Vá até a branch `cap10-fallback-com-feign` do projeto `fj33-api-gateway`:
+1. Vá até a branch `cap9-fallback-com-feign` do projeto `fj33-api-gateway`:
 
   ```sh
   cd ~/Desktop/fj33-api-gateway
-  git checkout -f cap10-fallback-com-feign
+  git checkout -f cap9-fallback-com-feign
   ```
 
   Certifique-se que o API Gateway foi reiniciado.
@@ -784,11 +784,11 @@ import org.springframework.retry.annotation.Retryable;
 
 ## Exercício: Spring Retry
 
-1. Faça o checkout da branch `cap10-retry` do monólito:
+1. Faça o checkout da branch `cap9-retry` do monólito:
 
   ```sh
   cd ~/Desktop/fj33-eats-monolito-modular
-  git checkout -f cap10-retry
+  git checkout -f cap9-retry
   ```
 
   Reinicie o monólito.
@@ -846,11 +846,11 @@ import org.springframework.retry.annotation.Backoff;
 
 ## Exercício: Exponential Backoff com Spring Retry
 
-1. Vá até a branch `cap10-backoff` do projeto `fj33-eats-monolito-modular`:
+1. Vá até a branch `cap9-backoff` do projeto `fj33-eats-monolito-modular`:
 
   ```sh
   cd ~/Desktop/fj33-eats-monolito-modular
-  git checkout -f cap10-backoff
+  git checkout -f cap9-backoff
   ```
 
 2. Pela UI, faça novamente o login como dono de um restaurante (por exemplo, com `longfu`/`123456`) e modifique o CEP ou tipo de cozinha.

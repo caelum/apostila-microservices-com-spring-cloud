@@ -286,16 +286,12 @@ logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=DEBUG
 
 1. Interrompa o serviço de distância.
 
-  No projeto `fj33-eats-distancia-service`, vá até a branch `cap8-detalhando-o-log-de-resquests-do-servico-de-distancia`:
+  No projeto `fj33-eats-distancia-service`, vá até a branch `cap7-detalhando-o-log-de-requests-do-servico-de-distancia`:
 
   ```sh
   cd ~/Desktop/fj33-eats-distancia-service
-  git checkout -f cap8-detalhando-o-log-de-resquests-do-servico-de-distancia
+  git checkout -f cap7-detalhando-o-log-de-requests-do-servico-de-distancia
   ```
-
-  <!--
-    TODO: renomear a branch cap8-detalhando-o-log-de-requests-do-servico-de-distancia, corrigindo o resquests, tanto na apostila como no repositório. 
-  -->
 
   Execute a classe `EatsDistanciaServiceApplication`.
 
@@ -460,14 +456,14 @@ import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 
 1. Interrompa o monólito e o API Gateway.
 
-  Faça o checkout da branch `cap8-client-side-load-balancing-no-rest-template-com-ribbon` dos projetos `fj33-eats-monolito-modular` e `fj33-api-gateway`:
+  Faça o checkout da branch `cap7-client-side-load-balancing-no-rest-template-com-ribbon` dos projetos `fj33-eats-monolito-modular` e `fj33-api-gateway`:
 
   ```sh
   cd ~/Desktop/fj33-eats-monolito-modular
-  git checkout -f cap8-client-side-load-balancing-no-rest-template-com-ribbon
+  git checkout -f cap7-client-side-load-balancing-no-rest-template-com-ribbon
 
   cd ~/Desktop/fj33-api-gateway
-  git checkout -f cap8-client-side-load-balancing-no-rest-template-com-ribbon
+  git checkout -f cap7-client-side-load-balancing-no-rest-template-com-ribbon
   ```
 
   Execute novamente o monólito e o API Gateway.
@@ -555,14 +551,14 @@ monolito.ribbon.listOfServers=http://localhost:8080,http://localhost:9090
 
 1. Pare o serviço de pagamentos e o API Gateway.
 
-  Vá até a branch `cap8-client-side-load-balancing-no-feign-com-ribbon` nos projetos `fj33-eats-pagamento-service` e `fj33-api-gateway`:
+  Vá até a branch `cap7-client-side-load-balancing-no-feign-com-ribbon` nos projetos `fj33-eats-pagamento-service` e `fj33-api-gateway`:
 
   ```sh
   cd ~/Desktop/fj33-eats-pagamento-service
-  git checkout -f cap8-client-side-load-balancing-no-feign-com-ribbon
+  git checkout -f cap7-client-side-load-balancing-no-feign-com-ribbon
 
   cd ~/Desktop/fj33-api-gateway
-  git checkout -f cap8-client-side-load-balancing-no-feign-com-ribbon
+  git checkout -f cap7-client-side-load-balancing-no-feign-com-ribbon
   ```
 
   Execute novamente o serviço de pagamentos e o API Gateway.

@@ -159,26 +159,26 @@ http://localhost:9999/actuator/filters
 
 ## Exercício: Health Check API com Spring Boot Actuator
 
-1. Faça checkout da branch `cap14-health-check-api-com-spring-boot-actuator` dos seguintes projetos:
+1. Faça checkout da branch `cap13-health-check-api-com-spring-boot-actuator` dos seguintes projetos:
 
   ```sh
   cd ~/Desktop/fj33-eats-pagamento-service
-  git checkout -f cap14-health-check-api-com-spring-boot-actuator
+  git checkout -f cap13-health-check-api-com-spring-boot-actuator
 
   cd ~/Desktop/fj33-eats-distancia-service
-  git checkout -f cap14-health-check-api-com-spring-boot-actuator
+  git checkout -f cap13-health-check-api-com-spring-boot-actuator
 
   cd ~/Desktop/fj33-eats-nota-fiscal-service
-  git checkout -f cap14-health-check-api-com-spring-boot-actuator
+  git checkout -f cap13-health-check-api-com-spring-boot-actuator
 
   cd ~/Desktop/fj33-api-gateway
-  git checkout -f cap14-health-check-api-com-spring-boot-actuator
+  git checkout -f cap13-health-check-api-com-spring-boot-actuator
 
   cd ~/Desktop/fj33-service-registry
-  git checkout -f cap14-health-check-api-com-spring-boot-actuator
+  git checkout -f cap13-health-check-api-com-spring-boot-actuator
 
   cd ~/Desktop/fj33-config-server
-  git checkout -f cap14-health-check-api-com-spring-boot-actuator
+  git checkout -f cap13-health-check-api-com-spring-boot-actuator
   ```
 
   Dê refresh nos projetos no Eclipse e os reinicie.
@@ -508,11 +508,11 @@ spring.cloud.stream.bindings.hystrixStreamOutput.destination=springCloudHystrixS
 
   Execute a classe `TurbineApplication`.
 
-2. Faça o checkout da branch `cap14-turbine-stream` do projeto `fj33-api-gateway`:
+2. Faça o checkout da branch `cap13-turbine-stream` do projeto `fj33-api-gateway`:
 
   ```sh
   cd ~/Desktop/fj33-api-gateway
-  git checkout -f cap14-turbine-stream
+  git checkout -f cap13-turbine-stream
   ```
 
   Dê o refresh do API Gateway no Eclipse e o reinicie.
@@ -633,23 +633,23 @@ Faça o mesmo no `pom.xml` do:
 
 ## Exercício: Distributed Tracing com Spring Cloud Sleuth e Zipkin
 
-1. Vá até a branch `cap14-spring-cloud-sleuth` dos projetos do API Gateway, do Monólito Modular e dos serviços de distância, pagamentos e notas fiscais:
+1. Vá até a branch `cap13-spring-cloud-sleuth` dos projetos do API Gateway, do Monólito Modular e dos serviços de distância, pagamentos e notas fiscais:
 
   ```sh
   cd ~/Desktop/fj33-api-gateway
-  git checkout -f cap14-spring-cloud-sleuth
+  git checkout -f cap13-spring-cloud-sleuth
 
   cd ~/Desktop/fj33-eats-monolito-modular
-  git checkout -f cap14-spring-cloud-sleuth
+  git checkout -f cap13-spring-cloud-sleuth
 
   cd ~/Desktop/fj33-eats-pagamento-service
-  git checkout -f cap14-spring-cloud-sleuth
+  git checkout -f cap13-spring-cloud-sleuth
 
   cd ~/Desktop/fj33-eats-distancia-service
-  git checkout -f cap14-spring-cloud-sleuth
+  git checkout -f cap13-spring-cloud-sleuth
 
   cd ~/Desktop/fj33-eats-nota-fiscal-service
-  git checkout -f cap14-spring-cloud-sleuth
+  git checkout -f cap13-spring-cloud-sleuth
   ```
 
   Faça refresh no Eclipse e reinicie os projetos.

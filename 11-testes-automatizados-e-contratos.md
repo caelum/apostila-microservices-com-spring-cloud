@@ -777,11 +777,11 @@ Matched-Stub-Id: [64ce3139-e460-405d-8ebb-fe7f527018c3]
 
 ## Exercício: Contract Test para comunicação síncrona
 
-1. Abra um Terminal e vá até a branch `cap12-contrato-cliente-servidor` do projeto do serviço de distância:
+1. Abra um Terminal e vá até a branch `cap11-contrato-cliente-servidor` do projeto do serviço de distância:
 
   ```sh
   cd ~/Desktop/fj33-eats-distancia-service
-  git checkout -f cap12-contrato-cliente-servidor
+  git checkout -f cap11-contrato-cliente-servidor
   ```
 
   Então, faça o build do serviço de distância, rode o Contract Test no próprio serviço, gere o JAR com os stubs do contrato e instale no repositório local do Maven. Basta executar o comando:
@@ -812,11 +812,11 @@ Matched-Stub-Id: [64ce3139-e460-405d-8ebb-fe7f527018c3]
 
   Observe, pelas mensagens anteriores, que o JAR com os stubs foi instalado no diretório `.m2`, o repositório local Maven, do usuário do curso.
 
-2. No projeto do monólito modular, faça checkout da branch `cap12-contrato-cliente-servidor`:
+2. No projeto do monólito modular, faça checkout da branch `cap11-contrato-cliente-servidor`:
 
   ```sh
   cd ~/Desktop/fj33-eats-monolito-modular
-  git checkout -f cap12-contrato-cliente-servidor
+  git checkout -f cap11-contrato-cliente-servidor
   ```
 
   Faça o refresh do projeto no Eclipse.
@@ -1134,11 +1134,11 @@ Rode o teste. Sucesso!
 
 ## Exercício: Contract Test para comunicação assíncrona
 
-1. Abra um Terminal e vá até a branch `cap12-contrato-publisher-subscriber` do projeto do serviço de pagamentos:
+1. Abra um Terminal e vá até a branch `cap11-contrato-publisher-subscriber` do projeto do serviço de pagamentos:
 
   ```sh
   cd ~/Desktop/fj33-eats-pagamento-service
-  git checkout -f cap12-contrato-publisher-subscriber
+  git checkout -f cap11-contrato-publisher-subscriber
   ```
 
   Então, faça o build, rode o Contract Test no próprio serviço, gere o JAR com os stubs do contrato e instale no repositório local do Maven. Para isso, basta executar o comando:
@@ -1169,11 +1169,11 @@ Rode o teste. Sucesso!
 
   Observe, pelas mensagens anteriores, que o JAR com os stubs foi instalado no diretório `.m2`, o repositório local Maven, do usuário do curso.
 
-2. No projeto do serviço de nota fiscal, faça checkout da branch `cap12-contrato-publisher-subscriber`:
+2. No projeto do serviço de nota fiscal, faça checkout da branch `cap11-contrato-publisher-subscriber`:
 
   ```sh
   cd ~/Desktop/fj33-eats-nota-fiscal-service
-  git checkout -f cap12-contrato-publisher-subscriber
+  git checkout -f cap11-contrato-publisher-subscriber
   ```
 
   Faça o refresh do projeto no Eclipse.

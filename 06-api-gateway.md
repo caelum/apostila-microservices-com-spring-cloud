@@ -228,11 +228,11 @@ export class RestauranteService {
 
   Note que as URLs anteriores, apesar de serem invocados no API Gateway, invocam o serviço de pagamento, o de distância e o monólito, respectivamente.
 
-3. Vá até a branch `cap7-ui-chama-api-gateway` do projeto `fj33-eats-ui`:
+3. Vá até a branch `cap6-ui-chama-api-gateway` do projeto `fj33-eats-ui`:
 
   ```sh
   cd ~/Desktop/fj33-eats-ui
-  git checkout -f cap7-ui-chama-api-gateway
+  git checkout -f cap6-ui-chama-api-gateway
   ```
 
 4. Com o monólito, os serviços de pagamentos e distância e o API Gateway no ar, suba o front-end por meio do comando `ng serve`.
@@ -261,11 +261,11 @@ zuul.sensitiveHeaders=
 
 1. Pare o API Gateway.
 
-  Obtenha o código da branch `cap7-cabecalhos-sensiveis-no-zuul` do projeto `fj33-api-gateway`:
+  Obtenha o código da branch `cap6-cabecalhos-sensiveis-no-zuul` do projeto `fj33-api-gateway`:
 
   ```sh
   cd ~/Desktop/fj33-api-gateway
-  git checkout -f cap7-cabecalhos-sensiveis-no-zuul
+  git checkout -f cap6-cabecalhos-sensiveis-no-zuul
   ```
 
   Execute a classe `ApiGatewayApplication`. Zuul no ar!
@@ -665,11 +665,11 @@ Como apenas o API Gateway será chamado diretamente pelo navegador e não há re
 
 1. Pare o API Gateway.
 
-  Faça o checkout da branch `cap7-api-composition-no-api-gateway` do projeto `fj33-api-gateway`:
+  Faça o checkout da branch `cap6-api-composition-no-api-gateway` do projeto `fj33-api-gateway`:
 
   ```sh
   cd ~/Desktop/fj33-api-gateway
-  git checkout -f cap7-api-composition-no-api-gateway
+  git checkout -f cap6-api-composition-no-api-gateway
   ```
 
   Certifique-se que o monólito e o serviço de distância estejam no ar.
@@ -703,22 +703,22 @@ Como apenas o API Gateway será chamado diretamente pelo navegador e não há re
 
   ```sh
   cd ~/Desktop/fj33-eats-monolito-modular
-  git checkout -f cap7-api-composition-no-api-gateway
+  git checkout -f cap6-api-composition-no-api-gateway
 
   cd ~/Desktop/fj33-eats-pagamento-service
-  git checkout -f cap7-api-composition-no-api-gateway
+  git checkout -f cap6-api-composition-no-api-gateway
 
   cd ~/Desktop/fj33-eats-distancia-service
-  git checkout -f cap7-api-composition-no-api-gateway
+  git checkout -f cap6-api-composition-no-api-gateway
   ```
 
   Reinicie o monólito e os serviços de pagamento e distância.
 
-3. Obtenha o código da branch `cap7-api-composition-no-api-gateway` do projeto `fj33-eats-ui`:
+3. Obtenha o código da branch `cap6-api-composition-no-api-gateway` do projeto `fj33-eats-ui`:
 
   ```sh
   cd ~/Desktop/fj33-eats-ui
-  git checkout -f cap7-api-composition-no-api-gateway
+  git checkout -f cap6-api-composition-no-api-gateway
   ```
 
   Com os serviços de distância e o monólito rodando, inicie o front-end com o comando `ng serve`.
@@ -944,11 +944,11 @@ Agora sim! Ao receber um status `201 Created`, depois de criar algum recurso em 
 
 2. Pare o API Gateway.
 
-  No projeto `fj33-api-gateway`, faça o checkout da branch `cap7-customizando-location-filter-do-zuul`:
+  No projeto `fj33-api-gateway`, faça o checkout da branch `cap6-customizando-location-filter-do-zuul`:
 
   ```sh
   cd ~/Desktop/fj33-api-gateway
-  git checkout -f cap7-customizando-location-filter-do-zuul
+  git checkout -f cap6-customizando-location-filter-do-zuul
   ```
 
   Execute a classe `ApiGatewayApplication`.

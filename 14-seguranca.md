@@ -193,14 +193,14 @@ As diversas mudanças no módulo de restaurantes do monólito também afetam a U
 
   Com o Service Registry e o Config Server no ar, suba o serviço Administrativo executando a classe `EatsAdministrativoServiceApplication`.
 
-3. Faça checkout da branch `cap15-extrai-administrativo-service` do monólito modular e da UI:
+3. Faça checkout da branch `cap14-extrai-administrativo-service` do monólito modular e da UI:
 
   ```sh
   cd ~/Desktop/fj33-eats-monolito-modular
-  git checkout -f cap15-extrai-administrativo-service
+  git checkout -f cap14-extrai-administrativo-service
 
   cd ~/Desktop/fj33-eats-ui
-  git checkout -f cap15-extrai-administrativo-service
+  git checkout -f cap14-extrai-administrativo-service
   ```
 
   Faça refresh do monólito modular no Eclipse.
@@ -1125,17 +1125,17 @@ Isso indica que o módulo de segurança do monólito reconheceu o token como vá
 
 ## Exercício: Autenticação no API Gateway e Autorização no monólito
 
-1. Faça checkout da branch `cap15-autenticacao-no-api-gateway-e-autorizacao-nos-servicos` nos projeto do monólito modular, API Gateway e UI:
+1. Faça checkout da branch `cap14-autenticacao-no-api-gateway-e-autorizacao-nos-servicos` nos projeto do monólito modular, API Gateway e UI:
 
   ```sh
   cd ~/Desktop/fj33-eats-monolito-modular
-  git checkout -f cap15-autenticacao-no-api-gateway-e-autorizacao-nos-servicos
+  git checkout -f cap14-autenticacao-no-api-gateway-e-autorizacao-nos-servicos
 
   cd ~/Desktop/fj33-api-gateway
-  git checkout -f cap15-autenticacao-no-api-gateway-e-autorizacao-nos-servicos
+  git checkout -f cap14-autenticacao-no-api-gateway-e-autorizacao-nos-servicos
 
   cd ~/Desktop/fj33-eats-ui
-  git checkout -f cap15-autenticacao-no-api-gateway-e-autorizacao-nos-servicos
+  git checkout -f cap14-autenticacao-no-api-gateway-e-autorizacao-nos-servicos
   ```
 
   Faça refresh no Eclipse nos projetos do monólito modular e do API Gateway.
@@ -1874,11 +1874,11 @@ z̶u̶u̶l̶.̶r̶o̶u̶t̶e̶s̶.̶a̶u̶t̶h̶.̶u̶r̶l̶=̶f̶o̶r̶w̶a̶r�
   }
   ```
 
-5. Faça checkout da branch `cap15-authorization-server` do API Gateway para remover a autenticação:
+5. Faça checkout da branch `cap14-authorization-server` do API Gateway para remover a autenticação:
 
   ```sh
   cd ~/Desktop/fj33-api-gateway
-  git checkout -f cap15-authorization-server
+  git checkout -f cap14-authorization-server
   ```
 
   Delete o arquivo `apigateway.properties` do `config-repo`.
@@ -2008,11 +2008,11 @@ Será necessário passar um token obtido do Authorization Server que contém o r
   security.oauth2.resource.jwt.key-value = um-segredo-bem-secreto
   ```
 
-2. Faça checkout da branch `cap15-resource-server-com-spring-security-oauth-2` do serviço Administrativo:
+2. Faça checkout da branch `cap14-resource-server-com-spring-security-oauth-2` do serviço Administrativo:
 
   ```sh
   cd ~/Desktop/fj33-eats-administrativo-service
-  git checkout -f cap15-resource-server-com-spring-security-oauth-2
+  git checkout -f cap14-resource-server-com-spring-security-oauth-2
   ```
 
   Faça refresh do projeto no Eclipse e o reinicie.

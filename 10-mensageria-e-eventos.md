@@ -571,14 +571,14 @@ import br.com.caelum.notafiscal.AmqpNotaFiscalConfig.PagamentoSink;
 
 ## Exercício: Evento de Pagamento Confirmado com Spring Cloud Stream
 
-1. Faça checkout da branch `cap11-evento-de-pagamento-confirmado-com-spring-cloud-stream` nos projetos do serviços de pagamentos e de nota fiscal:
+1. Faça checkout da branch `cap10-evento-de-pagamento-confirmado-com-spring-cloud-stream` nos projetos do serviços de pagamentos e de nota fiscal:
 
   ```sh
   cd ~/Desktop/fj33-eats-pagamento-service
-  git checkout -f cap11-evento-de-pagamento-confirmado-com-spring-cloud-stream
+  git checkout -f cap10-evento-de-pagamento-confirmado-com-spring-cloud-stream
 
   cd ~/Desktop/fj33-eats-nota-fiscal-service
-  git checkout -f cap11-evento-de-pagamento-confirmado-com-spring-cloud-stream
+  git checkout -f cap10-evento-de-pagamento-confirmado-com-spring-cloud-stream
   ```
 
   Reinicie o serviço de pagamento.
@@ -678,11 +678,11 @@ spring.cloud.stream.bindings.pagamentosConfirmados.group=notafiscal
 
   Note que o XML foi impresso nos logs das duas instâncias, `EatsNotaFiscalServiceApplication` e `EatsNotaFiscalServiceApplication (1)`. Ou seja, todas as instâncias recebem todas as mensagens publicadas no exchange `pagamentosConfirmados` do RabbitMQ.
 
-4. Em um Terminal, vá até a branch `cap11-consumer-groups` do serviço de nota fiscal:
+4. Em um Terminal, vá até a branch `cap10-consumer-groups` do serviço de nota fiscal:
 
   ```sh
   cd ~/Desktop/fj33-eats-nota-fiscal-service
-  git checkout -f cap11-consumer-groups
+  git checkout -f cap10-consumer-groups
   ```
 
   Reinicie ambas as instâncias do serviço de nota fiscal.
@@ -984,17 +984,17 @@ import lombok.AllArgsConstructor;
 
 ## Exercício: notificando novos pedidos e mudança de status do pedido com WebSocket e Eventos
 
-1. Em um Terminal, faça um checkout da branch `cap11-websocket-e-eventos` do monólito, do API Gateway e da UI:
+1. Em um Terminal, faça um checkout da branch `cap10-websocket-e-eventos` do monólito, do API Gateway e da UI:
 
   ```sh
   cd ~/Desktop/fj33-eats-monolito-modular
-  git checkout -f cap11-websocket-e-eventos
+  git checkout -f cap10-websocket-e-eventos
 
   cd ~/Desktop/fj33-api-gateway
-  git checkout -f cap11-websocket-e-eventos
+  git checkout -f cap10-websocket-e-eventos
 
   cd ~/Desktop/fj33-eats-ui
-  git checkout -f cap11-websocket-e-eventos
+  git checkout -f cap10-websocket-e-eventos
   ```
 
 2. Rode o comando abaixo para baixar as bibliotecas SockJS e Stomp, que são usadas pela UI:

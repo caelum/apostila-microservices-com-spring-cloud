@@ -310,11 +310,11 @@ spring.cloud.config.server.git.uri=git@github.com:organizacao/repositorio-de-con
 
   Execute a classe `ConfigServerApplication`.
 
-2. Faça checkout da branch `cap13-repositorio-git-no-config-server` do projeto do Config Server:
+2. Faça checkout da branch `cap12-repositorio-git-no-config-server` do projeto do Config Server:
 
   ```sh
   cd ~/Desktop/fj33-config-server
-  git checkout -f cap13-repositorio-git-no-config-server
+  git checkout -f cap12-repositorio-git-no-config-server
   ```
 
   Reinicie o Config Server, parando e rodando novamente a classe `ConfigServerApplication`.
@@ -461,17 +461,17 @@ s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶.̶m̶o̶n̶g̶o̶d̶b̶.̶p̶o̶r̶t̶=̶2̶7�
 
 ## Exercícios: Configurações específicas de cada serviço no Config Server
 
-1. Faça o checkout da branch `cap13-movendo-configuracoes-especificas-para-o-config-server` no monólito e nos serviços de pagamentos e de distância:
+1. Faça o checkout da branch `cap12-movendo-configuracoes-especificas-para-o-config-server` no monólito e nos serviços de pagamentos e de distância:
 
   ```sh
   cd ~/Desktop/fj33-eats-monolito-modular
-  git checkout -f cap13-movendo-configuracoes-especificas-para-o-config-server
+  git checkout -f cap12-movendo-configuracoes-especificas-para-o-config-server
 
   cd ~/Desktop/fj33-eats-pagamento-service
-  git checkout -f cap13-movendo-configuracoes-especificas-para-o-config-server
+  git checkout -f cap12-movendo-configuracoes-especificas-para-o-config-server
 
   cd ~/Desktop/fj33-eats-distancia-service
-  git checkout -f cap13-movendo-configuracoes-especificas-para-o-config-server
+  git checkout -f cap12-movendo-configuracoes-especificas-para-o-config-server
   ```
 
   Por enquanto, pare o monólito, o serviço de pagamentos e o serviço de distância.

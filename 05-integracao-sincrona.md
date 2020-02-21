@@ -764,14 +764,14 @@ Observação: pensando em design de código, será que os métodos auxiliares `t
 
 1. Interrompa o monólito e o serviço de distância.
 
-  Em um terminal, vá até a branch `cap6-integracao-monolito-distancia-com-rest-template` dos projetos `fj33-eats-monolito-modular` e `fj33-eats-distancia-service`:
+  Em um terminal, vá até a branch `cap5-integracao-monolito-distancia-com-rest-template` dos projetos `fj33-eats-monolito-modular` e `fj33-eats-distancia-service`:
 
   ```sh
   cd ~/Desktop/fj33-eats-monolito-modular
-  git checkout -f cap6-integracao-monolito-distancia-com-rest-template
+  git checkout -f cap5-integracao-monolito-distancia-com-rest-template
   
   cd ~/Desktop/fj33-eats-distancia-service
-  git checkout -f cap6-integracao-monolito-distancia-com-rest-template
+  git checkout -f cap5-integracao-monolito-distancia-com-rest-template
   ```
 
   Suba o monólito executando a classe `EatsApplication` e o serviço de distância por meio da classe `EatsDistanciaServiceApplication`.
@@ -939,14 +939,14 @@ public class PagamentoController {
 
 1. Interrompa o monólito e o serviço de pagamentos.
 
-  Em um terminal, vá até a branch `cap6-integracao-pagamento-monolito-com-feign` dos projetos `fj33-eats-monolito-modular` e `fj33-eats-pagamento-service`:
+  Em um terminal, vá até a branch `cap5-integracao-pagamento-monolito-com-feign` dos projetos `fj33-eats-monolito-modular` e `fj33-eats-pagamento-service`:
 
   ```sh
   cd ~/Desktop/fj33-eats-monolito-modular
-  git checkout -f cap6-integracao-pagamento-monolito-com-feign
+  git checkout -f cap5-integracao-pagamento-monolito-com-feign
   
   cd ~/Desktop/fj33-eats-pagamento-service
-  git checkout -f cap6-integracao-pagamento-monolito-com-feign
+  git checkout -f cap5-integracao-pagamento-monolito-com-feign
   ```
 
   Suba o monólito executando a classe `EatsApplication` e o serviço de pagamentos por meio da classe `EatsPagamentoServiceApplication`.

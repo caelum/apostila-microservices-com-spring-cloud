@@ -484,11 +484,11 @@ Novos pagamentos serão armazenados apenas no schema `eats_pagamento`. Os dados 
 
 1. Pare a execução de `EatsPagamentoServiceApplication`.
 
-  Obtenha as configurações e scripts de migração para outro schema da branch `cap5_migrando_pagamentos_para_schema_separado` do serviço de pagamentos:
+  Obtenha as configurações e scripts de migração para outro schema da branch `cap4-migrando-pagamentos-para-schema-separado` do serviço de pagamentos:
 
   ```sh
   cd ~/Desktop/fj33-eats-pagamento-service
-  git checkout -f cap5_migrando_pagamentos_para_schema_separado
+  git checkout -f cap4-migrando-pagamentos-para-schema-separado
   ```
 
   Execute `EatsPagamentoServiceApplication`. Observe o resultado da execução das migrations nos logs.
@@ -651,11 +651,11 @@ Note que a porta `3307` foi incluída na URL, mas mantivemos ainda `localhost`.
 
 ## Exercício: fazendo serviço de pagamentos apontar para o BD específico
 
-1. Obtenha as alterações no datasource do serviço de pagamentos da branch `cap5_apontando_pagamentos_para_BD_proprio`:
+1. Obtenha as alterações no datasource do serviço de pagamentos da branch `cap4-apontando-pagamentos-para-BD-proprio`:
 
   ```sh
   cd ~/Desktop/fj33-eats-pagamento-service
-  git checkout -f cap5_apontando_pagamentos_para_BD_proprio
+  git checkout -f cap4-apontando-pagamentos-para-BD-proprio
   ```
 
   Reinicie o serviço de pagamentos, executando a classe `EatsPagamentoServiceApplication`.
@@ -1003,11 +1003,11 @@ Para saber sobre outras propriedades, consulte: https://docs.spring.io/spring-bo
 
 1. Interrompa o serviço de distância.
 
-  Obtenha o código da branch `cap5_migrando_distancia_para_mongodb` do `fj33-eats-distancia-service`:
+  Obtenha o código da branch `cap4-migrando-distancia-para-mongodb` do `fj33-eats-distancia-service`:
 
   ```sh
   cd ~/Desktop/fj33-eats-distancia-service
-  git checkout -f cap5_migrando_distancia_para_mongodb
+  git checkout -f cap4-migrando-distancia-para-mongodb
   ```
 
   Certifique-se que o MongoDB do serviço de distância esteja no ar com o comando:
