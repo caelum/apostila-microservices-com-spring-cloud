@@ -593,7 +593,7 @@ import br.com.caelum.notafiscal.AmqpNotaFiscalConfig.PagamentoSink;
   curl -X PUT -i http://localhost:8081/pagamentos/1
   ```
 
-  _Observação: para facilitar testes durante o curso, a API de pagamentos permite reconfirmação de pagamentos. Talvez não seja o ideal..._
+  _Observação: para facilitar testes, a API de pagamentos permite reconfirmação de pagamentos. Não é o ideal para uma aplicação de verdade._
 
   Acesse a UI de gerenciamento do RabbitMQ, pela URL `http://localhost:15672`.
 

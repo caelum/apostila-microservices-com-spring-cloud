@@ -90,7 +90,7 @@ Do lado do cliente, há a necessidade de uma consulta ao Service Registry para o
 
 ## Eureka
 
-Nesse curso, usaremos o Eureka, que é integrado com o ecossistema Spring através do projeto Spring Cloud Netflix Eureka. Para implementar o Service Registry, será utilizado o projeto Spring Cloud Netflix Eureka Server, disponível pelo artefato `spring-cloud-starter-netflix-eureka-server`. Por padrão, o Eureka Serve usa a porta `8761`.
+Usaremos o Eureka, que é integrado com o ecossistema Spring através do projeto Spring Cloud Netflix Eureka. Para implementar o Service Registry, será utilizado o projeto Spring Cloud Netflix Eureka Server, disponível pelo artefato `spring-cloud-starter-netflix-eureka-server`. Por padrão, o Eureka Serve usa a porta `8761`.
 
 Para implementar o pattern _Self Registration_, as instâncias dos serviços precisam invocar a API do Service Registry. No caso ecossistema Spring, há o Spring Cloud Netflix Eureka Client, disponível no artefato `spring-cloud-starter-netflix-eureka-client`. Essa biblioteca que provê uma maneira baseada em anotações de uma instância registrar-se no Service Registry.
 
@@ -98,7 +98,7 @@ Para clientes feitos em linguagens que não rodam na JVM, o Eureka Server dispon
 
 A biblioteca Eureka Client implementa também o pattern _Client-Side Discovery_.
 
-No curso usaremos, no lado do cliente, o Spring Cloud Netflix Eureka Client por meio do artefato `spring-cloud-starter-netflix-eureka-client`. O Eureka Client fica responsável por obter a lista de instâncias registradas e disponíveis no Eureka Server. O Load Balancing fica por conta do Ribbon, que vimos em capítulo anterior.
+Usaremos, no lado do cliente, o Spring Cloud Netflix Eureka Client por meio do artefato `spring-cloud-starter-netflix-eureka-client`. O Eureka Client fica responsável por obter a lista de instâncias registradas e disponíveis no Eureka Server. O Load Balancing fica por conta do Ribbon, que vimos em capítulo anterior.
 
 O API Gateway, o Monólito e os serviços de Pagamentos e Distância terão o Spring Cloud Netflix Eureka Client e serão registrados no Eureka Server. O Ribbon obterá do Eureka Client a lista de instâncias que será usada no Load Balancing. As configurações de lista de servidores poderão ser removidas do `application.properties`!
 
@@ -563,7 +563,7 @@ spring.cloud.consul.port=8500
 spring.cloud.consul.discovery.register-health-check=false
 ```
 
-Como ainda não vimos o conceito de _health checking_ no curso, desabilitaremos essa funcionalidade.
+Como ainda não vimos o conceito de _health checking_, desabilitaremos essa funcionalidade.
 
 Finalmente, basta adicionar a anotação `@EnableDiscoveryClient` na classe principal (ou em alguma classe de configuração):
 

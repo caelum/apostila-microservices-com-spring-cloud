@@ -78,7 +78,7 @@ Já o time de Distância planeja explorar uma nova tecnologia de persistência, 
 
 Por enquanto, apenas criaremos os servidores de cada BD. Daria trabalho instalar e configurar os BDs manualmente. Então, para essas necessidades de infraestrutura, usaremos o Docker!
 
-> O curso [Infraestrutura ágil com Docker e Docker Swarm](https://www.caelum.com.br/curso-infraestrutura-agil-com-docker-e-docker-swarm) (DO-26) aprofunda nos conceitos do Docker e tecnologias relacionadas.
+> O curso [Infraestrutura ágil com Docker e Docker Swarm](https://www.caelum.com.br/curso-infraestrutura-agil-com-docker-e-docker-swarm) (DO-26) da Caelum aprofunda nos conceitos do Docker e tecnologias relacionadas.
 
 ## Criando uma nova instância do MySQL a partir do Docker
 
@@ -261,7 +261,7 @@ Depois de parados com `stop`, para iniciá-los novamente, faça um `docker-compo
 
 É possível parar e remover um _service_ específico, passando seu nome no final do comando.
 
-_ATENÇÃO: **evite** usar o comando `docker-compose down` durante o curso. Esse comando apagará todos os dados dos seus BD. Use apenas o comando `docker-compose stop`._
+_ATENÇÃO: **evite** usar o comando `docker-compose down`. Esse comando apagará todos os dados dos seus BD. Use apenas o comando `docker-compose stop`._
 
 ## Exercício: Gerenciando containers de infraestrutura com Docker Compose
 

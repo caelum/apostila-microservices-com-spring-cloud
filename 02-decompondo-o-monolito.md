@@ -93,7 +93,7 @@ Uncle Bob ainda cita, no mesmo livro, outras arquiteturas semelhantes:
 - DCI (Data, Context and Interaction), descrita por James Coplien, pioneiro dos Design Patterns, e Trygve Reenskaug, criador do MVC.
 - BCE (Boundary-Control-Entity), introduzida por Ivar Jacobson no livro mencionado anteriormente.
 
-> O curso [Práticas de Design e Arquitetura de código para aplicações Java](https://www.caelum.com.br/curso-design-arquitetura-de-aplicacoes-java) (FJ-38) explora, a partir de um gerador de ebooks, tópicos como os princípios SOLID de Orientação a Objetos e alguns Design Patterns, até chegar progressivamente a uma Arquitetura Hexagonal.
+> O curso [Práticas de Design e Arquitetura de código para aplicações Java](https://www.caelum.com.br/curso-design-arquitetura-de-aplicacoes-java) (FJ-38) da Caelum explora, a partir de um gerador de ebooks, tópicos como os princípios SOLID de Orientação a Objetos e alguns Design Patterns, até chegar progressivamente a uma Arquitetura Hexagonal.
 
 ### Software é massa!
 
@@ -307,7 +307,7 @@ Há o caso da classe `DistanciaService`, que utiliza diretamente `RestauranteRep
   git clone https://gitlab.com/aovs/projetos-cursos/fj33-eats-pacotes.git
   ```
 
-2. Crie um novo workspace no Eclipse, clicando em _File > Switch Workspace > Other_. Defina o workspace `/home/<usuario-do-curso>/workspace-pacotes`, onde `<usuario-do-curso>` é o login do curso.
+2. Crie um novo workspace no Eclipse, clicando em _File > Switch Workspace > Other_. Defina o workspace `/home/<SEU-USUARIO>/workspace-pacotes`, onde `<SEU-USUARIO>` é seu login.
 3. Acesse _File > Import > Existing Maven Projects_ e clique em _Next_. Em _Root Directory_, aponte para o diretório clonado no passo anterior.
 4. Acesse a classe `EatsApplication` e a execute com _CTRL+F11_.
 5. Certifique-se que o projeto `fj33-eats-ui` esteja sendo executado. Acesse `http://localhost:4200` e teste algumas das funcionalidades. Tudo deve funcionar como antes!
@@ -459,7 +459,7 @@ Uma ideia, visando tornar os módulos o mais independentes o possível, é aceit
   git clone https://gitlab.com/aovs/projetos-cursos/fj33-eats-monolito-modular.git
   ```
 
-2. Crie o novo workspace `/home/<usuario-do-curso>/workspace-monolito-modular` no Eclipse, clicando em _File > Switch Workspace > Other_. Troque `<usuario-do-curso>` pelo login do curso.
+2. Crie o novo workspace `/home/<SEU-USUARIO>/workspace-monolito-modular` no Eclipse, clicando em _File > Switch Workspace > Other_. Troque `<SEU-USUARIO>` pelo seu login.
 3. Importe, pelo menu  _File > Import > Existing Maven Projects_ do Eclipse, o projeto `fj33-eats-monolito-modular`.
 4. Para executar a aplicação, acesse o módulo `eats-application` e execute a classe `EatsApplication` com _CTRL+F11_. Certifique-se que as versões anteriores do projeto não estão sendo executadas.
 5. Com o projeto `fj33-eats-ui` no ar, teste as funcionalidades por meio de `http://localhost:4200`. Deve funcionar!

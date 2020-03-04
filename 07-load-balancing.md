@@ -54,7 +54,7 @@ Algumas medidas de Disponibilidade comuns:
 - um sistema que fica fora do ar durante 8,77 horas por ano tem Disponibilidade anual de 99.9 %, conhecida como _three nines_
 - um sistema que fica fora do ar durante 5,26 minutos por ano tem Disponibilidade anual de 99,999 %, conhecida como _five nines_
 
-> Mais adiante na apostila vamos revisitar o conceito de Disponibilidade.
+> Mais adiante vamos revisitar o conceito de Disponibilidade.
 
 Em um Sistema Distribuído, manter a Disponibilidade passa ser mais difícil. Para estar disponível, um Sistema Distribuído com 3 serviços distintos tem que ter todos no ar ao mesmo tempo. Se a Disponibilidade de cada serviço for 99 %, a Disponibilidade do todo é de 99<sup>3</sup> %, ou **97 %**. Ou seja, a disponibilidade geral é menor do que a disponibilidade de cada serviço!
 

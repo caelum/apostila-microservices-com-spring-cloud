@@ -1038,7 +1038,7 @@ Agora sim! Ao receber um status `201 Created`, depois de criar algum recurso em 
 
   Deve ocorrer um erro `429 Too Many Requests`.
 
-4. Apague (ou desabilite comentando a anotação `@Component`) a classe `RateLimitingZuulFilter` para que não cause erros na aplicação no restante do curso.
+4. Apague (ou desabilite comentando a anotação `@Component`) a classe `RateLimitingZuulFilter` para que não cause erros na aplicação.
 
 ## Para saber mais: Micro front-ends
 

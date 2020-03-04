@@ -799,9 +799,9 @@ Matched-Stub-Id: [64ce3139-e460-405d-8ebb-fe7f527018c3]
   [INFO]
   [INFO]
   ...
-  [INFO] Installing /home/<USUARIO-DO-CURSO>/Desktop/fj33-eats-distancia-service/target/eats-distancia-service-0.0.1-SNAPSHOT.jar to /home/<USUARIO-DO-CURSO>/.m2/repository/br/com/caelum/eats-distancia-service/0.0.1-SNAPSHOT/eats-distancia-service-0.0.1-SNAPSHOT.jar
-  [INFO] Installing /home/<USUARIO-DO-CURSO>/Desktop/fj33-eats-distancia-service/pom.xml to /home/<USUARIO-DO-CURSO>/.m2/repository/br/com/caelum/eats-distancia-service/0.0.1-SNAPSHOT/eats-distancia-service-0.0.1-SNAPSHOT.pom
-  [INFO] Installing /home/<USUARIO-DO-CURSO>/Desktop/fj33-eats-distancia-service/target/eats-distancia-service-0.0.1-SNAPSHOT-stubs.jar to /home/<USUARIO-DO-CURSO>/.m2/repository/br/com/caelum/eats-distancia-service/0.0.1-SNAPSHOT/eats-distancia-service-0.0.1-SNAPSHOT-stubs.jar
+  [INFO] Installing /home/<SEU-USUARIO>/Desktop/fj33-eats-distancia-service/target/eats-distancia-service-0.0.1-SNAPSHOT.jar to /home/<SEU-USUARIO>/.m2/repository/br/com/caelum/eats-distancia-service/0.0.1-SNAPSHOT/eats-distancia-service-0.0.1-SNAPSHOT.jar
+  [INFO] Installing /home/<SEU-USUARIO>/Desktop/fj33-eats-distancia-service/pom.xml to /home/<SEU-USUARIO>/.m2/repository/br/com/caelum/eats-distancia-service/0.0.1-SNAPSHOT/eats-distancia-service-0.0.1-SNAPSHOT.pom
+  [INFO] Installing /home/<SEU-USUARIO>/Desktop/fj33-eats-distancia-service/target/eats-distancia-service-0.0.1-SNAPSHOT-stubs.jar to /home/<SEU-USUARIO>/.m2/repository/br/com/caelum/eats-distancia-service/0.0.1-SNAPSHOT/eats-distancia-service-0.0.1-SNAPSHOT-stubs.jar
   [INFO] ------------------------------------------------------------------------
   [INFO] BUILD SUCCESS
   [INFO] ------------------------------------------------------------------------
@@ -1156,9 +1156,9 @@ Rode o teste. Sucesso!
   [INFO]
   [INFO]
   ...
-  [INFO] Installing /home/<USUARIO-DO-CURSO>/Desktop/fj33-eats-pagamento-service/target/eats-pagamento-service-0.0.1-SNAPSHOT.jar to /home/<USUARIO-DO-CURSO>/.m2/repository/br/com/caelum/eats-pagamento-service/0.0.1-SNAPSHOT/eats-pagamento-service-0.0.1-SNAPSHOT.jar
-  [INFO] Installing /home/<USUARIO-DO-CURSO>/Desktop/fj33-eats-pagamento-service/pom.xml to /home/<USUARIO-DO-CURSO>/.m2/repository/br/com/caelum/eats-pagamento-service/0.0.1-SNAPSHOT/eats-pagamento-service-0.0.1-SNAPSHOT.pom
-  [INFO] Installing /home/<USUARIO-DO-CURSO>/Desktop/fj33-eats-pagamento-service/target/eats-pagamento-service-0.0.1-SNAPSHOT-stubs.jar to /home/<USUARIO-DO-CURSO>/.m2/repository/br/com/caelum/eats-pagamento-service/0.0.1-SNAPSHOT/eats-pagamento-service-0.0.1-SNAPSHOT-stubs.jar
+  [INFO] Installing /home/<SEU-USUARIO>/Desktop/fj33-eats-pagamento-service/target/eats-pagamento-service-0.0.1-SNAPSHOT.jar to /home/<SEU-USUARIO>/.m2/repository/br/com/caelum/eats-pagamento-service/0.0.1-SNAPSHOT/eats-pagamento-service-0.0.1-SNAPSHOT.jar
+  [INFO] Installing /home/<SEU-USUARIO>/Desktop/fj33-eats-pagamento-service/pom.xml to /home/<SEU-USUARIO>/.m2/repository/br/com/caelum/eats-pagamento-service/0.0.1-SNAPSHOT/eats-pagamento-service-0.0.1-SNAPSHOT.pom
+  [INFO] Installing /home/<SEU-USUARIO>/Desktop/fj33-eats-pagamento-service/target/eats-pagamento-service-0.0.1-SNAPSHOT-stubs.jar to /home/<SEU-USUARIO>/.m2/repository/br/com/caelum/eats-pagamento-service/0.0.1-SNAPSHOT/eats-pagamento-service-0.0.1-SNAPSHOT-stubs.jar
   [INFO] ------------------------------------------------------------------------
   [INFO] BUILD SUCCESS
   [INFO] ------------------------------------------------------------------------

@@ -34,7 +34,7 @@ Clique em _Generate Project_.
 Extraia o `eats-administrativo-service.zip` e copie a pasta para seu Desktop.
 
 <!--@note
-  Dá muito trabalho fazer essa extração do módulo Administrativo. Por isso, na aula, o jeito é dar uma passada com o pessoal na apostila e pegar o código pronto do GitLab.
+  Dá muito trabalho fazer essa extração do módulo Administrativo. Por isso, na aula, o jeito é dar uma passada com o pessoal e pegar o código pronto do GitLab.
 -->
 
 Então, devemos mover as seguintes classes do módulo Administrativo do monólito para o novo serviço:
@@ -1364,10 +1364,6 @@ Em _Dependencies_, adicione:
 Clique em _Generate Project_.
 
 Descompacte o `authorization-server.zip` para seu Desktop.
-
-<!--@note
-  Dá muito trabalho fazer essa extração do módulo Administrativo. Por isso, na aula, o jeito é dar uma passada com o pessoal na apostila e pegar o código pronto do GitLab.
--->
 
 Devemos anotar a classe `AuthorizationServerApplication` com `@EnableAuthorizationServer`:
 

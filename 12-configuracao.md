@@ -9,7 +9,7 @@
   - observabilidade
   - segurança
 
-  Os próximos 3 capítulos da apostila tratam dessas questões.
+  Os próximos 3 capítulos tratam dessas questões.
 -->
 
 Boa parte das aplicações precisa manter uma série de configurações como credenciais de BD e Message Brokers, URLs e API keys de serviços externos, entre diversas outras.
@@ -362,7 +362,7 @@ spring.cloud.config.server.git.uri=git@github.com:organizacao/repositorio-de-con
       "state": null,
       "propertySources": [
           {
-              "name": "file:///home/<USUARIO-DO-CURSO>/Desktop/config-repo/application.properties",
+              "name": "file:///home/<SEU-USUARIO>/Desktop/config-repo/application.properties",
               "source": {
                   "spring.rabbitmq.username": "eats",
                   "spring.rabbitmq.password": "caelum123",

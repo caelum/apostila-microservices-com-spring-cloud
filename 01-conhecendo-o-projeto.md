@@ -2,7 +2,7 @@
 
 ## Peça sua comida com o Caelum Eats
 
-Nesse curso, usaremos como exemplo o Caelum Eats: uma aplicação de entrega de comida nos moldes de soluções conhecidas no mercado.
+Usaremos como exemplo o Caelum Eats: uma aplicação de entrega de comida nos moldes de soluções conhecidas no mercado.
 
 Há 3 perfis de usuário:
 
@@ -174,7 +174,7 @@ São utilizados alguns componentes open-source:
   git clone https://gitlab.com/aovs/projetos-cursos/fj33-eats-monolito.git
   ```
 
-2. Abra o Eclipse, definindo como workspace `/home/<usuario-do-curso>/workspace-monolito`. Troque `<usuario-do-curso>` pelo login utilizado no curso.
+2. Abra o Eclipse, definindo como workspace `/home/<SEU-USUARIO>/workspace-monolito`. Troque `<SEU-USUARIO>` pelo seu login.
 3. No Eclipse, acesse _File > Import > Existing Maven Projects_ e clique em _Next_. Em _Root Directory_, aponte para o diretório clonado anteriormente.
 4. Acesse a classe `EatsApplication` e a execute com _CTRL+F11_. O banco de dados será criado automaticamente e alguns dados serão populados.
 5. Teste a URL `http://localhost:8080/restaurantes/1` pelo navegador e verifique se um JSON com os dados de um restaurante foi retornado.

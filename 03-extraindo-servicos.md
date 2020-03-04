@@ -398,7 +398,7 @@ Chris Richardson, no livro [Microservices Patterns](https://www.manning.com/book
 
 Frameworks Java como [Dropwizard](https://www.dropwizard.io/en/stable/) e [Spring Boot](https://spring.io/projects/spring-boot) são exemplos de Microservices chassis. 
 
-O [Spring Cloud](https://spring.io/projects/spring-cloud) é um conjunto de ferramentas que expandem as capacidades do Spring Boot e oferecem implementações para patterns comuns de sistemas distribuídos. Há, por exemplo, o [Spring Cloud Netflix](https://spring.io/projects/spring-cloud-netflix), que integra vários componentes da Netflix OSS com o ecossistema do Spring. Estudaremos várias das ferramentas do Spring Cloud durante o curso.
+O [Spring Cloud](https://spring.io/projects/spring-cloud) é um conjunto de ferramentas que expandem as capacidades do Spring Boot e oferecem implementações para patterns comuns de sistemas distribuídos. Há, por exemplo, o [Spring Cloud Netflix](https://spring.io/projects/spring-cloud-netflix), que integra vários componentes da Netflix OSS com o ecossistema do Spring. Estudaremos várias das ferramentas do Spring Cloud.
 
 No Java EE (ou Jakarta EE), foi criada a especificação MicroProfile, um conjunto de especificações com foco que servem como um Microservices chassis. Entre as implementações estão: [KumuluzEE](https://ee.kumuluz.com/), [Wildfly Swarm/Thorntail](https://thorntail.io/), baseado no Wildfly da JBoss/Red Hat, [Open Liberty](https://openliberty.io/), baseado no WebSphere Liberty da IBM, [Payara Micro](https://www.payara.fish/software/payara-server/payara-micro/), baseado no Payara, um fork do GlassFish, e [Apache TomEE](https://tomee.apache.org/), baseado no Tomcat.
 
@@ -478,7 +478,7 @@ Sam Newman, no livro [Building Microservices](https://learning.oreilly.com/libra
 3. Dividir o schema do BD, mantendo o código no monólito. Nesse momento, joins, foreign keys e integridade transacional já seriam perdidas. Para Newman, seria uma boa maneira de explorar a decomposição e ajustar detalhes.
 4. Só então o código seria dividido em serviços, poucos de cada vez, progressivamente
 
-Já no livro [Microservices AntiPatterns and Pitfalls](https://learning.oreilly.com/library/view/microservices-antipatterns-and/9781492042716/) (RICHARDS, 2016), Mark Richards discorda diametralmente. Richards argumenta que são muitos comuns ajustes na granularidade dos serviços no começo da migração. Podemos ter quebrado demais os serviços, ou de menos. E reagrupar os dados no BD é muito mais difícil, custoso e propenso a erros que reagrupar o código da aplicação. Para o autor, uma migração para Microservices deveria começar com o código. Assim que haja uma garantia que a granularidade do serviço está correta, os dados podem ser migrados. É importante ressaltar que manter o BD monolítico é uma solução paliativa. Richards deixa claro o risco dessa abordagem: acoplamento dos serviços pelo BD. Discutiremos essa ideia mais adiante no curso.
+Já no livro [Microservices AntiPatterns and Pitfalls](https://learning.oreilly.com/library/view/microservices-antipatterns-and/9781492042716/) (RICHARDS, 2016), Mark Richards discorda diametralmente. Richards argumenta que são muitos comuns ajustes na granularidade dos serviços no começo da migração. Podemos ter quebrado demais os serviços, ou de menos. E reagrupar os dados no BD é muito mais difícil, custoso e propenso a erros que reagrupar o código da aplicação. Para o autor, uma migração para Microservices deveria começar com o código. Assim que haja uma garantia que a granularidade do serviço está correta, os dados podem ser migrados. É importante ressaltar que manter o BD monolítico é uma solução paliativa. Richards deixa claro o risco dessa abordagem: acoplamento dos serviços pelo BD. Discutiremos essa ideia mais adiante.
 
 Já em seu novo livro [Monolith to Microservices](https://learning.oreilly.com/library/view/monolith-to-microservices/9781492047834/) (NEWMAN, 2019), Sam Newman explora diferentes abordagens para extração de serviços: pelo BD primeiro, pelo código primeiro e BD e código juntos.
 
@@ -876,7 +876,7 @@ class CorsConfig implements WebMvcConfigurer {
 
 Faça um novo pedido, crie e confirme um pagamento. Deve funcionar!
 
-> Note apenas um detalhe: o status do pedido, exibido na tela após a confirmação do pagamento, **está _REALIZADO_ e não _PAGO_**. Isso ocorre porque removemos a chamada à classe `PedidoService`, que ainda está no módulo `eats-pedido` do monólito. Corrigiremos esse detalhe mais adiante no curso.
+> Note apenas um detalhe: o status do pedido, exibido na tela após a confirmação do pagamento, **está _REALIZADO_ e não _PAGO_**. Isso ocorre porque removemos a chamada à classe `PedidoService`, que ainda está no módulo `eats-pedido` do monólito. Corrigiremos esse detalhe mais adiante.
 
 ### Apagando código de pagamentos do monólito
 
@@ -923,7 +923,7 @@ Extraímos nosso primeiro serviço do monólito. A evolução do código de paga
   git clone https://gitlab.com/aovs/projetos-cursos/fj33-eats-pagamento-service.git
   ```
 
-  Vamos criar um workspace do Eclipse separado para os Microservices, mantendo aberto o workspace com o monólito. Para isso, clique no ícone do Eclipse da área de trabalho. Em _Workspace_, defina `/home/<usuario-do-curso>/workspace-microservices`, onde `<usuario-do-curso>` é o login do curso.
+  Vamos criar um workspace do Eclipse separado para os Microservices, mantendo aberto o workspace com o monólito. Para isso, clique no ícone do Eclipse da área de trabalho. Em _Workspace_, defina `/home/<SEU-USUARIO>/workspace-microservices`, onde `<SEU-USUARIO>` é o seu login.
 
   No Eclipse, importe o projeto `fj33-eats-pagamento-service`, usando o menu _File > Import > Existing Maven Projects_.
 
@@ -1016,7 +1016,7 @@ Extraímos nosso primeiro serviço do monólito. A evolução do código de paga
 
   Acesse `http://localhost:4200` e realize um pedido. Tente criar um pagamento.
 
-  Observe que, após a confirmação do pagamento, o status do pedido **está _REALIZADO_ e não _PAGO_**. Isso ocorre porque removemos a chamada à classe `PedidoService`, cujo código ainda está no monólito. Corrigiremos esse detalhe mais adiante no curso.
+  Observe que, após a confirmação do pagamento, o status do pedido **está _REALIZADO_ e não _PAGO_**. Isso ocorre porque removemos a chamada à classe `PedidoService`, cujo código ainda está no monólito. Corrigiremos esse detalhe mais adiante.
 
 ## Criando um Microservice de distância
 

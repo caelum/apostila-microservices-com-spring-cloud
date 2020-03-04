@@ -2,7 +2,7 @@
 
 ## Monitorando um sistema complexo 
 
-À medida que fomos avançando no curso, a Arquitetura do Caelum Eats foi aumentando progressivamente de complexidade. Temos cada vez mais componentes e, consequentemente, cada vez mais coisas podem apresentar erros.
+À medida que fomos avançando, a Arquitetura do Caelum Eats foi aumentando progressivamente de complexidade. Temos cada vez mais componentes e, consequentemente, cada vez mais coisas podem apresentar erros.
 
 ![Componentes do back-end do Caelum Eats, com BDs omitidos {w=79}](imagens/13-monitoramento-e-observabilidade/backend-caelum-eats-todos-os-componentes-menos-bd.png)
 
