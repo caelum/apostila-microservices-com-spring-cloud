@@ -1292,7 +1292,7 @@ Há extensões do OAuth 2.0 como o [OpenID Connect (OIDC)](https://openid.net/co
 
 O foco original do OAuth 2.0, na verdade, é permitir que aplicações de terceiros usem informações de usuários em serviços como Google, Facebook e GitHub. Quando efetuamos login em uma aplicação com uma conta do Facebook ou quando permitimos que um serviço de Integração Contínua como o Travis CI acesse nosso repositório no GitHub, estamos usando OAuth 2.0.
 
-Um padrão como o OAuth 2.0 nos permite instalar softwares como KeyCloak, WSO2 Identity Server, OpenAM ou Gluu e até usar soluções prontas de _identity as a service_ (IDaaS) como Auth0 ou Okta.
+Um padrão como o OAuth 2.0 nos permite instalar softwares como [Keycloak](https://www.keycloak.org/), [WSO2 Identity Server](https://wso2.com/identity-and-access-management/), [OpenAM](https://www.openidentityplatform.org/openam) ou [Gluu](https://www.gluu.org/) e até usar soluções prontas de _identity as a service_ (IDaaS) como [Auth0](https://auth0.com/) ou [Okta](https://www.okta.com/).
 
 E, claro, podemos usar as soluções do Spring: **[Spring Security OAuth](https://spring.io/projects/spring-security-oauth)**, que estende o Spring Security fornecendo implementações para OAuth 1 e OAuth 2.0. Há ainda o **[Spring Cloud Security](https://spring.io/projects/spring-cloud-security)**, que traz soluções compatíveis com outros projetos do Spring Cloud.
 
