@@ -336,7 +336,7 @@ Martin Fowler e James Lewis dizem em seu artigo sobre [Microservices](https://ma
   Alexandre: eu já trabalhei, nos idos de 2013, como analista de integração em uma grande empresa de seguros do Brasil. Haviam 5 diretorias: Seguros, Saúde, Previdência, Capitalização e Consórcios. Um serviço era basicamente uma diretoria. Portanto, tínhamos 5 serviços. Uma história interessante é que uma merge 5 empresas diferentes com sistemas feitos em COBOL, Oracle Forms + PL/SQL, SQL Server + T-SQL e até Web Services SOAP. E tudo isso tinha que ser vendido como uma coisa só, num front-end. Era usado um ESB de um desses grandes players do mercado de TI.
 -->
 
-Henrique Lobo mostra em seu artigo [Repensando micro serviços](https://www.itexto.com.br/devkico/?p=1768) que SOA como descrito pelo consórcio de padrões abertos [OASIS](https://en.wikipedia.org/wiki/OASIS_(organization) é muito parecido com o espírito dos Microservices.
+Henrique Lobo mostra em seu artigo [Repensando micro serviços](https://www.itexto.com.br/devkico/?p=1768) que SOA como descrito pelo consórcio de padrões abertos [OASIS](https://en.wikipedia.org/wiki/OASIS_%28organization%29) é muito parecido com o espírito dos Microservices.
 
 Sam Newman, em seu livro [Building Microservices](https://learning.oreilly.com/library/view/building-microservices/9781491950340/) (NEWMAN, 2015), reconhece que SOA trouxe boas ideias, mas que houve uma falta de consenso em como fazer SOA bem e dificuldade em ter uma narrativa alternativa à dos vendedores. SOA passou a ser visto como uma coleção de ferramentas e não como uma abordagem arquitetural. Ainda fala que uma Arquitetura de Microservices está para SOA assim como XP e Scrum estão para Agile: uma abordagem específica que veio de projetos reais.
 
