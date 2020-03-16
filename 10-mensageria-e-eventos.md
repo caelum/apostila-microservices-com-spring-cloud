@@ -287,7 +287,6 @@ Mais informações na documentação do RabbitMQ: https://www.rabbitmq.com/tutor
   ```yaml
   rabbitmq:
     image: "rabbitmq:3-management"
-    restart: on-failure
     ports:
       - "5672:5672"
       - "15672:15672"

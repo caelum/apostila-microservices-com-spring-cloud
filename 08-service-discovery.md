@@ -534,7 +534,6 @@ Mesmo com apenas um servidor, é necessário configurarmos o endereço do cluste
 ```yaml
   consul:
     image: consul:1.5
-    restart: on-failure
     ports:
       - "8500:8500"
       - "8600:8600"
