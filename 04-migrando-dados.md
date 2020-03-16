@@ -80,126 +80,11 @@ Por enquanto, apenas criaremos os servidores de cada BD. Daria trabalho instalar
 
 > O curso [Infraestrutura ágil com Docker e Docker Swarm](https://www.caelum.com.br/curso-infraestrutura-agil-com-docker-e-docker-swarm) (DO-26) da Caelum aprofunda nos conceitos do Docker e tecnologias relacionadas.
 
-## Criando uma nova instância do MySQL a partir do Docker
+Vamos definir um MySQL 5.7 para o serviço de pagamentos com as seguintes configurações: `3307` como porta, `caelum123` como senha do `root` e `eats_pagamento` como um _database_ pré-configurado com o usuário `pagamento` e a senha `pagamento123`.
 
-Abra um Terminal e baixe a imagem do MySQL 5.7 para sua máquina com o seguinte comando:
+Além disso, vamos definir um MongoDB 3.6, que será executado na porta `27018`.
 
-```sh
-docker image pull mysql:5.7
-```
-
-Suba um container do MySQL 5.7 com o seguinte comando:
-
-```sh
-docker container run --rm -d -p 3307:3306 --name eats.mysql -e MYSQL_ROOT_PASSWORD=caelum123 -e MYSQL_DATABASE=eats_pagamento -e MYSQL_USER=pagamento -e MYSQL_PASSWORD=pagamento123 mysql:5.7
-```
-
-Usamos as configurações:
-
-- `--rm` para remover o container quando ao sair.
-- `-d`, ou `--detach`, para rodar o container no background, imprimindo o id do container e liberando o Terminal para outros comandos.
-- `-p`, ou `--publish`, que associa a porta do container ao host. No nosso caso, associamos a porta `3307` do host à porta padrão do MySQL (`3306`) do container.
-- `--name`, define um apelido para o container.
-- `-e`, ou `--env`, define variáveis de ambiente para o container. No caso, definimos a senha do usuário `root` por meio da variável `MYSQL_ROOT_PASSWORD`. Também definimos um database a ser criado na inicialização do container e seu usuário e senha, pelas variáveis `MYSQL_DATABASE`, `MYSQL_USER` e `MYSQL_PASSWORD`, respectivamente.
-
-Mais detalhes sobre essas opções podem ser encontrados em: https://docs.docker.com/engine/reference/commandline/run/
-
-Liste os containers que estão sendo executados pelo Docker com o comando:
-
-```sh
-docker container ps
-```
-
-Deve aparecer algo como:
-
-```txt
-CONTAINER ID                                                       IMAGE               COMMAND                         CREATED             STATUS              PORTS                               NAMES
-183bc210a6071b46c4dd790858e07573b28cfa6394a7017cb9fa6d4c9af71563   mysql:5.7           "docker-entrypoint.sh mysqld"   16 minutes ago      Up 16 minutes       33060/tcp, 0.0.0.0:3307->3306/tcp   eats.mysql
-```
-
-É possível formatar as informações, deixando a saída do comando mais enxuta. Para isso, use a opção `--format`:
-
-```sh
-docker container ps --format "{{.Image}}\t{{.Names}}"
-```
-
-O resultado será semelhante a:
-
-```txt
-mysql:5.7     eats.mysql
-```
-
-Acesse os logs do container `eats.mysql` com o comando:
-
-```sh
-docker container logs eats.mysql
-```
-
-Podemos executar um comando dentro de um container por meio do `docker exec`.
-
-Para acessar a interface de linha de comando do MySQL (o comando `mysql`) com o database e usuário criados em passos anteriores, devemos executar:
-
-```sh
-docker container exec -it eats.mysql mysql -upagamento -p eats_pagamento
-```
-
-A opção `-i` (ou `--interactive`) repassa a entrada padrão do host para o container do Docker.
-
-Já a opção `-t` (ou `--tty`) simula um Terminal dentro do container.
-
-Informe a senha `pagamento123`, registrada em passos anteriores.
-
-Devem ser impressas informações sobre o MySQL, cuja versão deve ser _5.7.26 MySQL Community Server (GPL)_.
-
-Digite o seguinte comando:
-
-```sql
-show databases;
-```
-
-Deve ser exibido algo semelhante a:
-
-```txt
-+--------------------+
-| Database           |
-+--------------------+
-| information_schema |
-| eats_pagamento     |
-+--------------------+
-2 rows in set (0.00 sec)
-```
-
-Para sair, digite `exit`.
-
-Pare a execução do container `eats.mysql` com o comando a seguir:
-
-```sh
-docker container stop eats.mysql
-```
-
-## Criando uma instância do MongoDB a partir do Docker
-
-Baixe a imagem do MongoDB 3.6 com o comando a seguir:
-
-```sh
-docker image pull mongo:3.6
-```
-
-Execute o MongoDb 3.6 em um container com o comando:
-
-```sh
-docker container run --rm -d -p 27018:27017 --name eats.mongo mongo:3.6
-```
-
-Note que mudamos a porta do host para `27018`. A porta padrão do MongoDB é `27017`.
-
-Liste os containers, obtenha os logs de `eats.mongo` e pare a execução. Use como exemplo os comandos listados no exercício do MySQL.
-
-## Simplificando o gerenciamento dos containers com Docker Compose
-
-O Docker Compose permite definir uma série de _services_ (cuidado com o nome!) que permitem descrever a configuração de containers. Com essa ferramenta, é possível disparar novas instâncias de maneira muito fácil!
-
-Para isso, basta definirmos um arquivo `docker-compose.yml`. Os services devem ter um nome e referências às imagens do Docker Hub e podem ter definições de portas utilizadas, variáveis de ambiente e diversas outras configurações.
+O arquivo `docker-compose.yml` com o MySQL de pagamentos e o MongoDB de distância ficaria conforme a seguir:
 
 ####### docker-compose.yml
 
@@ -209,7 +94,6 @@ version: '3'
 services:
   mysql.pagamento:
     image: mysql:5.7
-    restart: on-failure
     ports:
       - "3307:3306"
     environment:
@@ -217,51 +101,18 @@ services:
       MYSQL_DATABASE: eats_pagamento
       MYSQL_USER: pagamento
       MYSQL_PASSWORD: pagamento123
+    volumes:
+      - mysql.eats.pagamento:/var/lib/mysql
   mongo.distancia:
     image: mongo:3.6
-    restart: on-failure
     ports:
       - "27018:27017"
+    volumes:
+      - mongo.eats.distancia:/data/db
+volumes:
+  mysql.eats.pagamento:
+  mongo.eats.distancia:
 ```
-
-Para subir os serviços definidos no `docker-compose.yml`, execute o comando:
-
-```sh
-docker-compose up -d
-```
-A opção `-d`, ou `--detach`, roda os containers no background, liberando o Terminal.
-
-É possível executar um Terminal diretamente em uma dos containers criados pelo Docker Compose com o comando `docker-compose exec`.
-
-Por exemplo, para acessar o comando `mongo`, a interface de linha de comando do MongoDB, do service `mongo.distancia`, faça:
-
-```sh
-docker-compose exec mongo.distancia mongo
-```
-
-Você pode obter os logs de ambos os containers com o seguinte comando:
-
-```sh
-docker-compose logs
-```
-
-Caso queira os logs apenas de um container específico, basta passar o nome do _service_ (o termo para uma configuração do Docker Compose). Para o MySQL, seria algo como:
-
-```sh
-docker-compose logs mysql.pagamento
-```
-
-Para interromper todos os _services_ sem remover os containers, volumes e imagens associados, use:
-
-```sh
-docker-compose stop
-```
-
-Depois de parados com `stop`, para iniciá-los novamente, faça um `docker-compose start`.
-
-É possível parar e remover um _service_ específico, passando seu nome no final do comando.
-
-_ATENÇÃO: **evite** usar o comando `docker-compose down`. Esse comando apagará todos os dados dos seus BD. Use apenas o comando `docker-compose stop`._
 
 ## Exercício: Gerenciando containers de infraestrutura com Docker Compose
 
@@ -290,7 +141,37 @@ _ATENÇÃO: **evite** usar o comando `docker-compose down`. Esse comando apagar�
   4890dcb9e898        mongo:3.6           "docker-entrypoint..."   26 minutes ago      Up 3 minutes        0.0.0.0:27018->27017/tcp            eats-microservices_mongo.distancia_1
   ```
 
-3. Acesse o MongoDB do service `mongo.distancia` com o comando:
+3. Acesse o MySQL do serviço de pagamentos com o comando: 
+
+  ```sh
+  docker-compose exec mysql.pagamento mysql -upagamento -p
+  ```
+
+  Informe a senha `pagamento123`, registrada em passos anteriores.
+
+  Informações sobre o MySQL, como _Server version: 5.7.29 MySQL Community Server (GPL)_ devem ser exibidas.
+
+  Digite o comando:
+
+  ```sql
+  show databases;
+  ```
+
+  Deve ser exibido algo semelhante a:
+
+  ```txt
+  +--------------------+
+  | Database           |
+  +--------------------+
+  | information_schema |
+  | eats_pagamento     |
+  +--------------------+
+  2 rows in set (0.00 sec)
+  ```
+
+  Para sair, digite `exit`.
+
+4. Acesse o MongoDB do serviço de distância com o comando:
 
   ```sh
   docker-compose exec mongo.distancia mongo
@@ -314,7 +195,7 @@ _ATENÇÃO: **evite** usar o comando `docker-compose down`. Esse comando apagar�
 
   Para sair, digite `quit()`, com os parênteses.
 
-4. Observe os logs dos services com o comando:
+5. Observe os logs dos services com o comando:
 
   ```sh
   docker-compose logs
