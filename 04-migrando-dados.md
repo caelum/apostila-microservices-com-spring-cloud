@@ -145,7 +145,17 @@ volumes:
   docker-compose up -d
   ```
 
-  Observe os containers sendo executados com o comando do Docker:
+  O MySQL do Monólito deve continuar no ar e os containers do MySQL de pagamentos e do MongoDB de distância devem ser criados. O resultado deve ser semelhante ao seguinte:
+
+  ```txt
+  Creating volume "eats-microservices_mysql.eats.pagamento" with default driver
+  Creating volume "eats-microservices_mongo.eats.distancia" with default driver
+  eats-microservices_mysql.monolito_1 is up-to-date
+  Creating eats-microservices_mysql.pagamento_1 ... done
+  Creating eats-microservices_mongo.distancia_1 ... done
+  ```
+
+  Observe quais os containers sendo executados com o comando:
 
   ```sh
   docker container ps
@@ -155,8 +165,9 @@ volumes:
 
   ```txt
   CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                               NAMES
-  49bf0d3241ad        mysql:5.7           "docker-entrypoint..."   26 minutes ago      Up 3 minutes        33060/tcp, 0.0.0.0:3308->3306/tcp   eats-microservices_mysql.pagamento_1
   4890dcb9e898        mongo:3.6           "docker-entrypoint..."   26 minutes ago      Up 3 minutes        0.0.0.0:27018->27017/tcp            eats-microservices_mongo.distancia_1
+  49bf0d3241ad        mysql:5.7           "docker-entrypoint..."   26 minutes ago      Up 3 minutes        33060/tcp, 0.0.0.0:3308->3306/tcp   eats-microservices_mysql.pagamento_1
+  6b8c11246884        mysql:5.7           "docker-entrypoint..."   5 hours ago         Up 5 hours          33060/tcp, 0.0.0.0:3307->3306/tcp   eats-microservices_.mysql.monolito_1
   ```
 
 3. Acesse o MySQL do serviço de pagamentos com o comando: 
@@ -213,7 +224,7 @@ volumes:
 
   Para sair, digite `quit()`, com os parênteses.
 
-5. Observe os logs dos services com o comando:
+5. Observe os logs com o comando:
 
   ```sh
   docker-compose logs
@@ -393,10 +404,10 @@ Novos pagamentos serão armazenados apenas no schema `eats_pagamento`. Os dados 
 2. Verifique se o conteúdo do database `eats_pagamento` condiz com o esperado, digitando os seguintes comandos em um Terminal:
 
   ```sh
-  mysql -u <SEU USUÁRIO> -p eats_pagamento
+  mysql -u eats -p eats_pagamento
   ```
 
-  Troque `<SEU USUÁRIO>` pelo usuário informado pelo instrutor. Quando solicitada, digite a senha informada pelo instrutor.
+  Quando solicitada, digite a senha `eats123`.
 
   Dentro do MySQL, execute a seguinte query:
 
