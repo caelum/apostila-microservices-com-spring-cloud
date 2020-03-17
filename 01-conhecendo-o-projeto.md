@@ -174,10 +174,11 @@ São utilizados alguns componentes open-source:
   git clone https://gitlab.com/aovs/projetos-cursos/fj33-eats-monolito.git
   ```
 
-2. Subiremos o MySQL pelo Docker Compose. Para isso, na pasta do back-end do projeto, execute o seguinte comando:
+2. O MySQL será executado pelo Docker Compose. Para isso, baixe e execute o `docker-compose.yml` para o seu Desktop com os seguintes comandos:
 
   ```sh
-  cd ~/Desktop/fj33-eats-monolito
+  cd ~/Desktop/
+  curl https://gitlab.com/snippets/1954188/raw > docker-compose.yml
   docker-compose up -d
   ```
 
@@ -223,7 +224,7 @@ Atualmente, só são aceitos cartões de débito, crédito e vale refeição. En
 
 Entre especialistas de negócio, desenvolvedores e operações, a equipe passou a ter algumas dezenas de pessoas, o que complica incrivelmente a comunicação.
 
-Os desenvolvedores passaram a reclamar do código, dizendo que é difícil de entender e de encontrar onde devem ser implementadas manutenções, correções e novas funcionalidades.
+Os desenvolvedores passaram a reclamar do código, dizendo que é difícil de entender e encontrar onde devem ser implementadas manutenções, correções e novas funcionalidades.
 
 Há ainda problemas de performance, especialmente no cálculo dos restaurantes mais próximos ao CEP informado por um cliente. Essa degradação da performance acaba afetando todas as outras partes da aplicação.
 

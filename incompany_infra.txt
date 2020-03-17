@@ -12,8 +12,6 @@ Node 8
 Angular CLI 7
 Visual Studio Code 1.41.1
 
-MySQL 5.6 com mysqldump
-
 Docker 17.05
 Docker Compose 1.22
 

@@ -80,11 +80,11 @@ Por enquanto, apenas criaremos os servidores de cada BD. Daria trabalho instalar
 
 > O curso [Infraestrutura ágil com Docker e Docker Swarm](https://www.caelum.com.br/curso-infraestrutura-agil-com-docker-e-docker-swarm) (DO-26) da Caelum aprofunda nos conceitos do Docker e tecnologias relacionadas.
 
-Vamos definir um MySQL 5.7 para o serviço de pagamentos com as seguintes configurações: `3307` como porta, `caelum123` como senha do `root` e `eats_pagamento` como um _database_ pré-configurado com o usuário `pagamento` e a senha `pagamento123`.
+Vamos definir um MySQL 5.7 para o serviço de pagamentos com as seguintes configurações: `3308` como porta, `caelum123` como senha do `root` e `eats_pagamento` como um _database_ pré-configurado com o usuário `pagamento` e a senha `pagamento123`.
 
 Além disso, vamos definir um MongoDB 3.6, que será executado na porta `27018`.
 
-O arquivo `docker-compose.yml` com o MySQL de pagamentos e o MongoDB de distância ficaria conforme a seguir:
+Devemos adicionar, ao arquivo `docker-compose.yml`, o MySQL de pagamentos e o MongoDB de distância:
 
 ####### docker-compose.yml
 
@@ -95,7 +95,7 @@ services:
   mysql.pagamento:
     image: mysql:5.7
     ports:
-      - "3307:3306"
+      - "3308:3306"
     environment:
       MYSQL_ROOT_PASSWORD: caelum123
       MYSQL_DATABASE: eats_pagamento
@@ -137,7 +137,7 @@ volumes:
 
   ```txt
   CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                               NAMES
-  49bf0d3241ad        mysql:5.7           "docker-entrypoint..."   26 minutes ago      Up 3 minutes        33060/tcp, 0.0.0.0:3307->3306/tcp   eats-microservices_mysql.pagamento_1
+  49bf0d3241ad        mysql:5.7           "docker-entrypoint..."   26 minutes ago      Up 3 minutes        33060/tcp, 0.0.0.0:3308->3306/tcp   eats-microservices_mysql.pagamento_1
   4890dcb9e898        mongo:3.6           "docker-entrypoint..."   26 minutes ago      Up 3 minutes        0.0.0.0:27018->27017/tcp            eats-microservices_mongo.distancia_1
   ```
 
@@ -285,7 +285,7 @@ O database do serviço de pagamentos precisa ser modificado para um novo. Podemo
 
 ```properties
 s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶u̶r̶l̶=̶j̶d̶b̶c̶:̶m̶y̶s̶q̶l̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶/̶e̶a̶t̶s̶?̶c̶r̶e̶a̶t̶e̶D̶a̶t̶a̶b̶a̶s̶e̶I̶f̶N̶o̶t̶E̶x̶i̶s̶t̶=̶t̶r̶u̶e̶
-spring.datasource.url=jdbc:mysql://localhost/eats_pagamento?createDatabaseIfNotExist=true
+spring.datasource.url=jdbc:mysql://localhost/eats_pagamento:3307?createDatabaseIfNotExist=true
 ```
 
 O mesmo usuário `root` deve ter acesso a ambos os databases: `eats`, do monólito, e `eats_pagamento`, do serviço de pagamentos. Dessa maneira, é possível executar scripts que migram dados de um database para outro.
@@ -332,7 +332,7 @@ Após executar `EatsPagamentoServiceApplication`, nos logs, devem aparecer infor
 2019-05-22 18:33:56.439  INFO 30484 --- [  restartedMain] o.f.c.internal.license.VersionPrinter    : Flyway Community Edition 5.2.4 by Boxfuse
 2019-05-22 18:33:56.448  INFO 30484 --- [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
 2019-05-22 18:33:56.632  INFO 30484 --- [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
-2019-05-22 18:33:56.635  INFO 30484 --- [  restartedMain] o.f.c.internal.database.DatabaseFactory  : Database: jdbc:mysql://localhost/eats_pagamento (MySQL 5.6)
+2019-05-22 18:33:56.635  INFO 30484 --- [  restartedMain] o.f.c.internal.database.DatabaseFactory  : Database: jdbc:mysql://localhost:3307/eats_pagamento (MySQL 5.7)
 2019-05-22 18:33:56.708  INFO 30484 --- [  restartedMain] o.f.core.internal.command.DbValidate     : Successfully validated 2 migrations (execution time 00:00.016s)
 2019-05-22 18:33:56.840  INFO 30484 --- [  restartedMain] o.f.c.i.s.JdbcTableSchemaHistory         : Creating Schema History table: `eats_pagamento`.`flyway_schema_history`
 2019-05-22 18:33:57.346  INFO 30484 --- [  restartedMain] o.f.core.internal.command.DbMigrate      : Current version of schema `eats_pagamento`: << Empty Schema >>
@@ -344,10 +344,8 @@ Após executar `EatsPagamentoServiceApplication`, nos logs, devem aparecer infor
 Para verificar se o conteúdo do database `eats_pagamento` condiz com o esperado, podemos acessar o MySQL em um Terminal:
 
 ```sh
-mysql -u <SEU USUÁRIO> -p eats_pagamento
+mysql -u eats -p eats_pagamento
 ```
-
-`<SEU USUÁRIO>` deve ser trocado pelo usuário do banco de dados. Deve ser solicitada uma senha.
 
 Dentro do MySQL, deve ser executada a seguinte query:
 
@@ -397,7 +395,7 @@ Nesse momento, temos um servidor de BD com Schemas separados para o Monólito e 
 No MySQL, o Schema (ou _database_) pode ser criado, se ainda não existir, quando a aplicação conecta com o BD se usarmos a propriedade `createDatabaseIfNotExist`. Em um projeto Spring Boot, isso pode ser definido na URL de conexão do _data source_:
 
 ```properties
-spring.datasource.url=jdbc:mysql://localhost:3307/eats_pagamento?createDatabaseIfNotExist=true
+spring.datasource.url=jdbc:mysql://localhost:3308/eats_pagamento?createDatabaseIfNotExist=true
 ```
 
 Com o Schema criado no MySQL de Pagamentos, precisamos criar as estruturas das tabelas e migrar os dados. Para isso, podemos gerar um dump com o comando `mysqldump` a partir do Schema `eats_pagamento` do MySQL do Monólito. Será gerado um script `.sql` com todo o DDL e DML do Schema.
@@ -448,7 +446,7 @@ O script com o dump pode ser carregado no outro MySQL, específico de Pagamentos
   Para isso, vamos usar o comando `mysql` informando _host_ e porta do container Docker:
 
   ```sh
-  mysql -u pagamento -p --host 127.0.0.1 --port 3307 eats_pagamento < eats_pagamento.sql
+  mysql -u pagamento -p --host 127.0.0.1 --port 3308 eats_pagamento < eats_pagamento.sql
   ```
 
   _Observação: o comando `mysql` não aceita `localhost`, apenas o IP `127.0.0.1`._
@@ -479,7 +477,7 @@ O script com o dump pode ser carregado no outro MySQL, específico de Pagamentos
 4. Para verificar se a importação do dump foi realizada com sucesso, vamos acessar o comando `mysql` sem passar nenhum arquivo:
 
   ```sh
-  mysql -u pagamento -p --host 127.0.0.1 --port 3307 eats_pagamento
+  mysql -u pagamento -p --host 127.0.0.1 --port 3308 eats_pagamento
   ```
 
   Informe a senha `pagamento123`.
@@ -519,7 +517,7 @@ Para isso, basta alterarmos a URL, usuário e senha de BD do serviço de pagamen
 
 ```properties
 s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶u̶r̶l̶=̶j̶d̶b̶c̶:̶m̶y̶s̶q̶l̶:̶/̶/̶l̶o̶c̶a̶l̶h̶o̶s̶t̶/̶e̶a̶t̶s̶_̶p̶a̶g̶a̶m̶e̶n̶t̶o̶?̶c̶r̶e̶a̶t̶e̶D̶a̶t̶a̶b̶a̶s̶e̶I̶f̶N̶o̶t̶E̶x̶i̶s̶t̶=̶t̶r̶u̶e̶
-spring.datasource.url=jdbc:mysql://localhost:3307/eats_pagamento?createDatabaseIfNotExist=true
+spring.datasource.url=jdbc:mysql://localhost:3308/eats_pagamento?createDatabaseIfNotExist=true
 
 s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶u̶s̶e̶r̶n̶a̶m̶e̶=̶<̶S̶E̶U̶ ̶U̶S̶U̶A̶R̶I̶O̶>̶
 spring.datasource.username=pagamento
@@ -528,7 +526,7 @@ s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶p̶a̶s̶s̶w̶o̶r̶d̶=�
 spring.datasource.password=pagamento123
 ```
 
-Note que a porta `3307` foi incluída na URL, mas mantivemos ainda `localhost`.
+Note que a porta `3308` foi incluída na URL, mas mantivemos ainda `localhost`.
 
 ## Exercício: fazendo serviço de pagamentos apontar para o BD específico
 

@@ -735,6 +735,11 @@ Para piorar o problema, raramente temos apenas uma UI. Além da Web, podemos ter
 
 Como resolver isso?
 
+<!--@note
+  Alexandre Aquiles: Coloquei as figuras de alguns posts da Netflix e o post do Sam Newman sobre BFF em uns slides:
+  https://slides.com/alexandreaquiles/apresentacao-api-gateway-composition-e-bff/fullscreen#/
+-->
+
 Poderíamos ter um time para a API. Só que esse time teria uma coordenação com cada _downstream service_ e também com cada UI.
 
 Uma solução melhor, usada pela SoundCloud e descrita por Phil Calçado no post [The Back-end for Front-end Pattern (BFF)](https://philcalcado.com/2015/09/18/the_back_end_for_front_end_pattern_bff.html) (CALÇADO, 2015) é ter um API Gateway com API Compositions específicas para cada front-end. Calçado relata que Nick Fisher, tech lead do time Web da SoundCloud, cunhou o termo _Back-end for Front-end_, ou simplesmente **BFF**.

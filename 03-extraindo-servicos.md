@@ -627,9 +627,9 @@ No arquivo `src/main/resources/application.properties`, modifique a porta para `
 server.port = 8081
 
 #DATASOURCE CONFIGS
-spring.datasource.url=jdbc:mysql://localhost/eats?createDatabaseIfNotExist=true
-spring.datasource.username=<SEU USUARIO>
-spring.datasource.password=<SUA SENHA>
+spring.datasource.url=jdbc:mysql://localhost/eats:3307?createDatabaseIfNotExist=true
+spring.datasource.username=eats
+spring.datasource.password=eats123
 
 #JPA CONFIGS
 spring.jpa.hibernate.ddl-auto=validate
@@ -637,8 +637,6 @@ spring.jpa.show-sql=true
 
 spring.jackson.serialization.fail-on-empty-beans=false
 ```
-
-Observação: `<SEU USUARIO>` e `<SUA SENHA>` devem ser trocados pelos valores do MySQL do monólito.
 
 ### Extraindo código de pagamentos do monólito
 
@@ -1057,9 +1055,9 @@ Edite o arquivo `src/main/resources/application.properties`, modificando a porta
 server.port = 8082
 
 #DATASOURCE CONFIGS
-spring.datasource.url=jdbc:mysql://localhost/eats?createDatabaseIfNotExist=true
-spring.datasource.username=<SEU USUARIO>
-spring.datasource.password=<SUA SENHA>
+spring.datasource.url=jdbc:mysql://localhost/eats:3307?createDatabaseIfNotExist=true
+spring.datasource.username=eats
+spring.datasource.password=eats123
 
 #JPA CONFIGS
 spring.jpa.hibernate.ddl-auto=validate
@@ -1067,8 +1065,6 @@ spring.jpa.show-sql=true
 
 spring.jackson.serialization.fail-on-empty-beans=false
 ```
-
-Troque `<SEU USUARIO>` e `<SUA SENHA>` pelos valores do BD.
 
 ###  Extraindo código de distância do monólito
 

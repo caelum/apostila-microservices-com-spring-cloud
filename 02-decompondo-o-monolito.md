@@ -4,6 +4,11 @@
 
 Qual é a emoção que a palavra **monólito** traz pra você?
 
+<!--@note
+  Alexandre Aquiles: fiz a apresentação a seguir, cheia de memes, que tem esse início e dá pra usar misturando com demos do código.
+  https://slides.com/alexandreaquiles/apresentacao-monolitos-e-microservices/fullscreen#/
+-->
+
 Muitos desenvolvedores associam a palavra monólito a código mal feito, sem estrutura aparente, com muito código repetido e com dados compartilhados entre partes pouco relacionadas. É o que comumente é chamado de código **Spaghetti** ou, [Big Ball of Mud](http://www.laputan.org/mud/mud.html) (FOOTE; YODER, 1999).
 
 Porém, é possível criar monólitos bem estruturados. Uma maneira comum de organizar um monólito é usar camadas: cada camada provê um serviço para a camada de cima e é um cliente das camadas de baixo.

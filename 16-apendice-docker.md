@@ -11,14 +11,14 @@ docker image pull mysql:5.7
 Suba um container do MySQL 5.7 com o seguinte comando:
 
 ```sh
-docker container run --rm -d -p 3307:3306 --name eats.mysql -e MYSQL_ROOT_PASSWORD=caelum123 -e MYSQL_DATABASE=eats_pagamento -e MYSQL_USER=pagamento -e MYSQL_PASSWORD=pagamento123 -v eats.mysql:/var/lib/mysql mysql:5.7
+docker container run --rm -d -p 3308:3306 --name eats.mysql -e MYSQL_ROOT_PASSWORD=caelum123 -e MYSQL_DATABASE=eats_pagamento -e MYSQL_USER=pagamento -e MYSQL_PASSWORD=pagamento123 -v eats.mysql:/var/lib/mysql mysql:5.7
 ```
 
 Usamos as configurações:
 
 - `--rm` para remover o container quando ao sair.
 - `-d`, ou `--detach`, para rodar o container no background, imprimindo o id do container e liberando o Terminal para outros comandos.
-- `-p`, ou `--publish`, que associa a porta do container ao host. No nosso caso, associamos a porta `3307` do host à porta padrão do MySQL (`3306`) do container.
+- `-p`, ou `--publish`, que associa a porta do container ao host. No nosso caso, associamos a porta `3308` do host à porta padrão do MySQL (`3306`) do container.
 - `--name`, define um apelido para o container.
 - `-e`, ou `--env`, define variáveis de ambiente para o container. No caso, definimos a senha do usuário `root` por meio da variável `MYSQL_ROOT_PASSWORD`. Também definimos um database a ser criado na inicialização do container e seu usuário e senha, pelas variáveis `MYSQL_DATABASE`, `MYSQL_USER` e `MYSQL_PASSWORD`, respectivamente.
 - `-v` para preservar os dados fora do container
@@ -37,7 +37,7 @@ Deve aparecer algo como:
 
 ```txt
 CONTAINER ID                                                       IMAGE               COMMAND                         CREATED             STATUS              PORTS                               NAMES
-183bc210a6071b46c4dd790858e07573b28cfa6394a7017cb9fa6d4c9af71563   mysql:5.7           "docker-entrypoint.sh mysqld"   16 minutes ago      Up 16 minutes       33060/tcp, 0.0.0.0:3307->3306/tcp   eats.mysql
+183bc210a6071b46c4dd790858e07573b28cfa6394a7017cb9fa6d4c9af71563   mysql:5.7           "docker-entrypoint.sh mysqld"   16 minutes ago      Up 16 minutes       33060/tcp, 0.0.0.0:3308->3306/tcp   eats.mysql
 ```
 
 Acesse os logs do container `eats.mysql` com o comando:
@@ -58,7 +58,7 @@ Já a opção `-t` (ou `--tty`) simula um Terminal dentro do container.
 
 Informe a senha `pagamento123`, registrada em passos anteriores.
 
-Devem ser impressas informações sobre o MySQL, cuja versão deve ser _5.7.26 MySQL Community Server (GPL)_.
+Devem ser impressas informações sobre o MySQL. Entre elas, uma versão semelhante a: _5.7.26 MySQL Community Server (GPL)_.
 
 Digite o seguinte comando:
 
@@ -110,7 +110,7 @@ Acesse a CLI do `eats.mongo` com o comando:
 docker container exec -it eats.mongo mongo
 ```
 
-Devem aparecer informações sobre o MongoDB, como a versão, que deve ser algo como _MongoDB server version: 3.6.12_.
+Devem aparecer informações sobre o MongoDB, como a versão, que deve ser algo como: _MongoDB server version: 3.6.12_.
 
 Digite o seguinte comando:
 
@@ -149,7 +149,7 @@ services:
   mysql.pagamento:
     image: mysql:5.7
     ports:
-      - "3307:3306"
+      - "3308:3306"
     environment:
       MYSQL_ROOT_PASSWORD: caelum123
       MYSQL_DATABASE: eats_pagamento
