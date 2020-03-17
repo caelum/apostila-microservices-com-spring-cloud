@@ -627,7 +627,7 @@ No arquivo `src/main/resources/application.properties`, modifique a porta para `
 server.port = 8081
 
 #DATASOURCE CONFIGS
-spring.datasource.url=jdbc:mysql://localhost/eats:3307?createDatabaseIfNotExist=true
+spring.datasource.url=jdbc:mysql://localhost:3307/eats?createDatabaseIfNotExist=true
 spring.datasource.username=eats
 spring.datasource.password=eats123
 
@@ -1055,7 +1055,7 @@ Edite o arquivo `src/main/resources/application.properties`, modificando a porta
 server.port = 8082
 
 #DATASOURCE CONFIGS
-spring.datasource.url=jdbc:mysql://localhost/eats:3307?createDatabaseIfNotExist=true
+spring.datasource.url=jdbc:mysql://localhost:3307/eats?createDatabaseIfNotExist=true
 spring.datasource.username=eats
 spring.datasource.password=eats123
 
