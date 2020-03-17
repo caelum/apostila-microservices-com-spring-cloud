@@ -82,45 +82,63 @@ Por enquanto, apenas criaremos os servidores de cada BD. Daria trabalho instalar
 
 Vamos definir um MySQL 5.7 para o serviço de pagamentos com as seguintes configurações: `3308` como porta, `caelum123` como senha do `root` e `eats_pagamento` como um _database_ pré-configurado com o usuário `pagamento` e a senha `pagamento123`.
 
-Além disso, vamos definir um MongoDB 3.6, que será executado na porta `27018`.
-
-Devemos adicionar, ao arquivo `docker-compose.yml`, o MySQL de pagamentos e o MongoDB de distância:
+Para isso, adicione ao `docker-compose.yml`:
 
 ####### docker-compose.yml
 
 ```yml
-version: '3'
+mysql.pagamento:
+  image: mysql:5.7
+  ports:
+    - "3308:3306"
+  environment:
+    MYSQL_ROOT_PASSWORD: caelum123
+    MYSQL_DATABASE: eats_pagamento
+    MYSQL_USER: pagamento
+    MYSQL_PASSWORD: pagamento123
+  volumes:
+    - mysql.eats.pagamento:/var/lib/mysql
+```
 
-services:
-  mysql.pagamento:
-    image: mysql:5.7
-    ports:
-      - "3308:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: caelum123
-      MYSQL_DATABASE: eats_pagamento
-      MYSQL_USER: pagamento
-      MYSQL_PASSWORD: pagamento123
-    volumes:
-      - mysql.eats.pagamento:/var/lib/mysql
-  mongo.distancia:
+Adicione também o volume:
+
+####### docker-compose.yml
+
+```yml
+volumes:
+  mysql.eats.pagamento:
+```
+
+Além disso, vamos definir um MongoDB 3.6 para o serviço de distância , que será executado na porta `27018`, com o Docker Compose:
+
+####### docker-compose.yml
+
+```yml
+mongo.distancia:
     image: mongo:3.6
     ports:
       - "27018:27017"
     volumes:
       - mongo.eats.distancia:/data/db
+```
+
+Não deixe de adicionar o volume:
+
+```yml
 volumes:
-  mysql.eats.pagamento:
   mongo.eats.distancia:
 ```
 
 ## Exercício: Gerenciando containers de infraestrutura com Docker Compose
 
-1. No seu Desktop, defina um arquivo `docker-compose.yml` com o conteúdo anterior, que pode ser encontrado em: https://gitlab.com/snippets/1859850
+1. Para isso, baixe o arquivo `docker-compose.yml` completo, com o MySQL de pagamentos e o MongoDB de distância, para o seu Desktop, sobrescrevendo-o:
 
-  Observação: mantenha os TABs certinhos. São muito importantes em um arquivo `.yml`. Em caso de dúvida, peça ajuda ao instrutor.
+  ```sh
+  cd ~/Desktop/
+  curl https://gitlab.com/snippets/1859850/raw > docker-compose.yml
+  ```
 
-2. No Desktop, suba ambos os containers, do MySQL e do MongoDB, com o comando:
+2. Ainda no Desktop, suba ambos os containers, do MySQL e do MongoDB, com o comando:
 
   ```sh
   cd ~/Desktop

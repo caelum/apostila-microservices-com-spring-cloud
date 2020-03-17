@@ -280,22 +280,31 @@ O RabbitMQ já vem com alguns Exchanges de cada tipo como `amq.direct`, `(AMQP d
 
 Mais informações na documentação do RabbitMQ: https://www.rabbitmq.com/tutorials/amqp-concepts.html
 
-## Exercício: configurando o RabbitMQ no Docker
+## Configurando um RabbitMQ com Docker Compose
 
-1. Adicione ao `docker-compose.yml` a configuração de um RabbitMQ na versão 3. Mantenha as portas padrão 5672 para o MOM propriamente dito e 15672 para a UI Web de gerenciamento. Defina o usuário `eats` com a senha `caelum123`:
+Para configurar, com Docker Compose, um RabbitMQ na versão 3, com a porta `5672` para o Broker, a porta `15672` para a UI Web de gerenciamento, e o usuário `eats` com a senha `caelum123`, devemos fazer as seguintes definições:
 
-  ```yaml
-  rabbitmq:
-    image: "rabbitmq:3-management"
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: eats
-      RABBITMQ_DEFAULT_PASS: caelum123
+####### docker-compose.yml
+
+```yaml
+rabbitmq:
+  image: "rabbitmq:3-management"
+  ports:
+    - "5672:5672"
+    - "15672:15672"
+  environment:
+    RABBITMQ_DEFAULT_USER: eats
+    RABBITMQ_DEFAULT_PASS: caelum123
+```
+
+## Exercício: executando o RabbitMQ 
+
+1. Baixe o `docker-compose.yml` completo, com a configuração do RabbitMQ, para o seu Desktop com os seguintes comandos:
+
+  ```sh
+  cd ~/Desktop
+  curl https://gitlab.com/snippets/1888246/raw > docker-compose.yml
   ```
-
-  O `docker-compose.yml` completo, com a configuração do RabbitMQ, pode ser encontrado em: https://gitlab.com/snippets/1888246
 
 2. Execute novamente o seguinte comando:
 
@@ -303,7 +312,7 @@ Mais informações na documentação do RabbitMQ: https://www.rabbitmq.com/tutor
   docker-compose up -d
   ```
 
-  Deve aparecer algo como:
+  O RabbitMQ deve ser iniciado:
 
   ```txt
   eats-microservices_mysql.pagamento_1 is up-to-date

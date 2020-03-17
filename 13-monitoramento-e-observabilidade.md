@@ -581,30 +581,37 @@ No ecossistema Spring, a biblioteca de instrumentação é o [Spring Cloud Sleut
 
 Para enviar os traces para o Zipkin, basta usar a biblioteca `spring-cloud-starter-zipkin`. Por padrão, os traces são enviados via HTTP para `http://localhost:9411`. Esse endereço pode ser modificado pela configuração `spring.zipkin.baseUrl`. Se o RabbitMQ estiver no Classpath, é possível usá-lo no envio das informações com a configuração `spring.zipkin.sender.type`.
 
+## Configurando o Zipkin no Docker Compose
+
 ## Exercício: configurando o Zipkin no Docker Compose
 
-1. Para provisionar uma instância do Zipkin, adicione as seguintes configurações ao `docker-compose.yml` do seu Desktop:
+Para provisionar uma instância do Zipkin, adicione as seguintes configurações ao `docker-compose.yml`:
 
-  ####### docker-compose.yml
+####### docker-compose.yml
 
-  ```yml
-  zipkin:
-    image: openzipkin/zipkin
-    ports:
-      - "9410:9410"
-      - "9411:9411"
-    depends_on:
-      - rabbitmq
-    environment:
-      RABBIT_URI: "amqp://eats:caelum123@rabbitmq:5672"
+```yml
+zipkin:
+  image: openzipkin/zipkin
+  ports:
+    - "9410:9410"
+    - "9411:9411"
+  depends_on:
+    - rabbitmq
+  environment:
+    RABBIT_URI: "amqp://eats:caelum123@rabbitmq:5672"
+```
+
+1. Baixe o `docker-compose.yml` completo, com a configuração do Zipkin, para o seu Desktop com os seguintes comandos:
+
+  ```sh
+  cd ~/Desktop
+  curl https://gitlab.com/snippets/1888247/raw > docker-compose.yml
   ```
-
-  O `docker-compose.yml` completo, com a configuração do Zipkin, pode ser encontrado em: https://gitlab.com/snippets/1888247
 
 2. Execute o servidor do Zipkin pelo Docker Compose com o comando:
 
   ```sh
-  docker-compose up
+  docker-compose up -d
   ```
 
 3. Acesse a UI Web do Zipkin pelo navegador através da URL:

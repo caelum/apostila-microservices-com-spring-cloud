@@ -788,7 +788,7 @@ Observação: pensando em design de código, será que os métodos auxiliares `t
   
   Aprove o novo restaurante. O serviço de distância deve ter sido chamado. Veja nos logs.
 
-  No diretório do `docker-compose.yml`, acesse o database de distância no MongoDB com o Mongo Shell:
+  No diretório do `docker-compose.yml`, o Desktop, acesse o database de distância no MongoDB com o Mongo Shell:
 
   ```sh
   cd ~/Desktop
