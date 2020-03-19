@@ -937,7 +937,7 @@ Extraímos nosso primeiro serviço do monólito. A evolução do código de paga
     http://localhost:8081/pagamentos
   ```
 
-  Para que você não precise digitar muito, o comando acima está disponível em: https://gitlab.com/snippets/1859389
+  Para que você não precise digitar muito, o comando anterior está disponível em: https://gitlab.com/snippets/1859389
 
   No comando acima, usamos as seguintes opções do cURL:
 
@@ -968,8 +968,12 @@ Extraímos nosso primeiro serviço do monólito. A evolução do código de paga
   Usando o id retornado no passo anterior, teste a confirmação do pagamento pelo cURL, com o seguinte comando:
 
   ```sh
-  curl -X PUT -i http://localhost:8081/pagamentos/7
+  curl -X PUT -i http://localhost:8081/pagamentos/<ID-DO-PAGAMENTO>
   ```
+
+  O comando anterior pode ser encontrado em: https://gitlab.com/snippets/1954931
+
+  Troque `<ID-DO-PAGAMENTO>` pelo id do pagamento retornado no passo anterior.
 
   Você deve obter uma resposta semelhante a:
 
@@ -1378,6 +1382,8 @@ Ufa! Mais um serviço extraído do monólito. Em um projeto real, isso seria fei
   curl -i http://localhost:8082/restaurantes/mais-proximos/71503510
   ```
 
+  O comando anterior pode ser encontrado em: https://gitlab.com/snippets/1954938
+
   A resposta será algo como:
 
   ```txt
@@ -1402,6 +1408,8 @@ Ufa! Mais um serviço extraído do monólito. Em um projeto real, isso seria fei
   curl -i http://localhost:8082/restaurantes/mais-proximos/71503510/tipos-de-cozinha/1
   ```
 
+  O comando anterior está disponível em: https://gitlab.com/snippets/1954941
+
   A resposta será semelhante a:
 
   ```txt
@@ -1422,6 +1430,8 @@ Ufa! Mais um serviço extraído do monólito. Em um projeto real, isso seria fei
   ```sh
   curl -i http://localhost:8082/restaurantes/71503510/restaurante/1
   ```
+
+  O comando anterior pode ser encontrado em: https://gitlab.com/snippets/1954942
 
   Teremos um resultado parecido com:
 
