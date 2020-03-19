@@ -308,7 +308,7 @@ Para isso, deve ser adicionada uma dependência ao Flyway no `pom.xml` do `eats-
 </dependency>
 ```
 
-O database do serviço de pagamentos precisa ser modificado para um novo. Podemos chamá-lo de `eats_pagamento`.
+O database deve ser modificado para um novo database (ou schema) específico para o serviço de pagamentos. Podemos chamá-lo de `eats_pagamento`.
 
 ####### fj33-eats-pagamento-service/src/main/resources/application.properties
 
@@ -421,7 +421,7 @@ Novos pagamentos serão armazenados apenas no schema `eats_pagamento`. Os dados 
 
 Nesse momento, temos um servidor de BD com Schemas separados para o Monólito e para o serviço de Pagamentos. Também temos um servidor de BD específico para Pagamentos, mas ainda vazio.
 
-No MySQL, o Schema (ou _database_) pode ser criado, se ainda não existir, quando a aplicação conecta com o BD se usarmos a propriedade `createDatabaseIfNotExist`. Em um projeto Spring Boot, isso pode ser definido na URL de conexão do _data source_:
+No MySQL, o Schema (ou _database_) pode ser criado, se ainda não existir, quando a aplicação conecta com o BD se usarmos a propriedade `createDatabaseIfNotExist` na URL de conexão do _data source_:
 
 ```properties
 spring.datasource.url=jdbc:mysql://localhost:3308/eats_pagamento?createDatabaseIfNotExist=true
@@ -429,7 +429,7 @@ spring.datasource.url=jdbc:mysql://localhost:3308/eats_pagamento?createDatabaseI
 
 Com o Schema criado no MySQL de Pagamentos, precisamos criar as estruturas das tabelas e migrar os dados. Para isso, podemos gerar um dump com o comando `mysqldump` a partir do Schema `eats_pagamento` do MySQL do Monólito. Será gerado um script `.sql` com todo o DDL e DML do Schema.
 
-O script com o dump pode ser carregado no outro MySQL, específico de Pagamentos, com o comando `mysql`. Mãos à obra!
+O script com o dump pode ser carregado no outro MySQL, específico de Pagamentos, com o comando `mysql`.
 
 ![Dump do schema de Pagamentos importado para servidor de BD específico {w=65}](imagens/04-migrando-dados/dump-do-mysql-do-monolito-para-o-de-pagamentos.png)
 
