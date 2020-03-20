@@ -126,7 +126,7 @@ config  0.000GB
 local   0.000GB
 ```
 
-Para sair, digite `quit()`, com os parênteses.
+Para sair, digite `exit`.
 
 Pare a execução do container `eats.mongo` com o comando a seguir:
 

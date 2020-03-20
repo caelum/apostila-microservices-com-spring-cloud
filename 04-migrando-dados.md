@@ -222,7 +222,7 @@ volumes:
   local   0.000GB
   ```
 
-  Para sair, digite `quit()`, com os parênteses.
+  Para sair, digite `exit`.
 
 5. Observe os logs com o comando:
 
@@ -401,15 +401,18 @@ Novos pagamentos serão armazenados apenas no schema `eats_pagamento`. Os dados 
 
   Execute `EatsPagamentoServiceApplication`. Observe o resultado da execução das migrations nos logs.
 
-2. Verifique se o conteúdo do database `eats_pagamento` condiz com o esperado, digitando os seguintes comandos em um Terminal:
+2. No diretório do Docker Compose, o Desktop, acesse o MySQL do Monólito:
 
   ```sh
-  mysql -u root -p eats_pagamento
+  cd ~/Desktop
+  docker-compose exec mysql.monolito mysql -uroot -p eats_pagamento
   ```
 
   Quando solicitada, digite a senha `caelum123`.
 
-  Dentro do MySQL, execute a seguinte query:
+  _Observação: no comando anterior, já informamos o database a ser acessado._
+
+  Verifique se o conteúdo do database `eats_pagamento` condiz com o esperado com a query:
 
   ```sql
   select * from pagamento;
@@ -417,114 +420,74 @@ Novos pagamentos serão armazenados apenas no schema `eats_pagamento`. Os dados 
 
   Os pagamentos devem ter sido migrados. Note as colunas `forma_de_pagamento_id` e `pedido_id`.
 
+  Se desejar, verifique dados sobre a  execução dos scripts SQL na tabela `flyway_schema_history`.
+
 ## Migrando dados de um servidor MySQL para outro
 
-Nesse momento, temos um servidor de BD com Schemas separados para o Monólito e para o serviço de Pagamentos. Também temos um servidor de BD específico para Pagamentos, mas ainda vazio.
+Nesse momento, o MySQL monolítico tem Schemas Separados para o Monólito e para o serviço de Pagamentos. Também temos um MySQL específico para Pagamentos já com um database `eats_pagamento`, mas ainda vazio.
 
-No MySQL, o Schema (ou _database_) pode ser criado, se ainda não existir, quando a aplicação conecta com o BD se usarmos a propriedade `createDatabaseIfNotExist` na URL de conexão do _data source_:
+Precisamos migrar as estruturas das tabelas e os dados. Uma maneira de fazer isso é gerar um dump com o comando `mysqldump` a partir do database `eats_pagamento` do MySQL do Monólito.
 
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3308/eats_pagamento?createDatabaseIfNotExist=true
+Como o MySQL monolítico está sendo executado pelo Docker Compose, devemos fazer algo como:
+
+```sh
+docker-compose exec -T mysql.monolito mysqldump -uroot -pcaelum123 --opt eats_pagamento
 ```
 
-Com o Schema criado no MySQL de Pagamentos, precisamos criar as estruturas das tabelas e migrar os dados. Para isso, podemos gerar um dump com o comando `mysqldump` a partir do Schema `eats_pagamento` do MySQL do Monólito. Será gerado um script `.sql` com todo o DDL e DML do Schema.
+A opção `--opt` do `mysqldump` equivale às opções:
+
+- `--add-drop-table`, que adiciona um `DROP TABLE` antes de cada `CREATE TABLE`
+- `--add-locks`, que faz um `LOCK TABLES` e `UNLOCK TABLES` em volta de cada dump
+- `--create-options`, que inclui opções específicas do MySQL nos `CREATE TABLE`
+- `--disable-keys`, que desabilita e habilita PKs e FKs em volta de cada `INSERT`
+- `--extended-insert`, que faz um `INSERT` de múltiplos registros de uma vez
+- `--lock-tables`, que trava as tabelas antes de realizar o dump
+- `--quick`, que lê os registros um a um
+- `--set-charset`, que adiciona `default_character_set` ao dump
+
+Será gerado um script com comandos de DDL e DML do Schema.
+
+Já a opção `-T` do `docker-compose exec` desabilita o modo interativo. Dessa maneira, a saída desse comando será usada para alimentar o próximo comando.
 
 O script com o dump pode ser carregado no outro MySQL, específico de Pagamentos, com o comando `mysql`.
+
+Para usar a saída do `mysqldump` do Monólito como entrada do `mysql` de Pagamentos, podemos fazer:
+
+```sh
+docker-compose exec -T mysql.monolito mysqldump -uroot -pcaelum123 --opt eats_pagamento |
+docker-compose exec -T mysql.pagamento mysql -upagamento -ppagamento123 eats_pagamento
+```
 
 ![Dump do schema de Pagamentos importado para servidor de BD específico {w=65}](imagens/04-migrando-dados/dump-do-mysql-do-monolito-para-o-de-pagamentos.png)
 
 ## Exercício: migrando dados de pagamento para um servidor MySQL específico
 
-1. Abra um Terminal e faça um dump do dados de pagamento com o comando a seguir:
+1. Garanta que os containers de BDs estejam sendo executados:
 
   ```sh
-  mysqldump -u <SEU USUÁRIO> -p --opt eats_pagamento > eats_pagamento.sql
+  cd ~/Desktop
+  docker-compose up -d 
   ```
 
-  Peça ao instrutor o usuário do BD e use em `<SEU USUÁRIO>`. Peça também a senha.
-
-  O comando anterior cria um arquivo `eats_pagamento.sql` com todo o schema e dados do database `eats_pagamento`.
-
-  A opção `--opt` equivale às opções:
-  
-    - `--add-drop-table`, que adiciona um `DROP TABLE` antes de cada `CREATE TABLE`
-    - `--add-locks`, que faz um `LOCK TABLES` e `UNLOCK TABLES` em volta de cada dump
-    - `--create-options`, que inclui opções específicas do MySQL nos `CREATE TABLE`
-    - `--disable-keys`, que desabilita e habilita PKs e FKs em volta de cada `INSERT`
-    - `--extended-insert`, que faz um `INSERT` de múltiplos registros de uma vez
-    - `--lock-tables`, que trava as tabelas antes de realizar o dump
-    - `--quick`, que lê os registros um a um
-    - `--set-charset`, que adiciona `default_character_set` ao dump
-
-  > Caso o MYSQL monolítico esteja dockerizado, execute o comando `mysqldump` pelo Docker:
-  > 
-  > ```sh
-  >  docker exec -it <NOME-DO-CONTAINER-DO-MYSQL-DO-MONOLITO> mysqldump -u root -p --opt eats_pagamento > eats_pagamento.sql
-  > ```
-  > 
-  > O valor de `<NOME-DO-CONTAINER-DO-MYSQL-DO-MONOLITO>` deve ser o nome do container do MySQL do monólito, que pode ser descoberto com o comando `docker ps`.
-
-2. Garanta que o container MySQL do serviço de pagamentos está sendo executado. Para isso, execute em um Terminal:
+2. Abra um Terminal e baixe o script de migração dos dados de pagamento para o seu Desktop. Dê as permissões necessárias, executando-o logo em seguida:
 
   ```sh
-  docker-compose up -d mysql.pagamento
+  cd ~/Desktop
+  curl https://gitlab.com/snippets/1955294/raw > migra-dados-de-pagamentos.sh
+  chmod +x migra-dados-de-pagamentos.sh
+  ./migra-dados-de-pagamentos.sh
   ```
 
-3. Pela linha de comando, vamos executar, no container de `mysql.pagamento`, o script `eats_pagamento.sql`.
+  _Observação: como colocamos as senhas do BD diretamente nos comandos, serão exibidos warnings de segurança._
 
-  Para isso, vamos usar o comando `mysql` informando _host_ e porta do container Docker:
+3. Ainda no Desktop, acesse o MySQL de Pagamentos pelo Docker Compose:
 
   ```sh
-  mysql -u pagamento -p --host 127.0.0.1 --port 3308 eats_pagamento < eats_pagamento.sql
+  cd ~/Desktop
+  docker-compose exec mysql.pagamento mysql -upagamento -p eats_pagamento
   ```
 
-  _Observação: o comando `mysql` não aceita `localhost`, apenas o IP `127.0.0.1`._
-
-  Quando for solicitada a senha, informe a que definimos no arquivo do Docker Compose: `pagamento123`.
-
-  > No caso do comando anterior não funcionar, copie o arquivo `eats_pagamento.sql` para o container do MySQL de pagamentos usando o Docker:
-  > 
-  > ```sh
-  > docker cp eats_pagamento.sql <NOME-DO-CONTAINER-DO-MYSQL-DE-PAGAMENTOS>:/eats_pagamento.sql
-  > ```
-  >
-  >  Então, execute o `bash` no container do MySQL de pagamentos:
-  > 
-  > ```sh
-  > docker exec -it <NOME-DO-CONTAINER-DO-MYSQL-DE-PAGAMENTOS> bash
-  > ```
-  > 
-  > Finalmente, dentro do container do MySQL de pagamentos, faça o import do dump:
-  > 
-  > ```
-  > mysql -upagamento -p eats_pagamento < eats_pagamento.sql
-  > ```
-  >
-  > Lembrando que o `<NOME-DO-CONTAINER-DO-MYSQL-DE-PAGAMENTOS>` pode ser descoberto com um `docker ps`.
-
-
-4. Para verificar se a importação do dump foi realizada com sucesso, vamos acessar o comando `mysql` sem passar nenhum arquivo:
-
-  ```sh
-  mysql -u pagamento -p --host 127.0.0.1 --port 3308 eats_pagamento
-  ```
-
-  Informe a senha `pagamento123`.
-
-  Perceba que o MySQL deve estar na versão _5.7.26 MySQL Community Server (GPL)_, a que definimos no arquivo do Docker Compose.
-
-  > Se o comando `mysql` não funcionar, execute o `bash` no container do MySQL de pagamentos:
-  > 
-  > ```sh
-  > docker exec -it <NOME-DO-CONTAINER-DO-MYSQL-DE-PAGAMENTOS> bash
-  > ```
-  > 
-  > Dentro do container, execute o comando `mysql`:
-  > 
-  > ```sh
-  > mysql -upagamento -p eats_pagamento
-  > ```
-  >
+  Informe a senha `pagamento123`, quando requisitada.
 
   Digite o seguinte comando SQL e verifique o resultado:
 
@@ -600,124 +563,102 @@ Há um conflito entre os conceitos de um BD relacional como o MySQL e de um BD o
 
 Devemos exportar um subconjunto dos dados de um `Restaurante`, que são relevantes para o serviço de Distância: o `id`, o `cep`, o `tipoDeCozinhaId` e o atributo `aprovado`, que indica se o restaurante já foi revisado e aprovado pelo Administrativo do Caelum Eats.
 
-Não é possível fazer um dump para um script `.sql`. Porém, como a nossa migração é simples, podemos usar um arquivo CSV com os dados de restaurantes que são relevantes para o serviço de Distância. Já que restaurantes não aprovados não são interessantes para o cálculo de distância, podemos fazer uma filtragem, mantendo apenas os restaurantes já aprovados.
-
-Para criar esse CSV a partir do MySQL, podemo usar um `select` com a instrução `into outfile`:
+Para isso, devemos executar o seguinte SQL:
 
 ```sql
-select r.id, r.cep, r.tipo_de_cozinha_id from restaurante r where r.aprovado = true into outfile '/tmp/restaurantes.csv' fields terminated by ',' enclosed by '"' lines terminated by '\n';
+select r.id, r.cep, r.tipo_de_cozinha_id from restaurante r where r.aprovado = true;
 ```
 
-A consulta anterior criará um arquivo `/tmp/restaurantes.csv`, com uma estrutura semelhante à seguinte:
+Não é possível fazer um dump para um script `.sql`. Porém, como a nossa migração é simples, podemos usar um arquivo CSV com os dados de restaurantes que são relevantes para o serviço de Distância.
 
-####### /tmp/restaurantes.csv
+Podemos executar o `select` no BD monolítico pelo Terminal com o comando:
+
+```sh
+docker-compose exec -T mysql.monolito mysql -uroot -pcaelum123 eats -N -B -e "select r.id, r.cep, r.tipo_de_cozinha_id from restaurante r where r.aprovado = true;"
+```
+
+A opção `-N`, ou `--skip-column-names`, remove do resultado a primeira linha de cabeçalho contendo o nome das colunas.
+
+A opção `-B`, ou `--batch`, remove a formatação dos resultados, separando cada coluna por um TAB, com cada registro em uma nova linha.
+
+A opção `-e`, ou `--execute`, permite que passemos um comando SQL.
+
+O resultado será algo como:
+
+```txt
+1	70238500	1
+2	71458-074	6
+```
+Podemos passar o resultado anterior por um `sed`, trocando os TABs por vírgulas:
+
+```sh
+docker-compose exec -T mysql.monolito mysql -uroot -pcaelum123 eats -N -B -e "select r.id, r.cep, r.tipo_de_cozinha_id from restaurante r where r.aprovado = true;" |
+sed 's/\t/,/g'
+```
+
+Será impresso algo semelhante ao seguinte:
 
 ```csv
-"1","70238500","1"
-"2","71458-074","6"
+1,70238500,1
+2,71458-074,6
 ```
 
-Para importar o CSV para o MongoDB, podemos usar a ferramenta `mongoimport`. Algumas opções do comando:
+A saída do `sed`, mostrada anteriormente, pode ser usada como entrada para o comando `mongoimport` do MongoDB de distância.
+
+Algumas opções do comando:
 
 - `--db`, o database de destino
 - `--collection`, a collection de destino
 - `--type`, o tipo do arquivo (no caso, um CSV)
-- `--file`, o caminho do arquivo a ser importado
 - `--fields`, para definir os nomes das propriedades do document
 
-Perceba que não há os nomes das propriedades no arquivo `restaurantes.csv`. Por isso, devemos definí-las usando a opção `--fields`. O campo de identificação do document deve se chamar `_id`. 
+Como  não há os nomes das propriedades na saída do `sed`, devemos definí-las usando a opção `--fields`. O campo de identificação do document deve se chamar `_id`. 
 
 Para importar o conteúdo do CSV para a collection `restaurantes` do database `eats_distancia`, com os campos `_id`, `cep` e `tipoDeCozinhaId`, devemos executar o seguinte comando:
 
 ```sh
-mongoimport --db eats_distancia --collection restaurantes --type csv  --fields=_id,cep,tipoDeCozinhaId --file restaurantes.csv
+mongoimport --db eats_distancia --collection restaurantes --type csv  --fields=_id,cep,tipoDeCozinhaId
+```
+
+Juntando tudo, teremos o seguinte comando:
+
+```sh
+docker-compose exec -T mysql.monolito mysql -uroot -pcaelum123 eats -N -B -e "select r.id, r.cep, r.tipo_de_cozinha_id from restaurante r where r.aprovado = true;" |
+sed 's/\t/,/g' |
+docker-compose exec -T mongo.distancia mongoimport --db eats_distancia --collection restaurantes --type csv  --fields=_id,cep,tipoDeCozinhaId
 ```
 
 ![Dump para CSV para MongoDB de Distância {w=65}](imagens/04-migrando-dados/dump-dos-dados-de-restaurante-do-monolito-para-o-mongodb-de-distancia.png)
 
+
 ## Exercício: migrando dados de restaurantes do MySQL para o MongoDB
 
-1. Em um Terminal, acesse o MySQL do monólito com o usuário `root`, já acessando `eats`, o database monolítico:
+1. Garanta que todos os containers de BDs estejam sendo executados:
 
   ```sh
-  mysql -u root -p eats
+  cd ~/Desktop
+  docker-compose up -d 
   ```
 
-  Peça a senha de root do MySQL para o instrutor. Se não houver senha, omita a opção `-p`.
-
-  Na CLI do MySQL, faça uma consulta que obtém os dados relevantes do MySQL para o serviço de distância: o id do restaurante, o cep e o id do tipo de cozinha. O cálculo de distância é feito somente para restaurantes aprovados. Por isso, podemos por um filtro na consulta, mantendo apenas os restaurantes aprovados.
-
-  O resultado pode ser exportado para um arquivo CSV, um formato que pode ser facilmente importado em um MongoDB.
+2. Abra um Terminal e baixe o script de migração dos dados de distância para o seu Desktop. Dê as permissões necessárias, executando-o logo em seguida:
 
   ```sh
-  mysql> select r.id, r.cep, r.tipo_de_cozinha_id from restaurante r where r.aprovado = true into outfile '/tmp/restaurantes.csv' fields terminated by ',' enclosed by '"' lines terminated by '\n';
+  cd ~/Desktop
+  curl https://gitlab.com/snippets/1955323/raw > migra-dados-de-distancia.sh
+  chmod +x migra-dados-de-distancia.sh
+  ./migra-dados-de-distancia.sh
   ```
 
-  A query do código anterior pode ser obtida em: https://gitlab.com/snippets/1894030
+  _Observação: como colocamos a senha do MySQL diretamente no comando, será exibidos um warning de segurança._
 
-  > Caso a instância do MySQL monolítico esteja dockerizada, execute o comando `mysql` pelo Docker:
-  > 
-  > ```sh
-  > docker exec -it <NOME-DO-CONTAINER-DO-MYSQL-DO-MONOLITO> mysql -u root -p eats
-  > ```
-  > 
-  > Digite a senha de root do MySQL do monólito, se houver. Execute a query, salvando o arquivo `restaurantes.csv` no diretório `/var/lib/mysql-files/`.
-  > 
-  > ```sh
- >  mysql> select r.id, r.cep, r.tipo_de_cozinha_id from restaurante r where r.aprovado = true into outfile '/var/lib/mysql-files/restaurantes.csv' fields terminated by ',' enclosed by '"' lines terminated by '\n';
-  > ```
-  > 
-  > A query do código anterior pode ser obtida em: https://gitlab.com/snippets/1895021
-  > 
-  > Então, obtenha o texto do `restaurantes.csv` e o copie para o diretório `/tmp` com o seguinte comando:
-  > 
-  > ```sh
-  > docker exec -it <NOME-DO-CONTAINER-DO-MYSQL-DO-MONOLITO> cat /var/lib/mysql-files/restaurantes.csv > /tmp/restaurantes.csv
-  > ```
-  >
-  > Lembrando que o `<NOME-DO-CONTAINER-DO-MYSQL-DO-MONOLITO>` pode ser descoberto com um `docker ps`.
-
-2. Certifique-se que o container MongoDB do serviço de distância definido no Docker Compose esteja no ar. Para isso, execute em um Terminal:
+3. Ainda no Desktop, acesse o database de Distância do MongoDB pelo Docker Compose:
 
   ```sh
-  docker-compose up -d mongo.distancia
+  cd ~/Desktop
+  docker-compose exec mongo.distancia mongo eats_distancia
   ```
 
-  Copie o CSV exportado a partir do MySQL para o seu Desktop:
-
-  ```sh
-  cp /tmp/restaurantes.csv ~/Desktop
-  ```
-
-  Descubra o nome do container do MongoDB de distância, com o comando `docker ps`. O container do MongoDB terá como sufixo `mongo.distancia_1`.
-
-  Copie o arquivo CSV com os dados exportados para o container do MongoDB:
-
-  ```sh
-  docker cp ~/Desktop/restaurantes.csv <NOME-DO-CONTAINER>:/restaurantes.csv
-  ```
-
-  Troque `<NOME-DO-CONTAINER>` pelo nome descoberto no passo anterior.
-
-  Execute um bash no container com o comando:
-
-  ```sh
-  docker exec -it <NOME-DO-CONTAINER> bash
-  ```
-
-  Importe os dados do CSV para a collection `restaurantes` do MongoDB de distância:
-
-  ```sh
-  mongoimport --db eats_distancia --collection restaurantes --type csv  --fields=_id,cep,tipoDeCozinhaId --file restaurantes.csv
-  ```
-
-  O comando acima pode ser encontrado em: https://gitlab.com/snippets/1894035
-
-  Ainda no bash do MongoDB, acesse o database de distância com o Mongo Shell:
-
-  ```sh
-  mongo eats_distancia
-  ```
+  _Observação: no comando anterior, já informamos o database a ser acessado._
 
   Dentro do Mongo Shell, verifique a collection de restaurantes foi criada:
 
@@ -747,7 +688,7 @@ mongoimport --db eats_distancia --collection restaurantes --type csv  --fields=_
 
   Pronto, os dados foram migrados para o MongoDB!
 
-  > Apenas os restaurantes já aprovados terão seus dados migrados. Restaurantes ainda não aprovados ou novos restaurantes não aparecerão para o serviço de distância.
+  _Observação: Apenas os restaurantes já aprovados terão seus dados migrados. Restaurantes ainda não aprovados ou novos restaurantes não aparecerão para o serviço de distância._
 
 ## Configurando MongoDB no serviço de distância
 
@@ -927,7 +868,7 @@ Para saber sobre outras propriedades, consulte: https://docs.spring.io/spring-bo
 
   Execute novamente a classe `EatsDistanciaServiceApplication`.
 
-  Use o cURL para testar algumas URLs do serviço de distância, como as seguir:
+  Use o cURL, ou o navegador, para testar algumas URLs do serviço de distância, como as seguir:
 
   ```sh
   curl -i http://localhost:8082/restaurantes/mais-proximos/71503510
@@ -936,8 +877,6 @@ Para saber sobre outras propriedades, consulte: https://docs.spring.io/spring-bo
 
   curl -i http://localhost:8082/restaurantes/71503510/restaurante/1
   ```
-
-  Observação: como é disparado um GET, é possível testar as URLs anteriores diretamente pelo navegador.
 
 ## Para saber mais: Change Data Capture
 
