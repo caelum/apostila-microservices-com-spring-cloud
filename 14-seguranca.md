@@ -62,8 +62,8 @@ No arquivo `administrativo.properties` do `config-repo`, definiremos as configur
 ```properties
 #DATASOURCE CONFIGS
 spring.datasource.url=jdbc:mysql://localhost:3307/eats?createDatabaseIfNotExist=true
-spring.datasource.username=eats
-spring.datasource.password=eats123
+spring.datasource.username=root
+spring.datasource.password=caelum123
 ```
 
 Inicialmente, o serviço administrativo pode apontar para o mesmo BD do monólito. Aos poucos, deve ser feita a migração das tabelas `forma_de_pagamento` e `tipo_de_cozinha` para um BD próprio.
@@ -178,8 +178,8 @@ As diversas mudanças no módulo de restaurantes do monólito também afetam a U
 
   ```properties
   spring.datasource.url=jdbc:mysql://localhost:3307/eats?createDatabaseIfNotExist=true
-  spring.datasource.username=eats
-  spring.datasource.password=eats123
+  spring.datasource.username=root
+  spring.datasource.password=caelum123
   ```
 
 2. Clone o projeto `fj33-eats-administrativo-service` para o seu Desktop:
@@ -601,8 +601,8 @@ No `config-repo`, adicione um arquivo `apigateway.properties` com o dados de con
 ```properties
 #DATASOURCE CONFIGS
 spring.datasource.url=jdbc:mysql://localhost:3307/eats?createDatabaseIfNotExist=true
-spring.datasource.username=eats
-spring.datasource.password=eats123
+spring.datasource.username=root
+spring.datasource.password=caelum123
 
 #JWT CONFIGS
 jwt.secret = um-segredo-bem-secreto
@@ -1149,8 +1149,8 @@ Isso indica que o módulo de segurança do monólito reconheceu o token como vá
   ```properties
   #DATASOURCE CONFIGS
   spring.datasource.url=jdbc:mysql://localhost:3307/eats?createDatabaseIfNotExist=true
-  spring.datasource.username=eats
-  spring.datasource.password=eats123
+  spring.datasource.username=root
+  spring.datasource.password=caelum123
 
   #JWT CONFIGS
   jwt.secret = um-segredo-bem-secreto
@@ -1427,8 +1427,8 @@ Para isso, vamos definir um arquivo `authorizationserver.properties` no reposit�
 ```properties
 #DATASOURCE CONFIGS
 spring.datasource.url=jdbc:mysql://localhost:3307/eats?createDatabaseIfNotExist=true
-spring.datasource.username=eats
-spring.datasource.password=eats123
+spring.datasource.username=root
+spring.datasource.password=caelum123
 
 security.oauth2.client.client-id=eats
 security.oauth2.client.client-secret=eats123
@@ -1804,8 +1804,8 @@ z̶u̶u̶l̶.̶r̶o̶u̶t̶e̶s̶.̶a̶u̶t̶h̶.̶u̶r̶l̶=̶f̶o̶r̶w̶a̶r�
   ```properties
   #DATASOURCE CONFIGS
   spring.datasource.url=jdbc:mysql://localhost:3307/eats?createDatabaseIfNotExist=true
-  spring.datasource.username=eats
-  spring.datasource.password=eats123
+  spring.datasource.username=root
+  spring.datasource.password=caelum123
 
   jwt.secret = um-segredo-bem-secreto
 

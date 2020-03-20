@@ -308,7 +308,7 @@ Para isso, deve ser adicionada uma dependência ao Flyway no `pom.xml` do `eats-
 </dependency>
 ```
 
-O database deve ser modificado para um novo database (ou schema) específico para o serviço de pagamentos. Podemos chamá-lo de `eats_pagamento`.
+O database deve ser modificado para um novo database específico para o serviço de pagamentos. Podemos chamá-lo de `eats_pagamento`.
 
 ####### fj33-eats-pagamento-service/src/main/resources/application.properties
 
@@ -317,7 +317,7 @@ s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶s̶o̶u̶r̶c̶e̶.̶u̶r̶l̶=̶j̶d̶b̶c̶:�
 spring.datasource.url=jdbc:mysql://localhost:3307/eats_pagamento?createDatabaseIfNotExist=true
 ```
 
-O mesmo usuário `root` deve ter acesso a ambos os databases: `eats`, do monólito, e `eats_pagamento`, do serviço de pagamentos. Dessa maneira, é possível executar scripts que migram dados de um database para outro.
+Estamos usando, no serviço de pagamentos, o usuário `root` do BD do Monólito. Esse usuário tem acesso a ambos os databases: `eats`, do monólito, e `eats_pagamento`, do serviço de pagamentos. Dessa maneira, é possível executar scripts que migram dados de um database para outro.
 
 Numa nova pasta `db/migration` em  `src/main/resources` deve ser criada uma primeira migration, que cria a tabela de `pagamento`. O arquivo pode ter o nome `V0001__cria-tabela-pagamento.sql` e o seguinte conteúdo:
 
@@ -404,10 +404,10 @@ Novos pagamentos serão armazenados apenas no schema `eats_pagamento`. Os dados 
 2. Verifique se o conteúdo do database `eats_pagamento` condiz com o esperado, digitando os seguintes comandos em um Terminal:
 
   ```sh
-  mysql -u eats -p eats_pagamento
+  mysql -u root -p eats_pagamento
   ```
 
-  Quando solicitada, digite a senha `eats123`.
+  Quando solicitada, digite a senha `caelum123`.
 
   Dentro do MySQL, execute a seguinte query:
 

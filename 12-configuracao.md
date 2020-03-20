@@ -392,8 +392,8 @@ Para o monólito, crie um arquivo `monolito.properties` no diretório `config-re
 ```properties
 # DATASOURCE CONFIGS
 spring.datasource.url=jdbc:mysql://localhost:3307/eats?createDatabaseIfNotExist=true
-spring.datasource.username=eats
-spring.datasource.password=eats123
+spring.datasource.username=root
+spring.datasource.password=caelum123
 
 #JWT CONFIGS
 jwt.secret = um-segredo-bem-secreto
@@ -483,8 +483,8 @@ s̶p̶r̶i̶n̶g̶.̶d̶a̶t̶a̶.̶m̶o̶n̶g̶o̶d̶b̶.̶p̶o̶r̶t̶=̶2̶7�
   ```properties
   # DATASOURCE CONFIGS
   spring.datasource.url=jdbc:mysql://localhost:3307/eats?createDatabaseIfNotExist=true
-  spring.datasource.username=eats
-  spring.datasource.password=eats123
+  spring.datasource.username=root
+  spring.datasource.password=caelum123
 
   #JWT CONFIGS
   jwt.secret = um-segredo-bem-secreto

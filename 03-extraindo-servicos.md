@@ -628,8 +628,8 @@ server.port = 8081
 
 #DATASOURCE CONFIGS
 spring.datasource.url=jdbc:mysql://localhost:3307/eats?createDatabaseIfNotExist=true
-spring.datasource.username=eats
-spring.datasource.password=eats123
+spring.datasource.username=root
+spring.datasource.password=caelum123
 
 #JPA CONFIGS
 spring.jpa.hibernate.ddl-auto=validate
@@ -1060,8 +1060,8 @@ server.port = 8082
 
 #DATASOURCE CONFIGS
 spring.datasource.url=jdbc:mysql://localhost:3307/eats?createDatabaseIfNotExist=true
-spring.datasource.username=eats
-spring.datasource.password=eats123
+spring.datasource.username=root
+spring.datasource.password=caelum123
 
 #JPA CONFIGS
 spring.jpa.hibernate.ddl-auto=validate
