@@ -158,7 +158,7 @@ volumes:
   Observe quais os containers sendo executados com o comando:
 
   ```sh
-  docker container ps
+  docker container ls
   ```
 
   Deverá ser impresso algo como:

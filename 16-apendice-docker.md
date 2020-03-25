@@ -30,7 +30,7 @@ Mais detalhes sobre essas opções podem ser encontrados em: https://docs.docker
 Liste os containers que estão sendo executados pelo Docker com o comando:
 
 ```sh
-docker container ps
+docker container ls
 ```
 
 Deve aparecer algo como:
