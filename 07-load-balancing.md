@@ -25,7 +25,7 @@ O pesquisador da Google Jeffrey Dean, na palestra [Designs, Lessons and Advice f
 - 3 falhas em roteadores, tirando o cluster do ar por 1 hora
 - 8 manutenções na rede, causando 30 minutos de perdas de conexões
 - 12 reloads em roteadores, derrubando o DNS por alguns minutos
-- 20 falhas em racks, matando dezenas de máquinas e levando 
+- 20 falhas em racks, matando dezenas de máquinas 
 - milhares de falhas em discos rígidos
 
 <!-- @note

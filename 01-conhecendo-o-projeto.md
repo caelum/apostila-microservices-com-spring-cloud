@@ -2,13 +2,13 @@
 
 ## Peça sua comida com o Caelum Eats
 
-Usaremos como exemplo o Caelum Eats: uma aplicação de entrega de comida nos moldes de soluções conhecidas no mercado.
+Usaremos como projeto de exemplo o Caelum Eats: uma aplicação de entrega de comida nos moldes de soluções conhecidas no mercado.
 
 Há 3 perfis de usuário:
 
-  - o cliente, que efetua um pedido
-  - o dono do restaurante, que mantém os dados do restaurante e muda os status de pedidos pendentes
-  - o administrador do Caelum Eats, que mantém os dados básicos do sistema e aprova novos restaurantes
+  - o cliente, que efetua um pedido.
+  - o dono do restaurante, que mantém os dados do restaurante e muda os status de pedidos pendentes.
+  - o administrador do Caelum Eats, que mantém os dados básicos do sistema e aprova novos restaurantes.
 
 ## Funcionalidades
 
@@ -68,7 +68,7 @@ Quando o restaurante avisar o Caelum Eats que o pedido foi entregue, o cliente p
 
 ![Cliente avalia o pedido {w=43}](imagens/01-conhecendo-o-projeto/cliente-10-avalia-o-pedido.png)
 
-### Dono do Restaurante
+### Dono do restaurante
 
 O dono de um restaurante deve efetuar o login para manipular as informações de seu restaurante.
 
@@ -134,7 +134,7 @@ Também é tarefa do administrador do Caelum Eats revisar o cadastro de novos re
 
 ### Back-end
 
-O back-end do Caelum Eats provẽ uma API REST. A porta usada é a `8080`.
+O back-end do Caelum Eats provê uma API REST. A porta usada é a `8080`.
 
 O Banco de Dados utilizado é o MySQL, na versão 5.7 e executado na porta `3307`.
 
@@ -194,7 +194,7 @@ São utilizados alguns componentes open-source:
 
 ## Exercício: Executando o front-end
 
-1. Em um Terminal, baixe para o Desktop o projeto do front-end, usando o Git, com os comandos:
+1. Em um terminal, baixe para o Desktop o projeto do front-end, usando o Git, com os comandos:
 
   ```sh
   cd ~/Desktop
