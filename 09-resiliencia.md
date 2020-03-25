@@ -885,7 +885,7 @@ import org.springframework.retry.annotation.Backoff;
 
       t̶h̶r̶o̶w̶ ̶n̶e̶w̶ ̶R̶u̶n̶t̶i̶m̶e̶E̶x̶c̶e̶p̶t̶i̶o̶n̶(̶)̶;̶
 
-      // descomente o código abaixo ...
+      // descomente o código a seguir ...
 
       if (!repo.existsById(id)) {
         throw new ResourceNotFoundException();

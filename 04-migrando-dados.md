@@ -338,7 +338,7 @@ CREATE TABLE pagamento (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 ```
 
-O conteúdo acima pode ser encontrado na seguinte URL: https://gitlab.com/snippets/1859564
+O conteúdo anterior pode ser encontrado na seguinte URL: https://gitlab.com/snippets/1859564
 
 Uma segunda migration, de nome `V0002__migra-dados-de-pagamento.sql`, obtem os dados do database `eats`, do monólito, e os insere no database `eats_pagamento`. Crie o arquivo  em `db/migration`, conforme a seguir:
 
@@ -351,7 +351,7 @@ insert into eats_pagamento.pagamento
       from eats.pagamento;
 ```
 
-O trecho de código acima pode ser encontrado em: https://gitlab.com/snippets/1859568
+O trecho de código anterior pode ser encontrado em: https://gitlab.com/snippets/1859568
 
 Essa migração só é possível porque o usuário tem acesso aos dois databases.
 

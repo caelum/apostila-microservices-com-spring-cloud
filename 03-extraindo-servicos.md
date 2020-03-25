@@ -939,7 +939,7 @@ Extraímos nosso primeiro serviço do monólito. A evolução do código de paga
 
   Para que você não precise digitar muito, o comando anterior está disponível em: https://gitlab.com/snippets/1859389
 
-  No comando acima, usamos as seguintes opções do cURL:
+  No comando anterior, usamos as seguintes opções do cURL:
 
   - `-X` define o método HTTP a ser utilizado
   - `-i` inclui informações detalhadas da resposta

@@ -32,7 +32,7 @@ Uma maneira de representar essas camadas em um código Java é utilizar pacotes,
 O código de back-end do Caelum Eats está organizado em camadas (layers). Podemos observar isso estudando a estrutura de pacotes do código Java:
 
 <!--@note
-É possível rodar o comando abaixo, na pasta do pacote base do código Java (src/main/java/br/com/caelum/eats/) do projeto fj33-eats-monolito, para mostrar a estrutura básica dos pacotes.
+É possível rodar o comando a seguir, na pasta do pacote base do código Java (src/main/java/br/com/caelum/eats/) do projeto fj33-eats-monolito, para mostrar a estrutura básica dos pacotes.
 
   tree -d -L 1
 
@@ -57,7 +57,7 @@ Porém, quando a aplicação começa a crescer, o código passa a ficar difícil
 
 Reflita um pouco: dos projetos implementados com a plataforma Java em que você trabalhou, quantos seguiam uma variação da estrutura Package by Layer que estudamos anteriormente? Provavelmente, a maioria!
 
-Veja a estrutura de diretórios abaixo:
+Veja a estrutura de diretórios a seguir:
 
 ```txt
 .

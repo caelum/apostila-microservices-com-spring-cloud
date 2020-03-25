@@ -509,7 +509,7 @@ r̶i̶b̶b̶o̶n̶.̶e̶u̶r̶e̶k̶a̶.̶e̶n̶a̶b̶l̶e̶d̶=̶f̶a̶l̶s̶e�
   curl -X PUT -i http://localhost:8081/pagamentos/1
   ```
 
-  Note que os logs são alternados entre `EatsApplication` e `EatsApplication (1)`, quando testamos o comando acima várias vezes.
+  Note que os logs são alternados entre `EatsApplication` e `EatsApplication (1)`, quando testamos o comando anterior várias vezes.
 
 3. Teste, pelo navegador ou por um cliente REST, as seguintes URLs:
 

@@ -575,7 +575,7 @@ zuul.routes.local.path=/restaurantes-com-distancia/**
 zuul.routes.local.url=forward:/restaurantes-com-distancia
 ```
 
-A rota acima deve ficar logo antes da rota do monólito, porque esta última é `/**`,  um "coringa" que corresponde a qualquer URL solicitada.
+A rota anterior deve ficar logo antes da rota do monólito, porque esta última é `/**`,  um "coringa" que corresponde a qualquer URL solicitada.
 
 Um novo acesso a URL `http://localhost:9999/restaurantes-com-distancia/71503510/restaurante/1` terá como resposta um JSON com os dados do restaurante e de distância mesclados.
 

@@ -1436,7 +1436,7 @@ security.oauth2.client.client-secret=eats123
 
 > A configuração anterior define apenas um Client. Se tivermos registro de diferentes clients, podemos fornecer uma implementação da interface `ClientDetailsService`, que define o método `loadClientByClientId`. Nesse método, recebemos uma String com o client id e devemos retornar um objeto que implementa a interface `ClientDetails`.
 
-Com essas configurações mínimas, teremos um Authorization Server que dá suporte a todos os grant types do OAuth 2.0 mencionados acima.
+Com essas configurações mínimas, teremos um Authorization Server que dá suporte a todos os grant types do OAuth 2.0 mencionados anteriormente.
 
 Ao executar a classe `AuthorizationServerApplication`, podemos gerar um token enviando uma requisição POST ao endpoint `/oauth/token`.
 
@@ -2069,7 +2069,7 @@ Será necessário passar um token obtido do Authorization Server que contém o r
   curl -i -X PUT -H 'Content-type: application/json' -H 'Authorization: Bearer TOKEN-JWT-AQUI' -d '{"id": 3, "tipo": "CARTAO_CREDITO", "nome": "Amex Express"}' http://localhost:8084/admin/formas-de-pagamento/3
   ```
 
-  O comando acima pode ser encontrado em: https://gitlab.com/snippets/1890417
+  O comando anterior pode ser encontrado em: https://gitlab.com/snippets/1890417
 
   Observação: troque `TOKEN-JWT-AQUI` pelo token obtido do Authorization Server em exercícios anteriores.
 

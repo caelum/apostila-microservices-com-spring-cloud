@@ -1005,7 +1005,7 @@ import lombok.AllArgsConstructor;
   git checkout -f cap10-websocket-e-eventos
   ```
 
-2. Rode o comando abaixo para baixar as bibliotecas SockJS e Stomp, que são usadas pela UI:
+2. Rode o comando a seguir para baixar as bibliotecas SockJS e Stomp, que são usadas pela UI:
 
   ```sh
   cd ~/Desktop/fj33-eats-ui

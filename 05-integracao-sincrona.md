@@ -1476,7 +1476,7 @@ Podemos nos inspirar na API do PayPal e adicionar um atributo `method` em cada l
 
 2. Na classe `PagamentoController`, adicione um `LinkWithMethod` na lista para os links de confirmação e cancelamento, passando o método HTTP adequado.
 
-  Use o trecho abaixo nos métodos `detalha` e `cria` de `PagamentoController`:
+  Use o trecho a seguir nos métodos `detalha` e `cria` de `PagamentoController`:
 
   ####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoController.java
 
@@ -1623,7 +1623,7 @@ Além disso, há suporte a [Uniform Basis for Exchanging Representations](https:
 
 <!--@note
 
-Usei o HAL-FORMS na versão milestone 2.2.0.M2 do Spring Boot no commit abaixo:
+Usei o HAL-FORMS na versão milestone 2.2.0.M2 do Spring Boot no commit a seguir:
 
 https://github.com/alexandreaquiles/eats/commit/f8ef33b88cd3d96c62627a13b4e8470c9f09ada0#diff-5f414af558500eda821060272d84b8d8
 
