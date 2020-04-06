@@ -76,7 +76,7 @@ Podemos implementar o Load Balancing de duas maneiras diferentes: do lado de que
 
 Um detalhe importante: se um _load balancer_ estiver fora do ar, todas as instâncias de um serviço ficarão inatingíveis. Para que não seja um _Single Point of Failure_, é necessário que haja redundância do próprio load balancer.
 
-Load Balancers que usam dados de protocolos no nível de rede ou transporte como IP, TCP, FTP e UDP para fazer o balanceamento são chamados de _L4 load balancers_, já que vão até o nível 4 (Transporte) do Modelo OSI de redes computacionais. Já quando um load balancer lida dados de protocolos do nível de aplicação, como cabeçalhos do HTTP, são chamados de _L7 load balancers_, correspondendo ao nível 7 (Aplicação) do Modelo OSI.
+Load Balancers que usam dados de protocolos no nível de rede ou transporte como IP, TCP e UDP para fazer o balanceamento são chamados de _L4 load balancers_, já que vão até o nível 4 (Transporte) do Modelo OSI de redes computacionais. Já quando um load balancer lida dados de protocolos do nível de aplicação, como cabeçalhos do HTTP, são chamados de _L7 load balancers_, correspondendo ao nível 7 (Aplicação) do Modelo OSI.
 
 > _Sistemas escaláveis horizontalmente atingem disponibilidade e escalabilidade por meio da multiplicidade. A adição de mais máquinas para aumentar a capacidade melhora a resiliência a impulsos (choques agudos e curtos no sistema). Os servidores menores usados em arquiteturas escaláveis horizontalmente também custam muito menos e permitem aumentar a capacidade em pequenos incrementos._
 >
