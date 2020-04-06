@@ -1300,6 +1300,18 @@ Fowler menciona a ideia de Ian Robinson de que o Modelo de Maturidade de Richard
   }
   ```
 
+  Os novos imports serão os seguintes:
+
+  ####### fj33-eats-pagamento-service/src/main/java/br/com/caelum/eats/pagamento/PagamentoController.java
+
+  ```java
+  import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+  import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+
+  import org.springframework.hateoas.Link;
+  import org.springframework.hateoas.Resource;
+  ```
+
 3. Reinicie o serviço de pagamentos e obtenha o pagamento de um `id` já cadastrado:
 
   ```sh
