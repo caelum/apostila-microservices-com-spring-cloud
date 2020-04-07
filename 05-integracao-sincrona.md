@@ -718,21 +718,25 @@ class RestauranteController {
   // métodos omitidos ...
 
   @PutMapping("/parceiros/restaurantes/{id}")
-  Restaurante atualiza(@RequestBody Restaurante restaurante) {
+  RestauranteDto atualiza(@RequestBody RestauranteDto restaurante) {
     Restaurante doBD = restauranteRepo.getOne(restaurante.getId());
-    restaurante.setUser(doBD.getUser());
-    restaurante.setAprovado(doBD.getAprovado());
 
-    Restaurante salvo = restauranteRepo.save(restaurante);
+    // adicionado
+    TipoDeCozinha tipoDeCozinhaOriginal = doBD.getTipoDeCozinha();
+    String cepOriginal = doBD.getCep();
 
-    if (restaurante.getAprovado() &&
-              (cepDiferente(restaurante, doBD) || tipoDeCozinhaDiferente(restaurante, doBD))) {
+    restaurante.populaRestaurante(doBD);
 
-      distanciaRestClient.restauranteAtualizado(restaurante);
+    Restaurante salvo = restauranteRepo.save(doBD); // adicionado
 
+    // adicionado
+    if (!tipoDeCozinhaOriginal.getId().equals(restaurante.getTipoDeCozinha().getId())
+          ||
+        !cepOriginal.equals(restaurante.getCep())) {
+      distanciaRestClient.restauranteAtualizado(salvo);
     }
 
-    return salvo;
+    return new RestauranteDto(salvo); // modificado
   }
 
   // método omitido ...
@@ -745,14 +749,6 @@ class RestauranteController {
     // adicionado
     Restaurante restaurante = restauranteRepo.getOne(id);
     distanciaRestClient.novoRestauranteAprovado(restaurante);
-  }
-
-  private boolean tipoDeCozinhaDiferente(Restaurante restaurante, Restaurante doBD) {
-    return !doBD.getTipoDeCozinha().getId().equals(restaurante.getTipoDeCozinha().getId());
-  }
-
-  private boolean cepDiferente(Restaurante restaurante, Restaurante doBD) {
-    return !doBD.getCep().equals(restaurante.getCep());
   }
 
 }

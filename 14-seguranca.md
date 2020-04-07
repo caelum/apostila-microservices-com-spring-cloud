@@ -991,36 +991,6 @@ i̶m̶p̶o̶r̶t̶ ̶j̶a̶v̶a̶x̶.̶p̶e̶r̶s̶i̶s̶t̶e̶n̶c̶e̶.̶O̶n�
 ̶i̶m̶p̶o̶r̶t̶ ̶b̶r̶.̶c̶o̶m̶.̶c̶a̶e̶l̶u̶m̶.̶e̶a̶t̶s̶.̶s̶e̶g̶u̶r̶a̶n̶c̶a̶.̶U̶s̶e̶r̶;̶
 ```
 
-Modifique também o uso do atributo `user` do `Restaurante` na classe `RestauranteController`:
-
-####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/RestauranteController.java
-
-```java
-@RestController
-@AllArgsConstructor
-class RestauranteController {
-
-  // código omitido...
-
-  @PutMapping("/parceiros/restaurantes/{id}")
-  public Restaurante atualiza(@RequestBody Restaurante restaurante) {
-    Restaurante doBD = restauranteRepo.getOne(restaurante.getId());
-
-    r̶e̶s̶t̶a̶u̶r̶a̶n̶t̶e̶.̶s̶e̶t̶U̶s̶e̶r̶(̶d̶o̶B̶D̶.̶g̶e̶t̶U̶s̶e̶r̶(̶)̶)̶;̶
-    restaurante.setUserId(doBD.getUserId()); // modificado
-
-    restaurante.setAprovado(doBD.getAprovado());
-
-    // código omitido...
-
-    return restauranteRepo.save(restaurante);
-  }
-
-  // código omitido...
-
-}
-```
-
 Ajuste a interface `RestauranteRepository`:
 
 ####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/RestauranteRepository.java
