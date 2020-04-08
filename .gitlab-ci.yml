@@ -27,4 +27,5 @@ upload-alumni:
         refs:
             - master
     dependencies:
-        - upload-dropbox
+        - build-apostila
+
