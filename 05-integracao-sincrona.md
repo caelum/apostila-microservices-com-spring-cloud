@@ -743,7 +743,7 @@ class RestauranteController {
 
   @Transactional
   @PatchMapping("/admin/restaurantes/{id}")
-  void aprova(@PathVariable("id") Long id) {
+  public void aprova(@PathVariable("id") Long id) {
     restauranteRepo.aprovaPorId(id);
 
     // adicionado
@@ -754,7 +754,25 @@ class RestauranteController {
 }
 ```
 
-Observação: pensando em design de código, será que os métodos auxiliares `tipoDeCozinhaDiferente` e `cepDiferente` deveriam ficar em `RestauranteController` mesmo?
+Se houver uma exceção ao invocar o serviço de distância, os dados do restaurante não devem ser atualizados. Para isso, o método `atualiza` de `RestauranteController` deve ser anotado com `@Transactional`. Além disso, devemos torná-lo público, já que [apenas essa visibilidade](https://docs.spring.io/spring/docs/current/spring-framework-reference/data-access.html#transaction-declarative-annotations) é considerada pelo mecanismo padrão de gerenciamento de transações do Spring.
+
+Perceba que não precisaremos alterar o método `aprova` de `RestauranteController`, que já está anotado com controle transacional e é público.
+
+####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/RestauranteController.java
+
+```java
+@Transactional // adicionado
+@PutMapping("/parceiros/restaurantes/{id}")
+public RestauranteDto atualiza(@RequestBody RestauranteDto restaurante) { // modificado
+```
+
+O import já deve estar declarado:
+
+####### fj33-eats-monolito-modular/eats/eats-restaurante/src/main/java/br/com/caelum/eats/restaurante/RestauranteController.java
+
+```java
+import org.springframework.transaction.annotation.Transactional;
+```
 
 ## Exercício: Integrando o módulo de restaurantes ao serviço de distância com RestTemplate
 
