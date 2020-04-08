@@ -1,6 +1,7 @@
 stages:
     - build
     - dropbox
+    - alumni
 
 build-apostila:
     script: "build-apostila.sh"
@@ -19,3 +20,11 @@ upload-dropbox:
     dependencies:
         - build-apostila
 
+upload-alumni:
+    script: "upload-alumni.sh"
+    stage: alumni
+    only:
+        refs:
+            - master
+    dependencies:
+        - upload-dropbox
