@@ -800,6 +800,8 @@ import org.springframework.retry.annotation.Retryable;
   Perceba que nos logs que foram feitas 5 tentativas de chamada ao serviço de distância. Algo como o que segue:
 
   ```txt
+  2019-06-18 17:30:41.952  INFO 12547 --- [nio-8080-exec-9] b.c.c.e.restaurante.DistanciaRestClient  : monólito tentando chamar distancia-service
+  ...
   2019-06-18 17:30:42.943  INFO 12547 --- [nio-8080-exec-9] b.c.c.e.restaurante.DistanciaRestClient  : monólito tentando chamar distancia-service
   2019-06-18 17:30:43.967  INFO 12547 --- [nio-8080-exec-9] b.c.c.e.restaurante.DistanciaRestClient  : monólito tentando chamar distancia-service
   2019-06-18 17:30:44.990  INFO 12547 --- [nio-8080-exec-9] b.c.c.e.restaurante.DistanciaRestClient  : monólito tentando chamar distancia-service
@@ -810,6 +812,26 @@ import org.springframework.retry.annotation.Retryable;
     at org.springframework.web.client.HttpServerErrorException.create(HttpServerErrorException.java:79) ~[spring-web-5.1.4.RELEASE.jar:5.1.4.RELEASE]
     ...
   ```
+
+3. (opcional) Perceba que aparece um erro `504 (Gateway Timeout)` _antes_ do fim das tentativas na UI. Lembre-se que a UI chama o API Gateway que, por sua vez, invoca o Monólito.
+
+  Configuramos o Monólito para fazer 5 tentativas. Depois da primeira chamada, o Spring Retry fará mais 4 novas tentativas esperando, por padrão, 1 segundo entre as tentativas. Por isso, o Monólito leva um pouco mais de 4 segundos ao todo para desistir de chamar o serviço de Distância.
+
+  Porém, o Zuul, nosso API Gateway, usa o Ribbon no proxy das requisições. E o Ribbon tem um Timeout padrão de 1 segundo. A origem do erro na UI é o Timeout no Zuul, ocasionado pelo Ribbon. Por isso o status `504 (Gateway Timeout)`.
+
+  Para corrigir esse erro, podemos modificar o Timeout geral do Ribbon com a configuração `ribbon.ReadTimeout`, usando um valor em milissegundos. Também é possível definir o tempo de espera máximo para um cliente específico com `<cliente>.ribbon.ReadTimeout`. 
+
+  Podemos configurar um Timeout de 30 segundos apenas para as requisições enviadas do API Gateway para o Monólito da seguinte maneira:
+
+  ####### fj33-api-gateway/src/main/resources/application.properties
+
+  ```properties
+  monolito.ribbon.ReadTimeout=30000
+  ```
+
+  Garanta que o API Gateway foi reiniciado e teste novamente.
+
+  Veja se o erro na UI aparece apenas depois da última tentativa.
 
 ## Exponential Backoff
 
