@@ -156,6 +156,15 @@ Já a URL `http://localhost:9999/distancia/restaurantes/mais-proximos/71503510` 
 
 Outras URLs, que não iniciam com `/pagamentos` ou `/distancia`, serão direcionadas para o Monólito. Por exemplo, a URL `http://localhost:9999/restaurantes/1`, será direcionada para `http://localhost:8080/restaurantes/1`.
 
+> Logo após reiniciarmos um serviço, a primeira chamada ao serviço reiniciado feita através do API Gateway pode apresentar um erro `504 (Gateway Timeout)`.
+>
+> Isso acontece porque a `DispatcherServlet` do Spring MVC só é carregada no primeiro acesso, podendo responder em um tempo superior ao limite do Zuul. Uma das maneiras de resolver isso é carregar a `DispatcherServlet` logo que a aplicação sobe. Para isso, podemos definir a propriedade `spring.mvc.servlet.load-on-startup` com o valor `1`. Segue um exemplo para o serviço de Pagamentos:
+> 
+> ####### fj33-eats-pagamento-service/src/main/resources/application.properties
+> 
+> ```properties
+> spring.mvc.servlet.load-on-startup=1
+> ```
 
 ## Fazendo a UI usar o API Gateway
 
