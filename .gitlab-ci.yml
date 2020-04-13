@@ -28,4 +28,3 @@ upload-alumni:
             - master
     dependencies:
         - build-apostila
-
