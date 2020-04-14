@@ -782,18 +782,39 @@ Certifique-se que o import correto foi realizado:
 import org.springframework.retry.annotation.Retryable;
 ```
 
+### Ajustando o Timeout no API Gateway
+
+Perceba que aparece um erro `504 (Gateway Timeout)` _antes_ do fim das tentativas na UI. Lembre-se que a UI chama o API Gateway que, por sua vez, invoca o Monólito.
+
+Configuramos o Monólito para fazer 5 tentativas. Depois da primeira chamada, o Spring Retry fará mais 4 novas tentativas esperando, por padrão, 1 segundo entre as tentativas. Por isso, o Monólito leva um pouco mais de 4 segundos ao todo para desistir de chamar o serviço de Distância.
+
+Porém, o Zuul, nosso API Gateway, usa o Ribbon no proxy das requisições, que tem um Timeout padrão de 1 segundo. Como a chamada ao serviço de Distância leva uns 4 segundos, ocorre um erro no API Gateway. Portanto, a origem do erro na UI é o Timeout no Zuul, ocasionado pelo Ribbon. Por isso o status `504 (Gateway Timeout)`.
+
+Para corrigir esse erro, podemos modificar o Timeout geral do Ribbon com a configuração `ribbon.ReadTimeout`, usando um valor em milissegundos. Também é possível definir o tempo de espera máximo para um cliente específico com `<cliente>.ribbon.ReadTimeout`. 
+
+Podemos configurar um Timeout de 30 segundos apenas para as requisições enviadas do API Gateway para o Monólito da seguinte maneira:
+
+####### fj33-api-gateway/src/main/resources/application.properties
+
+```properties
+monolito.ribbon.ReadTimeout=30000
+```
+
 ## Exercício: Spring Retry
 
-1. Faça o checkout da branch `cap9-retry` do monólito:
+1. Faça o checkout da branch `cap9-retry` do monólito e no API Gateway:
 
   ```sh
   cd ~/Desktop/fj33-eats-monolito-modular
+  git checkout -f cap9-retry
+
+  cd ~/Desktop/fj33-api-gateway
   git checkout -f cap9-retry
   ```
 
   Reinicie o monólito.
 
-2. Garanta que o monólito, o serviço de distância e que a UI estejam no ar.
+2. Garanta que o monólito, o API Gateway, o serviço de distância e a UI estejam no ar.
 
   Faça login como dono de um restaurante (por exemplo, `longfu`/`123456`) e mude o CEP ou tipo de cozinha.
 
@@ -812,26 +833,6 @@ import org.springframework.retry.annotation.Retryable;
     at org.springframework.web.client.HttpServerErrorException.create(HttpServerErrorException.java:79) ~[spring-web-5.1.4.RELEASE.jar:5.1.4.RELEASE]
     ...
   ```
-
-3. (opcional) Perceba que aparece um erro `504 (Gateway Timeout)` _antes_ do fim das tentativas na UI. Lembre-se que a UI chama o API Gateway que, por sua vez, invoca o Monólito.
-
-  Configuramos o Monólito para fazer 5 tentativas. Depois da primeira chamada, o Spring Retry fará mais 4 novas tentativas esperando, por padrão, 1 segundo entre as tentativas. Por isso, o Monólito leva um pouco mais de 4 segundos ao todo para desistir de chamar o serviço de Distância.
-
-  Porém, o Zuul, nosso API Gateway, usa o Ribbon no proxy das requisições. E o Ribbon tem um Timeout padrão de 1 segundo. A origem do erro na UI é o Timeout no Zuul, ocasionado pelo Ribbon. Por isso o status `504 (Gateway Timeout)`.
-
-  Para corrigir esse erro, podemos modificar o Timeout geral do Ribbon com a configuração `ribbon.ReadTimeout`, usando um valor em milissegundos. Também é possível definir o tempo de espera máximo para um cliente específico com `<cliente>.ribbon.ReadTimeout`. 
-
-  Podemos configurar um Timeout de 30 segundos apenas para as requisições enviadas do API Gateway para o Monólito da seguinte maneira:
-
-  ####### fj33-api-gateway/src/main/resources/application.properties
-
-  ```properties
-  monolito.ribbon.ReadTimeout=30000
-  ```
-
-  Garanta que o API Gateway foi reiniciado e teste novamente.
-
-  Veja se o erro na UI aparece apenas depois da última tentativa.
 
 ## Exponential Backoff
 
