@@ -589,11 +589,11 @@ O resultado será algo como:
 1	70238500	1
 2	71458-074	6
 ```
-Podemos passar o resultado anterior por um `sed`, trocando os TABs por vírgulas:
+Podemos passar o resultado anterior por um `sed`, trocando os espaços e TABs por vírgulas:
 
 ```sh
 docker-compose exec -T mysql.monolito mysql -uroot -pcaelum123 eats -N -B -e "select r.id, r.cep, r.tipo_de_cozinha_id from restaurante r where r.aprovado = true;" |
-sed 's/\t/,/g'
+sed -E 's/[[:space:]]+/,/g'
 ```
 
 Será impresso algo semelhante ao seguinte:
@@ -624,7 +624,7 @@ Juntando tudo, teremos o seguinte comando:
 
 ```sh
 docker-compose exec -T mysql.monolito mysql -uroot -pcaelum123 eats -N -B -e "select r.id, r.cep, r.tipo_de_cozinha_id from restaurante r where r.aprovado = true;" |
-sed 's/\t/,/g' |
+sed -E 's/[[:space:]]+/,/g' |
 docker-compose exec -T mongo.distancia mongoimport --db eats_distancia --collection restaurantes --type csv  --fields=_id,cep,tipoDeCozinhaId
 ```
 
