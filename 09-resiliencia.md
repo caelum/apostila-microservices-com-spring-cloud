@@ -955,13 +955,13 @@ A [documentação do Resilience4j](https://github.com/resilience4j/resilience4j#
 - _Descrição:_ Recurso são isolados em pools de maneira que, se algum falhar, os outros continuarão.
 - _Slogans:_ "Uma falha não deveria afundar o navio todo" ou "Por favor, não todos de uma vez"
 
-## Cache
+#### Cache
 
 - _Como funciona?_ Memoriza um resultado bem sucedido.
 - _Descrição:_ Alguma proporção das requisições pode ser semelhante.
 - _Slogans:_ "Você já pediu esse"
 
-## Fallback
+#### Fallback
 
 - _Como funciona?_ Provê um resultado alternativo para falhas.
 - _Descrição:_ As coisas ainda falharão - planeje o que você fará quando isso acontecer.
