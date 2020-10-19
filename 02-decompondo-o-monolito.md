@@ -289,7 +289,7 @@ Porém, se alinharmos os pacotes ao domínio, passamos a ter a opção de deixar
 
 Por exemplo, podemos agrupar no pacote `br.com.caelum.eats.pagamento` as seguintes classes relacionadas ao contexto de Pagamento:
 
-####### br.com.caelum.eats.pagamento
+br.com.caelum.eats.pagamento
 
 ```txt
 .
