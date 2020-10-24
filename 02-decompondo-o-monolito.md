@@ -553,7 +553,7 @@ Por meio de uma solução como **OSGi**, até seria possível **atualizar um mó
 
 Como estudamos nesse capítulo, um monólito não é sinônimo de código mal feito. É possível implementar um monólito com código organizado, fatiado em pequenos pedaços independentes e alinhados com o negócio. Podemos até compor esses pedaços de diferentes maneiras e implementá-los de maneira poliglotas. Dependendo da tecnologia utilizada, podem ser atualizados parcialmente sem derrubar toda a aplicação. E podemos escalar um monólito, executando múltiplas instâncias por trás de um Load Balancer. Então o que define um monólito?
 
-Para responser, precisamos pensar em qual é o “entregável” de uma aplicação: qual é o artefato que implantamos no ambiente de produção?
+Para responder, precisamos pensar em qual é o “entregável” de uma aplicação: qual é o artefato que implantamos no ambiente de produção?
 
 Na plataforma Java, há algum tempo, o artefato mais comum era um WAR implantado em um servlet container como Tomcat ou Jetty. Já com frameworks como o Spring Boot, temos um JAR com as dependências embutidas, um _fat JAR_. Em uma Arquitetura de Plugins, seja com Service Loader API ou com OSGi, temos uma coleção de JARs.
 
