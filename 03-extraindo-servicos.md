@@ -437,7 +437,7 @@ Uma vez que decidimos ir em direção a uma Arquitetura de Microservices, temos 
 
 No artigo [Things You Should Never Do, Part I](https://www.joelonsoftware.com/2000/04/06/things-you-should-never-do-part-i/) (SPOLSKY, 2000), Joel Spolsky conta o caso da Netscape, que passou 3 anos sem lançar uma nova versão e, nesse tempo, viu sua fatia de mercado cair drasticamente. Spolsky diz que o motivo para o fracasso é o pior erro estratégico para uma companhia que depende de software: _reescrever código do zero_. Segundo o autor, é comum que programadores querem jogar código antigo fora e escrever tudo do zero e o motivo para isso é que _é mais difícil ler código do que escrever_. Reescrever todo o código, para Joel, é jogar conhecimento fora, dar vantagem competitiva para os concorrentes e gastar dinheiro com código que já existe. Uma refatoração cuidadosa e reescrita pontual de trechos de código seria uma abordagem melhor.
 
-> O caso da Netscape e o nascimento do Mozilla são assunto do documentário [Code Rush](https://www.youtube.com/watch?v=4Q7FTjhvZ7Y) (WINTON, 2000).
+> O ocaso da Netscape e o nascimento do Mozilla são assunto do documentário [Code Rush](https://www.youtube.com/watch?v=4Q7FTjhvZ7Y) (WINTON, 2000).
 
 Robert "Uncle Bob" Martin chama essa ideia de reescrever todo o projeto de _Grand Redesign in the Sky_, no livro [Clean Code](https://www.amazon.com/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882) (MARTIN, 2009). Uncle Bob descreve o cenário em que um time dos sonhos é escolhido para reescrever um projeto do zero, enquanto outro time continua a manter o sistema atual. O novo time passa a ter que fazer tudo o que o software antigo faz, mantendo-se atualizado com as mudanças que são continuamente realizadas.
 
