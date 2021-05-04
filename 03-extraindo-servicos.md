@@ -533,7 +533,7 @@ Ainda há um empecilho: o Banco de Dados. Por enquanto, deixaremos um só BD. Ma
 
 ## Quebrando o Domínio
 
-No capítulo que discute sobre como refatorar um monólito em direção a Microservices, do livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), Chris Richardson diz que é necessário extrair o Modelo de Domínio específico para um novo serviço do Modelo de Domínio já existente no Monólito. E um dos principais desafios é eliminar referências a objetos de outros domínios, que vão além das fronteiros de um serviço.
+No capítulo que discute sobre como refatorar um monólito em direção a Microservices, do livro [Microservices Patterns](https://www.manning.com/books/microservices-patterns) (RICHARDSON, 2018a), Chris Richardson diz que é necessário extrair o Modelo de Domínio específico para um novo serviço do Modelo de Domínio já existente no Monólito. E um dos principais desafios é eliminar referências a objetos de outros domínios, que vão além das fronteiras de um serviço.
 
 No Caelum Eats, por exemplo, o novo serviço de Pagamentos teria um objeto `Pagamento` que está relacionado a um `Pedido`, que continuará no módulo de Pedido do Monólito.
 
