@@ -4,7 +4,7 @@
 
 Ao extrairmos os serviços de Pagamentos e de Distância do Monólito, o Caelum Eats perdeu algumas funcionalidades.
 
-Depois de termos extraído o serviço de Pagamentos, depois de confirmar um pagamento, o status do pedido é mostrado como _REALIZADO_ e não como _PAGO_. Isso acontece porque a confirmação é feita no serviço de Pagamentos e removemos o código que atualizava o status do pedido, que é parte do módulo de Pedido do Monólito.
+Depois de termos extraído o serviço de Pagamentos, ao confirmarmos um pagamento, o status do pedido é mostrado como _REALIZADO_ e não como _PAGO_. Isso acontece porque a confirmação é feita no serviço de Pagamentos e removemos o código que atualizava o status do pedido, que é parte do módulo de Pedido do Monólito.
 
 Já no caso do serviço de Distância, a extração em si não fez com que nenhuma funcionalidade fosse perdida. Porém, ao migramos os dados para um BD próprio, copiamos apenas os restaurantes do momento da migração. Mas dados de restaurantes podem ser modificados e novos restaurantes podem ser aprovados. E esses dados de restaurantes não estão sendo replicados para o BD de Distância.
 
