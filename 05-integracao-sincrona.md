@@ -2000,11 +2000,11 @@ Anteriormente, discutimos como o uso de formatos binários de serialização dos
 
 No post [gRPC: a true internet-scale RPC framework](https://cloud.google.com/blog/products/gcp/grpc-a-true-internet-scale-rpc-framework-is-now-1-and-ready-for-production-deployments) (TALWAR, 2016), Varun Talwar revela que a Google usou por 15 anos um projeto chamado Stubby, uma framework RPC que fornecia essa implementação de clientes e servidores, usando Protocol Buffers como formato de dados e lidando com dezenas de bilhões de requests por segundo.
 
-Como mencionamos anteriormente, RPC (Remote Procedure Call) é uma forma de integrar Sistemas Distribuídos que expõe as operações de uma aplicação. Exemplos de mecanismos RPC são Web Services CORBA, DCOM, RMI, SOAP e Thrift.
+Como mencionamos anteriormente, RPC (Remote Procedure Call) é uma forma de integrar Sistemas Distribuídos que expõe as operações de uma aplicação. Exemplos de mecanismos RPC são CORBA, DCOM, RMI, Web Services SOAP e Thrift.
 
 Uma API RESTful não seria exatamente RPC, apesar da comunicação síncrona, porque é _Resource-Oriented_.
 
-Em um framework RPC, o cliente invoca o servidor como se você uma chamada local. O framework lida com as complexidades de serialização de dados, comunicação pela rede, entre outras preocupações.
+Em um framework RPC, o cliente invoca o servidor como se fosse uma chamada local. O framework lida com as complexidades de serialização de dados, comunicação pela rede, entre outras preocupações.
 
 Em 2015, a Google lançou o projeto open-source **gRPC**, uma evolução do Stubby que provê um framework para comunicação RPC que usa Protocol Buffers como formato padrão de dados. Como protocolo para transmissão de dados, o gRPC é implementado sobre HTTP/2, aproveitando os frames binários e streams. Podem ser gerados servidores e clientes em linguagens como C++, C#, Java, Go, PHP, Python, Ruby, JS/Node, entre outras.
 
